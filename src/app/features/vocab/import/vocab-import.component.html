@@ -1,0 +1,154 @@
+<div class="vocab-import">
+
+  <div class="page-header">
+    <div>
+      <h1><i class="fa-solid fa-file-import highlight"></i> Import Vocab</h1>
+      <p class="subtitle">Nhập JSON từ AI để import từ vựng hàng loạt</p>
+    </div>
+    <button class="btn-icon" routerLink="/vocab" title="Về Dashboard">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="steps glass-panel">
+    <div class="step" [class.active]="step() === 'paste'" [class.done]="step() === 'preview' || step() === 'result'">
+      <span class="step-num">1</span><span class="step-label">Dán JSON</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" [class.active]="step() === 'preview'" [class.done]="step() === 'result'">
+      <span class="step-num">2</span><span class="step-label">Xem trước</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" [class.active]="step() === 'result'">
+      <span class="step-num">3</span><span class="step-label">Kết quả</span>
+    </div>
+  </div>
+
+  <!-- Step 1: Paste JSON -->
+  <div class="step-content glass-panel" *ngIf="step() === 'paste'">
+    <div class="prompt-hint">
+      <h3><i class="fa-solid fa-lightbulb"></i> Chưa có JSON?</h3>
+      <p>Copy prompt mẫu, dán vào ChatGPT/Claude, rồi copy kết quả JSON trả về vào đây.</p>
+      <button class="btn-secondary" (click)="copyPrompt()">
+        <i class="fa-regular fa-copy"></i> Copy Prompt Mẫu
+      </button>
+    </div>
+
+    <div class="textarea-wrap">
+      <label class="textarea-label">Dán JSON từ AI</label>
+      <textarea
+        class="json-textarea"
+        [(ngModel)]="jsonInput"
+        placeholder='[&#10;  {&#10;    "word": "decision",&#10;    "ipa": "/dɪˈsɪʒ.ən/",&#10;    "meaning_vi": "sự quyết định",&#10;    ...&#10;  }&#10;]'
+        rows="14"
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <div class="parse-error" *ngIf="parseError()">
+      <i class="fa-solid fa-circle-exclamation"></i> {{ parseError() }}
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-primary" (click)="parseJson()" [disabled]="!jsonInput.trim()">
+        <i class="fa-solid fa-magnifying-glass"></i> Parse &amp; Xem trước
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Preview -->
+  <div class="step-content glass-panel" *ngIf="step() === 'preview'">
+    <div class="preview-header">
+      <div class="preview-stats">
+        <span class="stat-ok"><i class="fa-solid fa-check"></i> {{ validCount }} hợp lệ</span>
+        <span class="stat-err" *ngIf="previewCards().length - validCount > 0">
+          <i class="fa-solid fa-xmark"></i> {{ previewCards().length - validCount }} lỗi
+        </span>
+      </div>
+      <div class="deck-select-wrap" *ngIf="decks().length > 0">
+        <select class="deck-select" [(ngModel)]="selectedDeckId">
+          <option value="">Không chọn deck</option>
+          <option *ngFor="let d of decks()" [value]="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="preview-table-wrap">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>Từ</th>
+            <th>IPA</th>
+            <th>POS</th>
+            <th>Nghĩa</th>
+            <th>Ví dụ</th>
+            <th>Liên quan</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of previewCards()" [class.row-error]="!c.valid">
+            <td class="col-word">
+              {{ c.word }}
+              <span class="error-tag" *ngIf="!c.valid" [title]="c.error">⚠</span>
+            </td>
+            <td class="col-muted">{{ c.ipa || '—' }}</td>
+            <td class="col-muted">{{ c.partOfSpeech || '—' }}</td>
+            <td>{{ c.meaningVi }}</td>
+            <td class="col-center">{{ c.examplesCount }}</td>
+            <td class="col-center">{{ c.relationsCount }}</td>
+            <td class="col-status">
+              <i class="fa-solid fa-check status-ok" *ngIf="c.valid"></i>
+              <i class="fa-solid fa-xmark status-err" *ngIf="!c.valid"></i>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-secondary" (click)="step.set('paste')">
+        <i class="fa-solid fa-arrow-left"></i> Sửa lại
+      </button>
+      <button class="btn-primary" (click)="doImport()" [disabled]="validCount === 0 || importing()">
+        <i class="fa-solid fa-circle-notch fa-spin" *ngIf="importing()"></i>
+        <i class="fa-solid fa-file-import" *ngIf="!importing()"></i>
+        {{ importing() ? 'Đang import...' : 'Import ' + validCount + ' từ' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Result -->
+  <div class="step-content result-panel glass-panel" *ngIf="step() === 'result' && importResult() as r">
+    <div class="result-icon">
+      <i class="fa-solid fa-party-horn"></i>
+    </div>
+    <h2>Import hoàn tất!</h2>
+
+    <div class="result-stats">
+      <div class="result-stat stat-imported">
+        <span class="rs-num">{{ r.importedCount }}</span>
+        <span class="rs-label">✅ Đã import</span>
+      </div>
+      <div class="result-stat stat-skipped">
+        <span class="rs-num">{{ r.skippedCount }}</span>
+        <span class="rs-label">⚠️ Bỏ qua (trùng)</span>
+      </div>
+      <div class="result-stat stat-errors">
+        <span class="rs-num">{{ r.errorCount }}</span>
+        <span class="rs-label">❌ Lỗi</span>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-secondary" (click)="reset()">
+        <i class="fa-solid fa-plus"></i> Import thêm
+      </button>
+      <button class="btn-primary" (click)="goToDashboard()">
+        <i class="fa-solid fa-book-open-reader"></i> Xem Vocab Vault
+      </button>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,196 @@
+<div class="word-detail" *ngIf="!loading(); else loadingTpl">
+  <ng-container *ngIf="card() as c">
+
+    <!-- ── Back + Actions ── -->
+    <div class="top-bar">
+      <button class="btn-icon" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="top-actions">
+        <button class="btn-primary" (click)="startPractice()">
+          <i class="fa-solid fa-bolt"></i> Luyện tập
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Hero Card ── -->
+    <div class="hero-card glass-panel">
+      <div class="hero-top">
+        <div class="hero-word">{{ c.front }}</div>
+        <div class="hero-badges">
+          <span class="badge badge-genre" *ngIf="c.topic">{{ c.topic }}</span>
+          <span class="badge badge-primary">{{ getStageLabel(c.stage) }}</span>
+        </div>
+      </div>
+
+      <div class="hero-meta" *ngIf="c.ipa">
+        <span class="ipa">{{ c.ipa }}</span>
+        <button class="audio-btn" *ngIf="c.audio" title="Nghe phát âm">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+
+      <div class="hero-meaning">{{ c.back }}</div>
+
+      <div class="hero-definition" *ngIf="c.definitionEn">
+        <i class="fa-solid fa-quote-left quote-icon"></i>
+        {{ c.definitionEn }}
+      </div>
+
+      <div class="hero-usage" *ngIf="c.usageNote">
+        <i class="fa-solid fa-lightbulb"></i>
+        <span>{{ c.usageNote }}</span>
+      </div>
+    </div>
+
+    <!-- ── Examples ── -->
+    <div class="section glass-panel" *ngIf="c.examples && c.examples.length > 0">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-comment-dots highlight"></i> Ví dụ</h2>
+        <div class="formality-tabs">
+          <button [class.active]="activeExampleFormality() === 'all'"
+                  (click)="activeExampleFormality.set('all')">Tất cả</button>
+          <button [class.active]="activeExampleFormality() === 'formal'"
+                  (click)="activeExampleFormality.set('formal')">Trang trọng</button>
+          <button [class.active]="activeExampleFormality() === 'informal'"
+                  (click)="activeExampleFormality.set('informal')">Thông thường</button>
+          <button [class.active]="activeExampleFormality() === 'written'"
+                  (click)="activeExampleFormality.set('written')">Văn viết</button>
+        </div>
+      </div>
+
+      <div class="example-list">
+        <div class="example-item" *ngFor="let ex of filteredExamples">
+          <div class="example-text">
+            <i class="fa-solid fa-minus example-bullet"></i>
+            {{ ex.text }}
+          </div>
+          <div class="example-footer">
+            <span class="formality-tag" [class]="getFormalityClass(ex.formality)">
+              {{ getFormalityLabel(ex.formality) }}
+            </span>
+            <span class="example-translation" *ngIf="ex.translation">{{ ex.translation }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Relations ── -->
+    <div class="section glass-panel" *ngIf="c.relations && c.relations.length > 0">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-diagram-project highlight"></i> Từ liên quan</h2>
+        <div class="relation-tabs">
+          <button [class.active]="activeRelTab() === 'family'"
+                  (click)="activeRelTab.set('family')">
+            Họ từ <span class="tab-count">{{ familyRelations.length }}</span>
+          </button>
+          <button [class.active]="activeRelTab() === 'collocation'"
+                  (click)="activeRelTab.set('collocation')">
+            Cụm từ <span class="tab-count">{{ collocationRelations.length }}</span>
+          </button>
+          <button [class.active]="activeRelTab() === 'synonym'"
+                  (click)="activeRelTab.set('synonym')">
+            Đồng nghĩa <span class="tab-count">{{ synonymRelations.length }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Family -->
+      <div class="relation-grid" *ngIf="activeRelTab() === 'family'">
+        <div class="relation-chip" *ngFor="let rel of familyRelations">
+          <div class="rel-main">
+            <span class="rel-text">{{ rel.relatedText }}</span>
+            <span class="rel-pos" *ngIf="rel.pos">{{ getPosLabel(rel.pos) }}</span>
+          </div>
+          <button
+            class="rel-btn-learned"
+            *ngIf="rel.relatedCardId"
+            (click)="navigateToRelated(rel.relatedCardId!)"
+            title="Xem từ này"
+          >
+            <i class="fa-solid fa-check"></i> Đã học
+          </button>
+          <button
+            class="rel-btn-add"
+            *ngIf="!rel.relatedCardId"
+            [disabled]="addingPending().has(rel.relatedText)"
+            [class.added]="addedPending().has(rel.relatedText)"
+            (click)="addToPending(rel)"
+          >
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
+               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
+            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+          </button>
+        </div>
+        <div class="empty-tab" *ngIf="familyRelations.length === 0">Không có họ từ</div>
+      </div>
+
+      <!-- Collocations -->
+      <div class="relation-grid" *ngIf="activeRelTab() === 'collocation'">
+        <div class="relation-chip" *ngFor="let rel of collocationRelations">
+          <div class="rel-main">
+            <span class="rel-text">{{ rel.relatedText }}</span>
+          </div>
+          <button class="rel-btn-learned" *ngIf="rel.relatedCardId"
+                  (click)="navigateToRelated(rel.relatedCardId!)">
+            <i class="fa-solid fa-check"></i> Đã học
+          </button>
+          <button class="rel-btn-add" *ngIf="!rel.relatedCardId"
+                  [disabled]="addingPending().has(rel.relatedText)"
+                  [class.added]="addedPending().has(rel.relatedText)"
+                  (click)="addToPending(rel)">
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
+               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
+            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+          </button>
+        </div>
+        <div class="empty-tab" *ngIf="collocationRelations.length === 0">Không có cụm từ</div>
+      </div>
+
+      <!-- Synonyms -->
+      <div class="relation-grid" *ngIf="activeRelTab() === 'synonym'">
+        <div class="relation-chip" *ngFor="let rel of synonymRelations">
+          <div class="rel-main">
+            <span class="rel-text">{{ rel.relatedText }}</span>
+          </div>
+          <button class="rel-btn-learned" *ngIf="rel.relatedCardId"
+                  (click)="navigateToRelated(rel.relatedCardId!)">
+            <i class="fa-solid fa-check"></i> Đã học
+          </button>
+          <button class="rel-btn-add" *ngIf="!rel.relatedCardId"
+                  [disabled]="addingPending().has(rel.relatedText)"
+                  [class.added]="addedPending().has(rel.relatedText)"
+                  (click)="addToPending(rel)">
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
+               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
+            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+          </button>
+        </div>
+        <div class="empty-tab" *ngIf="synonymRelations.length === 0">Không có từ đồng nghĩa</div>
+      </div>
+    </div>
+
+    <!-- ── Reverse Relations ── -->
+    <div class="section glass-panel" *ngIf="reverseRelations().length > 0">
+      <div class="section-header">
+        <h2><i class="fa-solid fa-arrows-turn-to-dots highlight"></i> Xuất hiện trong</h2>
+      </div>
+      <div class="reverse-list">
+        <a class="reverse-chip"
+           *ngFor="let r of reverseRelations()"
+           (click)="navigateToRelated(r.id)">
+          <i class="fa-solid fa-link"></i>
+          {{ r.front }}
+        </a>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">
+    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+    <p>Đang tải từ...</p>
+  </div>
+</ng-template>

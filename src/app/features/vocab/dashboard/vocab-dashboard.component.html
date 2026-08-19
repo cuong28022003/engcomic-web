@@ -1,0 +1,153 @@
+<div class="vocab-dashboard">
+
+  <!-- ── Page Header ── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1><i class="fa-solid fa-book-open-reader"></i> Vocab Vault</h1>
+      <p class="subtitle">Kho từ vựng thông minh của bạn</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="goToCollector()">
+        <i class="fa-solid fa-inbox"></i> Collector
+        <span class="action-badge" *ngIf="stats().dueToday > 0">{{ stats().dueToday }}</span>
+      </button>
+      <button class="btn-secondary" (click)="goToImport()">
+        <i class="fa-solid fa-file-import"></i> Import
+      </button>
+      <button class="btn-primary" (click)="startPractice()" [disabled]="stats().dueToday === 0">
+        <i class="fa-solid fa-bolt"></i>
+        Luyện tập {{ stats().dueToday > 0 ? '(' + stats().dueToday + ')' : '' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Stats Bar ── -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <i class="fa-solid fa-layer-group"></i>
+      <span class="stat-num">{{ stats().total }}</span>
+      <span class="stat-label">Tổng</span>
+    </div>
+    <div class="stat-pill stat-due" [class.has-due]="stats().dueToday > 0">
+      <i class="fa-solid fa-clock"></i>
+      <span class="stat-num">{{ stats().dueToday }}</span>
+      <span class="stat-label">Hôm nay</span>
+    </div>
+    <div class="stat-pill">
+      <i class="fa-solid fa-seedling"></i>
+      <span class="stat-num">{{ stats().newCount }}</span>
+      <span class="stat-label">Mới</span>
+    </div>
+    <div class="stat-pill">
+      <i class="fa-solid fa-chart-line"></i>
+      <span class="stat-num">{{ stats().learningCount }}</span>
+      <span class="stat-label">Đang học</span>
+    </div>
+    <div class="stat-pill stat-mature">
+      <i class="fa-solid fa-check-circle"></i>
+      <span class="stat-num">{{ stats().matureCount }}</span>
+      <span class="stat-label">Thành thạo</span>
+    </div>
+    <div class="stat-pill stat-leech" [class.has-leech]="stats().leechCount > 0">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span class="stat-num">{{ stats().leechCount }}</span>
+      <span class="stat-label">Khó nhớ</span>
+    </div>
+  </div>
+
+  <!-- ── Filters ── -->
+  <div class="filter-bar glass-panel">
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm từ vựng..."
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+    <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+      <option value="">Tất cả trạng thái</option>
+      <option value="new">Mới</option>
+      <option value="learning">Đang học</option>
+      <option value="mature">Thành thạo</option>
+      <option value="leech">Khó nhớ</option>
+    </select>
+    <input
+      type="text"
+      class="filter-input"
+      placeholder="Chủ đề..."
+      [(ngModel)]="filterTopic"
+      (keyup.enter)="onFilterChange()"
+    />
+    <button class="btn-icon" (click)="clearFilters()" title="Xóa bộ lọc">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- ── Loading ── -->
+  <div class="loading-state" *ngIf="loading()">
+    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+    <p>Đang tải từ vựng...</p>
+  </div>
+
+  <!-- ── Empty State ── -->
+  <div class="empty-state" *ngIf="!loading() && cards().length === 0">
+    <i class="fa-regular fa-folder-open empty-icon"></i>
+    <h3>Chưa có từ vựng nào</h3>
+    <p>Import từ AI hoặc thêm thủ công để bắt đầu học.</p>
+    <button class="btn-primary" (click)="goToImport()">
+      <i class="fa-solid fa-file-import"></i> Import ngay
+    </button>
+  </div>
+
+  <!-- ── Card List ── -->
+  <div class="card-list" *ngIf="!loading() && cards().length > 0">
+    <div
+      class="vocab-card glass-panel"
+      *ngFor="let card of cards()"
+      (click)="goToDetail(card)"
+    >
+      <div class="card-main">
+        <div class="card-word-row">
+          <span class="card-word">{{ card.front }}</span>
+          <span class="card-ipa" *ngIf="card.ipa">{{ card.ipa }}</span>
+          <span class="badge badge-genre" *ngIf="card.topic">{{ card.topic }}</span>
+        </div>
+        <div class="card-meaning">{{ card.back }}</div>
+        <div class="card-definition" *ngIf="card.definitionEn">{{ card.definitionEn }}</div>
+      </div>
+
+      <div class="card-meta">
+        <div class="stage-dots">
+          <span
+            class="dot"
+            *ngFor="let filled of getStageDots(card.stage)"
+            [class.filled]="filled"
+          ></span>
+          <span class="stage-label">{{ getStageLabel(card.stage) }}</span>
+        </div>
+        <span class="status-badge" [class]="getStatusClass(card.status)">
+          {{ getStatusLabel(card.status) }}
+        </span>
+        <span class="next-review" [class.overdue]="isOverdue(card.nextReview)">
+          <i class="fa-regular fa-clock"></i>
+          {{ formatNextReview(card.nextReview) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pagination ── -->
+  <div class="pagination" *ngIf="totalPages() > 1">
+    <button class="btn-icon" (click)="prevPage()" [disabled]="currentPage() === 0">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <span class="page-info">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
+    <button class="btn-icon" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+</div>

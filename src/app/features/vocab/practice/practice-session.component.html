@@ -1,0 +1,182 @@
+<div class="practice-shell">
+
+  <!-- ── Loading ── -->
+  <div class="loading-state" *ngIf="state() === 'loading'">
+    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+    <p>Đang tải bài luyện tập...</p>
+  </div>
+
+  <!-- ── Finished ── -->
+  <div class="finished-panel" *ngIf="state() === 'finished'">
+    <div class="finish-icon">🎉</div>
+    <h2>Hoàn thành!</h2>
+    <p class="finish-sub">Bạn đã học xong {{ cards().length }} từ hôm nay.</p>
+    <div class="finish-score">
+      <span class="score-num">{{ correctCount() }}</span>
+      <span class="score-label">/ {{ cards().length }} đúng</span>
+    </div>
+    <button class="btn-primary" (click)="goToDashboard()">
+      <i class="fa-solid fa-book-open-reader"></i> Về Vocab Vault
+    </button>
+  </div>
+
+  <!-- ── Exercise ── -->
+  <div class="exercise-shell" *ngIf="state() === 'exercise' || state() === 'feedback'">
+
+    <!-- Header -->
+    <div class="practice-header">
+      <button class="btn-icon" (click)="goToDashboard()" title="Thoát">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress"></div>
+        </div>
+        <span class="progress-label">{{ currentIndex() + 1 }} / {{ cards().length }}</span>
+      </div>
+      <span class="stage-badge">{{ stageName }}</span>
+    </div>
+
+    <!-- Feedback Overlay (stage 1, 2, 4) -->
+    <div class="feedback-overlay" *ngIf="state() === 'feedback'" [class.correct]="lastAnswerCorrect()" [class.wrong]="lastAnswerCorrect() === false">
+      <div class="feedback-content">
+        <div class="feedback-icon">
+          <i class="fa-solid fa-circle-check" *ngIf="lastAnswerCorrect()"></i>
+          <i class="fa-solid fa-circle-xmark" *ngIf="!lastAnswerCorrect()"></i>
+        </div>
+        <div class="feedback-text">
+          <strong>{{ lastAnswerCorrect() ? 'Chính xác! 🎉' : 'Chưa đúng 😅' }}</strong>
+          <span *ngIf="!lastAnswerCorrect()">Đáp án: <b>{{ currentCard?.front }}</b> — {{ currentCard?.back }}</span>
+        </div>
+        <button class="btn-primary feedback-next" (click)="advance()" [disabled]="submitLoading()">
+          Tiếp theo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card area -->
+    <ng-container [ngSwitch]="currentCard?.stage ?? 0" *ngIf="state() === 'exercise'">
+
+      <!-- Stage 0: New card — flip reveal -->
+      <div class="exercise-card stage-0" *ngSwitchCase="0">
+        <div class="card-flip" [class.flipped]="showingCard()">
+          <div class="card-front">
+            <div class="card-prompt">Từ mới</div>
+            <div class="card-word">{{ currentCard?.front }}</div>
+            <div class="card-ipa" *ngIf="currentCard?.ipa">{{ currentCard?.ipa }}</div>
+            <button class="btn-primary reveal-btn" *ngIf="!showingCard()" (click)="flipCard()">
+              <i class="fa-solid fa-eye"></i> Xem nghĩa
+            </button>
+          </div>
+          <div class="card-back" *ngIf="showingCard()">
+            <div class="card-meaning">{{ currentCard?.back }}</div>
+            <div class="card-definition" *ngIf="currentCard?.definitionEn">{{ currentCard?.definitionEn }}</div>
+            <div class="card-example" *ngIf="currentCard?.examples?.[0]">
+              <i class="fa-solid fa-quote-left"></i>
+              {{ currentCard?.examples?.[0]?.text }}
+            </div>
+            <button class="btn-primary" (click)="markSeen()" [disabled]="submitLoading()">
+              <i class="fa-solid fa-check"></i> Đã hiểu, tiếp theo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 1: Recognition — Multiple Choice -->
+      <div class="exercise-card stage-1" *ngSwitchCase="1">
+        <div class="ex-prompt">Nghĩa của từ này là gì?</div>
+        <div class="ex-word">{{ currentCard?.front }}</div>
+        <div class="ex-ipa" *ngIf="currentCard?.ipa">{{ currentCard?.ipa }}</div>
+        <div class="mc-choices">
+          <button
+            class="mc-choice"
+            *ngFor="let choice of mcChoices()"
+            [class.selected]="selectedChoice() === choice"
+            [class.correct]="selectedChoice() && choice === currentCard?.back"
+            [class.wrong]="selectedChoice() === choice && choice !== currentCard?.back"
+            (click)="selectChoice(choice)"
+            [disabled]="!!selectedChoice()"
+          >
+            {{ choice }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 2: Recall — Type the word -->
+      <div class="exercise-card stage-2" *ngSwitchCase="2">
+        <div class="ex-prompt">Từ tiếng Anh của nghĩa này là gì?</div>
+        <div class="ex-meaning">{{ currentCard?.back }}</div>
+        <div class="recall-input-wrap">
+          <input
+            type="text"
+            class="recall-input"
+            placeholder="Nhập từ tiếng Anh..."
+            [(ngModel)]="inputAnswer"
+            (keyup.enter)="submitRecall()"
+            autocomplete="off"
+            autofocus
+          />
+        </div>
+        <button class="btn-primary" (click)="submitRecall()" [disabled]="!inputAnswer.trim() || submitLoading()">
+          <i class="fa-solid fa-paper-plane"></i> Kiểm tra
+        </button>
+      </div>
+
+      <!-- Stage 3: Pronunciation — Self-assessed -->
+      <div class="exercise-card stage-3" *ngSwitchCase="3">
+        <div class="ex-prompt">Đọc to từ này:</div>
+        <div class="ex-word">{{ currentCard?.front }}</div>
+        <div class="ipa-display" *ngIf="currentCard?.ipa">
+          <i class="fa-solid fa-headphones"></i> {{ currentCard?.ipa }}
+        </div>
+        <div class="card-example" *ngIf="currentCard?.examples?.[0]">
+          <i class="fa-solid fa-quote-left"></i>
+          {{ currentCard?.examples?.[0]?.text }}
+        </div>
+        <div class="self-assess-btns">
+          <button class="btn-secondary" (click)="markPronunciation(false)">
+            <i class="fa-solid fa-xmark"></i> Chưa tự tin
+          </button>
+          <button class="btn-primary" (click)="markPronunciation(true)">
+            <i class="fa-solid fa-check"></i> Đọc tốt!
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 4: Production — Fill in blank -->
+      <div class="exercise-card stage-4" *ngSwitchCase="4">
+        <div class="ex-prompt">Điền từ vào chỗ trống:</div>
+        <div class="fill-sentence">{{ fillBlankSentence() || 'Điền: ' + currentCard?.back }}</div>
+        <div class="recall-input-wrap">
+          <input
+            type="text"
+            class="recall-input"
+            placeholder="Điền từ..."
+            [(ngModel)]="inputAnswer"
+            (keyup.enter)="submitFillBlank()"
+            autocomplete="off"
+            autofocus
+          />
+        </div>
+        <button class="btn-primary" (click)="submitFillBlank()" [disabled]="!inputAnswer.trim() || submitLoading()">
+          <i class="fa-solid fa-paper-plane"></i> Kiểm tra
+        </button>
+      </div>
+
+      <!-- Stage 5+: Default → treat as stage 2 -->
+      <div class="exercise-card stage-2" *ngSwitchDefault>
+        <div class="ex-prompt">Từ tiếng Anh của nghĩa này?</div>
+        <div class="ex-meaning">{{ currentCard?.back }}</div>
+        <div class="recall-input-wrap">
+          <input type="text" class="recall-input" placeholder="Nhập từ..."
+                 [(ngModel)]="inputAnswer" (keyup.enter)="submitRecall()" autofocus />
+        </div>
+        <button class="btn-primary" (click)="submitRecall()" [disabled]="!inputAnswer.trim()">
+          <i class="fa-solid fa-paper-plane"></i> Kiểm tra
+        </button>
+      </div>
+
+    </ng-container>
+  </div>
+
+</div>
