@@ -213,6 +213,21 @@
   font-style: italic;
 }
 
+.clickable-topic-badge {
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 51, 119, 0.3);
+  }
+}
+
 .card-meaning {
   font-size: 0.9rem;
   color: var(--text-muted);

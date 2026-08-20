@@ -49,7 +49,29 @@ Backend auth trả về `{ success, data: { id, username, ... } }` — không ph
 CORS được cấu hình bằng `allowedOriginPatterns("http://localhost:*")` ở backend.
 Không cần sửa Angular để fix CORS — sửa backend `CorsConfig.java`.
 
-### 6. Luôn chạy `ng build` để verify trước khi kết luận "done"
+### 6. Luôn ưu tiên tái sử dụng Shared Suite (`@shared`)
+Đã có đầy đủ các thành phần trong `src/app/shared/`. **TUYỆT ĐỐI KHÔNG** code lại thủ công:
+- **Components**:
+  - `PaginatorComponent` (`<app-paginator [currentPage]="p" [totalPages]="t" (pageChange)="onPage($event)" />`)
+  - `SearchBoxComponent` (`<app-search-box [placeholder]="..." (searchChange)="onSearch($event)" />`)
+  - `EmptyStateComponent` (`<app-empty-state [title]="..." [description]="..." (actionClick)="..." />`)
+  - `StarRatingComponent` (`<app-star-rating [rating]="r" (ratingChange)="onRate($event)" />`)
+  - `ConfirmDialogService` (`this.confirmDialog.confirm({ title, message, type: 'danger' }).subscribe(ok => ...)`)
+- **Pipes**: `SafeHtmlPipe`, `TimeAgoPipe`, `TruncatePipe`, `StageLabelPipe`
+- **Directives**: `ClickOutsideDirective` (`(appClickOutside)="..."`), `ScrollEventDirective`, `SwipeDirective`, `TooltipDirective` (`[appTooltip]="..."`)
+- **Enums**: Luôn import từ `src/app/shared/enums/` (`CardStatus`, `PracticeStage`, `ComicStatus`, `UserRole`, `RelationType`, `FormalityLevel`...) thay vì dùng string literals tùy tiện.
+
+### 7. Luôn áp dụng Live Auto-Filter (Debounce) khi làm tìm kiếm
+Khi tạo ô input tìm kiếm hoặc bộ lọc text:
+- **BẮT BUỘC** dùng `Subject` với `debounceTime(250)` hoặc `(ngModelChange)` để tự động lọc dữ liệu khi người dùng gõ phím.
+- **KHÔNG** bắt người dùng phải nhấn nút Tìm kiếm hay nhấn Enter mới thực hiện lọc.
+
+### 8. Luôn subscribe `route.paramMap` cho các trang chi tiết (`:id`)
+- Khi màn hình có thể chuyển đổi giữa các đối tượng cùng loại (ví dụ: từ từ vựng này sang từ liên quan khác `/vocab/word/:id`):
+- **BẮT BUỘC** dùng `this.route.paramMap.subscribe(...)`.
+- **TUYỆT ĐỐI KHÔNG** chỉ dùng `route.snapshot.paramMap.get('id')` vì cơ chế Route Reuse của Angular sẽ không reload dữ liệu khi đổi ID.
+
+### 9. Luôn chạy `ng build` để verify trước khi kết luận "done"
 ```bash
 cd d:\Others\my-projects\EngComic_angular
 npx ng build --configuration=development

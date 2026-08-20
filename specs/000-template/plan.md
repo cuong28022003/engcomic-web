@@ -83,6 +83,9 @@ src/app/features/[feature]/
 ---
 
 ## 6. Verification & Quality Checklist
+- [ ] Tái sử dụng Shared Suite (`@shared`: Paginator, SearchBox, EmptyState, StarRating, ConfirmDialog, Pipes, Directives).
+- [ ] Ô tìm kiếm / bộ lọc luôn sử dụng live auto-filter với debounce 250ms–300ms.
+- [ ] Trang chi tiết (`/path/:id`) bắt buộc lắng nghe `route.paramMap.subscribe(...)` để hỗ trợ chuyển đổi mượt mà.
 - [ ] Responsive UI verified on mobile and desktop viewports.
 - [ ] Build passes with `npx ng build --configuration=development` (0 errors).
 - [ ] Verified API connection with `BACKEND_CONTRACT.md`.

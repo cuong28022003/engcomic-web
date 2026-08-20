@@ -1,8 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CardApiService } from '@services/card-api.service';
 import { PendingItemApiService } from '@services/pending-item-api.service';
+import { PendingCountService } from '@services/pending-count.service';
+import { DictionaryApiService, WordPronunciationData } from '@services/dictionary-api.service';
 import { Card, WordRelation, CardDetailResponse } from '@models/index';
 
 type RelationTab = 'family' | 'collocation' | 'synonym';
@@ -14,37 +17,93 @@ type RelationTab = 'family' | 'collocation' | 'synonym';
   templateUrl: './word-detail.component.html',
   styleUrls: ['./word-detail.component.scss'],
 })
-export class WordDetailComponent implements OnInit {
+export class WordDetailComponent implements OnInit, OnDestroy {
   card = signal<Card | null>(null);
   reverseRelations = signal<Card[]>([]);
   loading = signal(true);
   activeRelTab = signal<RelationTab>('family');
   activeExampleFormality = signal<string>('all');
   addingPending = signal<Set<string>>(new Set());
-  addedPending = signal<Set<string>>(new Set());
+
+  // Pronunciation & Accents
+  pronunciationData = signal<WordPronunciationData | null>(null);
+  playingAccent = signal<'us' | 'uk' | null>(null);
+
+  private routeSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private cardApi: CardApiService,
-    private pendingApi: PendingItemApiService
+    private pendingApi: PendingItemApiService,
+    public pendingCountService: PendingCountService,
+    private dictionaryApi: DictionaryApiService
   ) {}
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) this.loadCard(id);
+    this.pendingCountService.refresh();
+
+    this.routeSub = this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.loadCard(id);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
   }
 
   loadCard(id: string) {
     this.loading.set(true);
+    this.pronunciationData.set(null);
+
     this.cardApi.getCardDetail(id).subscribe({
       next: (res: CardDetailResponse) => {
-        this.card.set(res.card);
-        this.reverseRelations.set(res.reverseRelations ?? []);
+        const c = res?.card;
+        this.card.set(c);
+        this.reverseRelations.set(res?.reverseRelations ?? []);
         this.loading.set(false);
+
+        const word = c?.word || c?.front;
+        if (word) {
+          this.loadPronunciation(word);
+        }
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  loadPronunciation(word: string) {
+    this.dictionaryApi.getPronunciation(word).subscribe({
+      next: (data) => {
+        this.pronunciationData.set(data);
+      }
+    });
+  }
+
+  playAccent(accent: 'us' | 'uk') {
+    const c = this.card();
+    const word = c?.word || c?.front;
+    if (!word) return;
+
+    this.playingAccent.set(accent);
+    const audioUrl = accent === 'us'
+      ? (this.pronunciationData()?.us.audioUrl || c?.audio)
+      : (this.pronunciationData()?.uk.audioUrl || c?.audio);
+
+    this.dictionaryApi.speak(word, accent, audioUrl).finally(() => {
+      this.playingAccent.set(null);
+    });
+  }
+
+  get usIpa(): string {
+    return this.pronunciationData()?.us.ipa || this.card()?.ipa || '';
+  }
+
+  get ukIpa(): string {
+    return this.pronunciationData()?.uk.ipa || this.card()?.ipa || '';
   }
 
   get familyRelations(): WordRelation[] {
@@ -66,6 +125,15 @@ export class WordDetailComponent implements OnInit {
     return examples.filter(e => e.formality === f);
   }
 
+  getRelationWord(rel: WordRelation): string {
+    return (rel.text || rel.relatedText || rel.word || '').trim();
+  }
+
+  isWordInCollector(rel: WordRelation): boolean {
+    const word = this.getRelationWord(rel);
+    return this.pendingCountService.isWordPending(word);
+  }
+
   getPosLabel(pos?: string): string {
     const map: Record<string, string> = {
       noun: 'n', verb: 'v', adjective: 'adj', adverb: 'adv'
@@ -85,8 +153,8 @@ export class WordDetailComponent implements OnInit {
   }
 
   addToPending(rel: WordRelation) {
-    const key = rel.text || rel.relatedText || rel.word || '';
-    if (!key || this.addedPending().has(key) || this.addingPending().has(key)) return;
+    const key = this.getRelationWord(rel);
+    if (!key || this.isWordInCollector(rel) || this.addingPending().has(key)) return;
 
     this.addingPending.update(s => { const n = new Set(s); n.add(key); return n; });
 
@@ -97,7 +165,7 @@ export class WordDetailComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.addingPending.update(s => { const n = new Set(s); n.delete(key); return n; });
-        this.addedPending.update(s => { const n = new Set(s); n.add(key); return n; });
+        this.pendingCountService.addPendingWord(key);
       },
       error: () => {
         this.addingPending.update(s => { const n = new Set(s); n.delete(key); return n; });
@@ -105,8 +173,17 @@ export class WordDetailComponent implements OnInit {
     });
   }
 
-  navigateToRelated(cardId: string) {
+  navigateToRelated(cardId?: string) {
+    if (!cardId) return;
     this.router.navigate(['/vocab/word', cardId]);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  filterByTopic(topic?: string) {
+    if (!topic) return;
+    this.router.navigate(['/vocab'], { queryParams: { topic } });
   }
 
   startPractice() {

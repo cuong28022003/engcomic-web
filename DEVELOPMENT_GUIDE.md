@@ -265,7 +265,65 @@ import { environment } from '@env/environment';
 
 ---
 
-## 11. Environment Config
+## 11. Hướng dẫn sử dụng Shared Suite (`@shared`)
+
+### 11.1 Reusable Components
+```typescript
+import {
+  PaginatorComponent,
+  SearchBoxComponent,
+  EmptyStateComponent,
+  StarRatingComponent,
+  ConfirmDialogService
+} from '@shared';
+
+// 1. Phân trang
+<app-paginator [currentPage]="page" [totalPages]="total" (pageChange)="onPageChange($event)" />
+
+// 2. Tìm kiếm tự động (debounce 300ms)
+<app-search-box placeholder="Tìm kiếm..." (searchChange)="onLiveSearch($event)" />
+
+// 3. Khung trống (Empty State)
+<app-empty-state icon="fa-regular fa-folder-open" title="Chưa có dữ liệu" (actionClick)="onAdd()" />
+
+// 4. Đánh giá sao (1-5 sao)
+<app-star-rating [rating]="score" (ratingChange)="onRate($event)" />
+
+// 5. Popup xác nhận toàn cục (Confirm Dialog)
+const dialog = inject(ConfirmDialogService);
+dialog.confirm({
+  title: 'Xóa từ vựng',
+  message: 'Bạn có chắc chắn muốn xóa từ này?',
+  type: 'danger',
+  confirmText: 'Xóa ngay'
+}).subscribe(confirmed => {
+  if (confirmed) this.deleteItem();
+});
+```
+
+### 11.2 Pipes & Directives
+```html
+<!-- Safe HTML -->
+<div [innerHTML]="htmlContent | safeHtml"></div>
+
+<!-- Time Ago -->
+<span>{{ createdAt | timeAgo }}</span>
+
+<!-- Truncate -->
+<p>{{ longText | truncate:60 }}</p>
+
+<!-- Stage Label -->
+<span class="badge">{{ stage | stageLabel }}</span>
+
+<!-- Directives -->
+<div (appClickOutside)="closeDropdown()">...</div>
+<button [appTooltip]="'Nhấn để xem chi tiết'" tooltipPosition="top">...</button>
+<div (appSwipe)="onSwipeLeft()">...</div>
+```
+
+---
+
+## 12. Environment Config
 
 ```typescript
 // src/environments/environment.ts (dev)
@@ -284,7 +342,7 @@ const BASE_URL = environment.apiUrl;
 
 ---
 
-## 12. Checklist trước khi commit
+## 13. Checklist trước khi commit
 
 - [ ] `ng build --configuration=development` không có lỗi
 - [ ] Không để `console.log()` thừa trong production code

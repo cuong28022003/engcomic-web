@@ -234,3 +234,20 @@ button, input, select, textarea {
     padding-right: 14px;
   }
 }
+
+/* Custom Tooltip */
+.app-custom-tooltip {
+  background: rgba(18, 22, 34, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+  white-space: nowrap;
+}

@@ -1,9 +1,12 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { CardApiService } from '@services/card-api.service';
-import { Card, DashboardStats, PageResponse } from '@models/index';
+import { PendingCountService } from '@services/pending-count.service';
+import { Card, DashboardStats } from '@models/index';
 
 @Component({
   selector: 'app-vocab-dashboard',
@@ -12,7 +15,7 @@ import { Card, DashboardStats, PageResponse } from '@models/index';
   templateUrl: './vocab-dashboard.component.html',
   styleUrls: ['./vocab-dashboard.component.scss'],
 })
-export class VocabDashboardComponent implements OnInit {
+export class VocabDashboardComponent implements OnInit, OnDestroy {
   stats = signal<DashboardStats>({
     total: 0, dueToday: 0, newCount: 0,
     learningCount: 0, matureCount: 0, leechCount: 0
@@ -27,13 +30,42 @@ export class VocabDashboardComponent implements OnInit {
   filterStatus = '';
   filterTopic = '';
 
+  private querySub?: Subscription;
+  private searchSubject = new Subject<void>();
+  private searchSub?: Subscription;
+
   constructor(
     private cardApi: CardApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    public pendingCountService: PendingCountService
   ) {}
 
+  get pendingCount() {
+    return this.pendingCountService.pendingCount;
+  }
+
   ngOnInit() {
-    this.loadDashboard();
+    this.pendingCountService.refresh();
+
+    // Auto debounce live search & filter
+    this.searchSub = this.searchSubject.pipe(
+      debounceTime(250)
+    ).subscribe(() => {
+      this.loadDashboard(0);
+    });
+
+    this.querySub = this.route.queryParams.subscribe((params) => {
+      if (params['topic'] !== undefined) {
+        this.filterTopic = params['topic'];
+      }
+      this.loadDashboard(0);
+    });
+  }
+
+  ngOnDestroy() {
+    this.querySub?.unsubscribe();
+    this.searchSub?.unsubscribe();
   }
 
   loadDashboard(page = 0) {
@@ -70,11 +102,21 @@ export class VocabDashboardComponent implements OnInit {
     });
   }
 
-  onSearch() {
-    this.loadDashboard(0);
+  onSearchInput() {
+    this.searchSubject.next();
+  }
+
+  onTopicInput() {
+    this.searchSubject.next();
   }
 
   onFilterChange() {
+    this.loadDashboard(0);
+  }
+
+  filterByTopic(topic?: string) {
+    if (!topic) return;
+    this.filterTopic = topic;
     this.loadDashboard(0);
   }
 
@@ -82,6 +124,7 @@ export class VocabDashboardComponent implements OnInit {
     this.searchQuery = '';
     this.filterStatus = '';
     this.filterTopic = '';
+    this.router.navigate([], { relativeTo: this.route, queryParams: {} });
     this.loadDashboard(0);
   }
 

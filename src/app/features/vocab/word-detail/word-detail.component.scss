@@ -25,7 +25,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .hero-word {
@@ -42,35 +42,111 @@
   padding-top: 8px;
 }
 
+.clickable-topic {
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  &:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 51, 119, 0.3);
+  }
+}
+
+// ── Pronunciation & Audio ──────────────────────────────────────────
 .hero-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.ipa {
-  font-size: 1.05rem;
-  color: var(--text-muted);
-  font-style: italic;
-  letter-spacing: 0.5px;
-}
-
-.audio-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 51, 119, 0.12);
-  border: 1px solid rgba(255, 51, 119, 0.3);
-  color: var(--primary-color);
-  cursor: pointer;
+.pronunciation-group {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  transition: all 0.2s;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-  &:hover { background: rgba(255, 51, 119, 0.22); transform: scale(1.1); }
+.accent-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .flag {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  .accent-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .accent-ipa {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--text-muted);
+    font-family: 'Times New Roman', serif;
+  }
+
+  i {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+
+    i { color: var(--primary-color); }
+  }
+
+  &.us-btn:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15);
+    i { color: #38bdf8; }
+  }
+
+  &.uk-btn:hover {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.15);
+    i { color: #ef4444; }
+  }
+
+  &.playing {
+    background: rgba(255, 51, 119, 0.15);
+    border-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255, 51, 119, 0.35);
+    animation: pulsePlay 1.2s infinite ease-in-out;
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+}
+
+@keyframes pulsePlay {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
 }
 
 .hero-meaning {
@@ -276,7 +352,26 @@
   transition: all 0.2s;
   white-space: nowrap;
 
-  &:hover { background: rgba(16,185,129,0.22); }
+  &:hover {
+    background: rgba(16,185,129,0.22);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  }
+}
+
+.rel-btn-in-collector {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .rel-btn-add {
@@ -294,13 +389,10 @@
   transition: all 0.2s;
   white-space: nowrap;
 
-  &:hover { background: rgba(99,102,241,0.22); }
-
-  &.added {
-    background: rgba(16,185,129,0.12);
-    border-color: rgba(16,185,129,0.3);
-    color: var(--success-color);
-    cursor: default;
+  &:hover {
+    background: rgba(99,102,241,0.22);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
   }
 
   &:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -335,7 +427,11 @@
 
   i { color: var(--text-dim); font-size: 0.78rem; }
 
-  &:hover { border-color: var(--border-glow); color: #fff; }
+  &:hover {
+    border-color: var(--border-glow);
+    color: #fff;
+    transform: translateY(-1px);
+  }
 }
 
 // ── Loading ──────────────────────────────────────────────────────────

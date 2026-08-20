@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PendingItemApiService } from '@services/pending-item-api.service';
+import { PendingCountService } from '@services/pending-count.service';
 import { PendingItem } from '@models/index';
 
 @Component({
@@ -23,6 +24,7 @@ export class WordCollectorComponent implements OnInit {
 
   constructor(
     private pendingApi: PendingItemApiService,
+    public pendingCountService: PendingCountService,
     private router: Router
   ) {}
 
@@ -32,9 +34,10 @@ export class WordCollectorComponent implements OnInit {
 
   loadItems() {
     this.loading.set(true);
-    this.pendingApi.getAll({ status: 'pending', page: 0, size: 100 }).subscribe({
+    this.pendingApi.getAll({ status: 'pending', page: 0, size: 200 }).subscribe({
       next: (res) => {
-        this.items.set(res.content);
+        this.items.set(res?.content ?? []);
+        this.pendingCountService.refresh();
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
@@ -42,11 +45,14 @@ export class WordCollectorComponent implements OnInit {
   }
 
   addManual() {
-    if (!this.newWord.trim() || this.addingManual) return;
+    const word = this.newWord.trim();
+    if (!word || this.addingManual) return;
     this.addingManual = true;
-    this.pendingApi.addManual(this.newWord.trim()).subscribe({
+
+    this.pendingApi.addManual(word).subscribe({
       next: (item) => {
         this.items.update(list => [item, ...list]);
+        this.pendingCountService.addPendingWord(word);
         this.newWord = '';
         this.addingManual = false;
       },
@@ -56,7 +62,10 @@ export class WordCollectorComponent implements OnInit {
 
   removeItem(item: PendingItem) {
     this.pendingApi.remove(item.id).subscribe({
-      next: () => this.items.update(list => list.filter(i => i.id !== item.id))
+      next: () => {
+        this.items.update(list => list.filter(i => i.id !== item.id));
+        this.pendingCountService.removePendingWord(item.content);
+      }
     });
   }
 

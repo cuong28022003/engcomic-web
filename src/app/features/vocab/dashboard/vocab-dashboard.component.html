@@ -9,7 +9,7 @@
     <div class="header-actions">
       <button class="btn-secondary" (click)="goToCollector()">
         <i class="fa-solid fa-inbox"></i> Collector
-        <span class="action-badge" *ngIf="stats().dueToday > 0">{{ stats().dueToday }}</span>
+        <span class="action-badge" *ngIf="pendingCount() > 0">{{ pendingCount() }}</span>
       </button>
       <button class="btn-secondary" (click)="goToImport()">
         <i class="fa-solid fa-file-import"></i> Import
@@ -64,7 +64,7 @@
         class="search-input"
         placeholder="Tìm từ vựng..."
         [(ngModel)]="searchQuery"
-        (keyup.enter)="onSearch()"
+        (ngModelChange)="onSearchInput()"
       />
     </div>
     <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
@@ -79,7 +79,7 @@
       class="filter-input"
       placeholder="Chủ đề..."
       [(ngModel)]="filterTopic"
-      (keyup.enter)="onFilterChange()"
+      (ngModelChange)="onTopicInput()"
     />
     <button class="btn-icon" (click)="clearFilters()" title="Xóa bộ lọc">
       <i class="fa-solid fa-xmark"></i>
@@ -113,7 +113,14 @@
         <div class="card-word-row">
           <span class="card-word">{{ card.word || card.front }}</span>
           <span class="card-ipa" *ngIf="card.ipa">{{ card.ipa }}</span>
-          <span class="badge badge-genre" *ngIf="card.topic">{{ card.topic }}</span>
+          <span
+            class="badge badge-genre clickable-topic-badge"
+            *ngIf="card.topic"
+            (click)="$event.stopPropagation(); filterByTopic(card.topic)"
+            title="Lọc các từ thuộc chủ đề '{{ card.topic }}'"
+          >
+            <i class="fa-solid fa-tag"></i> {{ card.topic }}
+          </span>
         </div>
         <div class="card-meaning">{{ card.meaning || card.back }}</div>
         <div class="card-definition" *ngIf="card.definitionEn">{{ card.definitionEn }}</div>
