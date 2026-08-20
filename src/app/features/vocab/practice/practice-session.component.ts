@@ -79,29 +79,30 @@ export class PracticeSessionComponent implements OnInit {
     if (stage === 1) {
       // Build multiple choice options
       const allCards = this.cards();
+      const currentMeaning = card.meaning || card.back || '';
       const wrong = allCards
-        .filter(c => c.id !== card.id && c.back)
+        .filter(c => c.id !== card.id && (c.meaning || c.back))
         .sort(() => Math.random() - 0.5)
         .slice(0, 3)
-        .map(c => c.back);
-      const choices = [card.back, ...wrong].sort(() => Math.random() - 0.5);
+        .map(c => c.meaning || c.back || '');
+      const choices: string[] = [currentMeaning, ...wrong].sort(() => Math.random() - 0.5);
       this.mcChoices.set(choices);
     }
 
     if (stage === 4) {
       // Pick a random example for fill-in-blank
       const examples = card.examples ?? [];
-      if (examples.length > 0) {
+      const word = card.word || card.front || '';
+      if (examples.length > 0 && word) {
         const ex = examples[Math.floor(Math.random() * examples.length)];
-        const word = card.front;
         const blank = '_'.repeat(word.length);
-        const sentence = ex.text.replace(new RegExp(word, 'gi'), blank);
+        const sentence = (ex.text || '').replace(new RegExp(word, 'gi'), blank);
         this.fillBlankSentence.set(sentence);
-        this.fillBlankAnswer.set(card.front);
+        this.fillBlankAnswer.set(word);
       } else {
         // Fallback: treat as recall
         this.fillBlankSentence.set('');
-        this.fillBlankAnswer.set(card.front);
+        this.fillBlankAnswer.set(word);
       }
     }
 
@@ -121,7 +122,7 @@ export class PracticeSessionComponent implements OnInit {
   selectChoice(choice: string) {
     if (this.selectedChoice()) return;
     this.selectedChoice.set(choice);
-    const correct = choice === this.currentCard?.back;
+    const correct = choice === (this.currentCard?.meaning || this.currentCard?.back);
     this.lastAnswerCorrect.set(correct);
     this.state.set('feedback');
     this.submitResult(correct ? 5 : 1);
@@ -130,7 +131,8 @@ export class PracticeSessionComponent implements OnInit {
   // Stage 2 — recall (type the word)
   submitRecall() {
     const answer = this.inputAnswer.trim().toLowerCase();
-    const correct = this.currentCard?.front?.toLowerCase() === answer;
+    const targetWord = (this.currentCard?.word || this.currentCard?.front || '').toLowerCase();
+    const correct = targetWord === answer;
     this.lastAnswerCorrect.set(correct);
     this.state.set('feedback');
     this.submitResult(correct ? 5 : 1);

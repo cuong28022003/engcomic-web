@@ -201,9 +201,22 @@ Response trả về flat fields thay vì nested `stats`:
 ### `GET /api/card/:id`
 ```json
 {
-  "card": { "id": "...", "front": "decision", "back": "quyết định", ... },
+  "card": {
+    "id": "...",
+    "word": "decision",
+    "meaning": "sự quyết định",
+    "ipa": "/dɪˈsɪʒ.ən/",
+    "partOfSpeech": "noun",
+    "definitionEn": "a choice or judgment made after considering options",
+    "examples": [
+      { "id": "...", "text": "The manager made a quick decision.", "translation": null, "formality": "formal" }
+    ],
+    "relations": [
+      { "text": "decide", "type": "family", "pos": "verb", "relatedCardId": "..." }
+    ]
+  },
   "reverseRelations": [
-    { "id": "...", "front": "decide", "back": "quyết định", ... }
+    { "id": "...", "word": "decide", "meaning": "quyết định", ... }
   ]
 }
 ```
@@ -221,3 +234,5 @@ Response trả về flat fields thay vì nested `stats`:
 | `PageParams` type error | `PageParams` interface thiếu index signature | Thêm `[key: string]: string \| number \| boolean \| undefined` vào `PageParams` |
 | Rating 404 | `RatingApiService.BASE = '/rating'` nhưng backend route là `/ratings` | Đổi thành `/ratings` |
 | `Cannot read properties of undefined (reading 'dueToday')` | Backend `GET /api/card/dashboard` trả về `totalCards`, `dueToday`, `newCount`... ở root object thay vì nested trong `stats` | Cập nhật `DashboardResponse` interface và map trực tiếp từ `res.totalCards`, `res.dueToday` |
+| `ExampleSentence` và `WordRelation` chỉ lưu `_id` | `BatchImportCardInteractor` map cứng key `en`, `vi`, `context`, `word`, `meaning` trong khi AI trả `text`, `formality`, `pos`... | Cập nhật hàm `getString()` hỗ trợ đa dạng alias (snake_case + camelCase) và map đầy đủ vào entity |
+| Thuật ngữ `front`/`back` khó hình dung | Thuật ngữ cũ từ flashcard | Đã đổi sang `word` (từ tiếng Anh) và `meaning` (nghĩa tiếng Việt) trên cả Backend và Frontend |

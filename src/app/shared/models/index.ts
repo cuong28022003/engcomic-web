@@ -116,17 +116,21 @@ export interface Deck {
 }
 
 export interface WordRelation {
-  relatedText: string;
-  relationType: 'family' | 'collocation' | 'synonym';
+  text: string;             // từ liên quan
+  type: 'family' | 'collocation' | 'synonym';
   pos?: string;             // noun | verb | adjective | adverb (chỉ cho family)
   relatedCardId?: string;   // null nếu chưa auto-link
+  // Backward compatibility
+  relatedText?: string;
+  relationType?: 'family' | 'collocation' | 'synonym';
+  word?: string;
 }
 
 export interface ExampleSentence {
   id?: string;
-  text: string;
+  text: string;             // câu ví dụ tiếng Anh
+  translation?: string;     // nghĩa tiếng Việt
   formality?: 'formal' | 'informal' | 'written';
-  translation?: string;
   source?: string;
 }
 
@@ -134,11 +138,12 @@ export interface Card {
   id: string;
   deckId?: string;
   userId?: string;
-  // Nội dung từ vựng
-  front: string;            // word / phrase
-  back: string;             // meaning_vi
+  // Nội dung từ vựng chính
+  word: string;             // từ / cụm từ tiếng Anh
+  meaning: string;          // nghĩa tiếng Việt
   ipa?: string;
   audio?: string;
+  partOfSpeech?: string;
   definitionEn?: string;
   usageNote?: string;
   topic?: string;
@@ -158,7 +163,8 @@ export interface Card {
   createdAt?: string;
   updatedAt?: string;
   // Legacy fields (backward compat)
-  meaning?: string;
+  front?: string;
+  back?: string;
   example?: string;
   difficulty?: number;
 }

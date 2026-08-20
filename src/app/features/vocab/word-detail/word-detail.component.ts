@@ -48,15 +48,15 @@ export class WordDetailComponent implements OnInit {
   }
 
   get familyRelations(): WordRelation[] {
-    return this.card()?.relations?.filter(r => r.relationType === 'family') ?? [];
+    return this.card()?.relations?.filter(r => (r.type || r.relationType) === 'family') ?? [];
   }
 
   get collocationRelations(): WordRelation[] {
-    return this.card()?.relations?.filter(r => r.relationType === 'collocation') ?? [];
+    return this.card()?.relations?.filter(r => (r.type || r.relationType) === 'collocation') ?? [];
   }
 
   get synonymRelations(): WordRelation[] {
-    return this.card()?.relations?.filter(r => r.relationType === 'synonym') ?? [];
+    return this.card()?.relations?.filter(r => (r.type || r.relationType) === 'synonym') ?? [];
   }
 
   get filteredExamples() {
@@ -85,14 +85,14 @@ export class WordDetailComponent implements OnInit {
   }
 
   addToPending(rel: WordRelation) {
-    const key = rel.relatedText;
-    if (this.addedPending().has(key) || this.addingPending().has(key)) return;
+    const key = rel.text || rel.relatedText || rel.word || '';
+    if (!key || this.addedPending().has(key) || this.addingPending().has(key)) return;
 
     this.addingPending.update(s => { const n = new Set(s); n.add(key); return n; });
 
     this.pendingApi.create({
-      content: rel.relatedText,
-      sourceType: rel.relationType,
+      content: key,
+      sourceType: rel.type || rel.relationType,
       sourceCardId: this.card()?.id
     }).subscribe({
       next: () => {

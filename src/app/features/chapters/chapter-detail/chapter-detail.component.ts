@@ -583,8 +583,8 @@ export class ChapterDetailComponent implements OnInit {
     this.cardApi
       .createCard({
         deckId: this.selectedDeckId,
-        front: this.translationResult.word,
-        back: this.translationResult.meaning || '',
+        word: this.translationResult.word,
+        meaning: this.translationResult.meaning || '',
         ipa: this.translationResult.ipa || '',
       })
       .subscribe({

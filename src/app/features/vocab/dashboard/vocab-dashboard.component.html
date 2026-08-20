@@ -111,11 +111,11 @@
     >
       <div class="card-main">
         <div class="card-word-row">
-          <span class="card-word">{{ card.front }}</span>
+          <span class="card-word">{{ card.word || card.front }}</span>
           <span class="card-ipa" *ngIf="card.ipa">{{ card.ipa }}</span>
           <span class="badge badge-genre" *ngIf="card.topic">{{ card.topic }}</span>
         </div>
-        <div class="card-meaning">{{ card.back }}</div>
+        <div class="card-meaning">{{ card.meaning || card.back }}</div>
         <div class="card-definition" *ngIf="card.definitionEn">{{ card.definitionEn }}</div>
       </div>
 

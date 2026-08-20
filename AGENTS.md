@@ -9,12 +9,13 @@
 
 Khi nhận task mới, AI phải đọc theo thứ tự ưu tiên:
 
-1. **`BACKEND_CONTRACT.md`** — Đọc trước khi viết bất kỳ API call nào. Chứa response format thực tế, field name thực tế, và các bugs đã fix.
-2. **`UI_STYLE_GUIDE.md`** — Đọc trước khi viết bất kỳ UI/template/style nào. Chứa color tokens, component patterns, animation rules, DO/DON'T.
-3. **`ARCHITECTURE.md`** — Đọc khi cần thêm feature mới hoặc refactor. Chứa cấu trúc folder, pattern, design system tokens.
-4. **`DEVELOPMENT_GUIDE.md`** — Đọc khi cần biết cách đặt tên, tạo component/service/model mới.
-5. **`API_REFERENCE.md`** — Tham khảo danh sách endpoint. Nhưng **luôn ưu tiên** `BACKEND_CONTRACT.md` nếu có mâu thuẫn.
-6. **`README.md`** — Tổng quan project.
+1. **`specs/`** — Thư mục đặc tả từng tính năng (`spec.md` cho yêu cầu, `plan.md` cho kiến trúc frontend, `tasks.md` cho checklist thực thi). Khi làm feature mới, copy từ `specs/000-template/`.
+2. **`BACKEND_CONTRACT.md`** — Đọc trước khi viết bất kỳ API call nào. Chứa response format thực tế, field name thực tế, và các bugs đã fix.
+3. **`UI_STYLE_GUIDE.md`** — Đọc trước khi viết bất kỳ UI/template/style nào. Chứa color tokens, component patterns, animation rules, DO/DON'T.
+4. **`ARCHITECTURE.md`** — Đọc khi cần thêm feature mới hoặc refactor. Chứa cấu trúc folder, pattern, design system tokens.
+5. **`DEVELOPMENT_GUIDE.md`** — Đọc khi cần biết cách đặt tên, tạo component/service/model mới.
+6. **`API_REFERENCE.md`** — Tham khảo danh sách endpoint. Nhưng **luôn ưu tiên** `BACKEND_CONTRACT.md` nếu có mâu thuẫn.
+7. **`README.md`** — Tổng quan project.
 
 ---
 

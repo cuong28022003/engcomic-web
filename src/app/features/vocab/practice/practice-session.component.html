@@ -46,7 +46,7 @@
         </div>
         <div class="feedback-text">
           <strong>{{ lastAnswerCorrect() ? 'Chính xác! 🎉' : 'Chưa đúng 😅' }}</strong>
-          <span *ngIf="!lastAnswerCorrect()">Đáp án: <b>{{ currentCard?.front }}</b> — {{ currentCard?.back }}</span>
+          <span *ngIf="!lastAnswerCorrect()">Đáp án: <b>{{ currentCard?.word || currentCard?.front }}</b> — {{ currentCard?.meaning || currentCard?.back }}</span>
         </div>
         <button class="btn-primary feedback-next" (click)="advance()" [disabled]="submitLoading()">
           Tiếp theo <i class="fa-solid fa-arrow-right"></i>
@@ -62,14 +62,14 @@
         <div class="card-flip" [class.flipped]="showingCard()">
           <div class="card-front">
             <div class="card-prompt">Từ mới</div>
-            <div class="card-word">{{ currentCard?.front }}</div>
+            <div class="card-word">{{ currentCard?.word || currentCard?.front }}</div>
             <div class="card-ipa" *ngIf="currentCard?.ipa">{{ currentCard?.ipa }}</div>
             <button class="btn-primary reveal-btn" *ngIf="!showingCard()" (click)="flipCard()">
               <i class="fa-solid fa-eye"></i> Xem nghĩa
             </button>
           </div>
           <div class="card-back" *ngIf="showingCard()">
-            <div class="card-meaning">{{ currentCard?.back }}</div>
+            <div class="card-meaning">{{ currentCard?.meaning || currentCard?.back }}</div>
             <div class="card-definition" *ngIf="currentCard?.definitionEn">{{ currentCard?.definitionEn }}</div>
             <div class="card-example" *ngIf="currentCard?.examples?.[0]">
               <i class="fa-solid fa-quote-left"></i>
@@ -85,15 +85,15 @@
       <!-- Stage 1: Recognition — Multiple Choice -->
       <div class="exercise-card stage-1" *ngSwitchCase="1">
         <div class="ex-prompt">Nghĩa của từ này là gì?</div>
-        <div class="ex-word">{{ currentCard?.front }}</div>
+        <div class="ex-word">{{ currentCard?.word || currentCard?.front }}</div>
         <div class="ex-ipa" *ngIf="currentCard?.ipa">{{ currentCard?.ipa }}</div>
         <div class="mc-choices">
           <button
             class="mc-choice"
             *ngFor="let choice of mcChoices()"
             [class.selected]="selectedChoice() === choice"
-            [class.correct]="selectedChoice() && choice === currentCard?.back"
-            [class.wrong]="selectedChoice() === choice && choice !== currentCard?.back"
+            [class.correct]="selectedChoice() && choice === (currentCard?.meaning || currentCard?.back)"
+            [class.wrong]="selectedChoice() === choice && choice !== (currentCard?.meaning || currentCard?.back)"
             (click)="selectChoice(choice)"
             [disabled]="!!selectedChoice()"
           >
@@ -105,7 +105,7 @@
       <!-- Stage 2: Recall — Type the word -->
       <div class="exercise-card stage-2" *ngSwitchCase="2">
         <div class="ex-prompt">Từ tiếng Anh của nghĩa này là gì?</div>
-        <div class="ex-meaning">{{ currentCard?.back }}</div>
+        <div class="ex-meaning">{{ currentCard?.meaning || currentCard?.back }}</div>
         <div class="recall-input-wrap">
           <input
             type="text"
@@ -125,7 +125,7 @@
       <!-- Stage 3: Pronunciation — Self-assessed -->
       <div class="exercise-card stage-3" *ngSwitchCase="3">
         <div class="ex-prompt">Đọc to từ này:</div>
-        <div class="ex-word">{{ currentCard?.front }}</div>
+        <div class="ex-word">{{ currentCard?.word || currentCard?.front }}</div>
         <div class="ipa-display" *ngIf="currentCard?.ipa">
           <i class="fa-solid fa-headphones"></i> {{ currentCard?.ipa }}
         </div>
@@ -146,7 +146,7 @@
       <!-- Stage 4: Production — Fill in blank -->
       <div class="exercise-card stage-4" *ngSwitchCase="4">
         <div class="ex-prompt">Điền từ vào chỗ trống:</div>
-        <div class="fill-sentence">{{ fillBlankSentence() || 'Điền: ' + currentCard?.back }}</div>
+        <div class="fill-sentence">{{ fillBlankSentence() || 'Điền: ' + (currentCard?.meaning || currentCard?.back) }}</div>
         <div class="recall-input-wrap">
           <input
             type="text"
@@ -166,7 +166,7 @@
       <!-- Stage 5+: Default → treat as stage 2 -->
       <div class="exercise-card stage-2" *ngSwitchDefault>
         <div class="ex-prompt">Từ tiếng Anh của nghĩa này?</div>
-        <div class="ex-meaning">{{ currentCard?.back }}</div>
+        <div class="ex-meaning">{{ currentCard?.meaning || currentCard?.back }}</div>
         <div class="recall-input-wrap">
           <input type="text" class="recall-input" placeholder="Nhập từ..."
                  [(ngModel)]="inputAnswer" (keyup.enter)="submitRecall()" autofocus />

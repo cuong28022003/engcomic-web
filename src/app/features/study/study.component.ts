@@ -79,11 +79,11 @@ import { Card, Deck } from '@models/index';
             <!-- Card Front (English word + IPA + Audio) -->
             <div class="card-face card-front glass-panel">
               <span class="face-badge">Tiếng Anh</span>
-              <h2 class="card-word">{{ currentCard?.front }}</h2>
+              <h2 class="card-word">{{ currentCard?.word || currentCard?.front }}</h2>
               @if (currentCard?.ipa) {
                 <p class="card-ipa"><code>{{ currentCard?.ipa }}</code></p>
               }
-              <button class="btn-icon audio-btn" (click)="speak($event, currentCard?.front || '')" title="Nghe phát âm">
+              <button class="btn-icon audio-btn" (click)="speak($event, currentCard?.word || currentCard?.front || '')" title="Nghe phát âm">
                 <i class="fa-solid fa-volume-high"></i>
               </button>
               <span class="flip-hint"><i class="fa-solid fa-hand-pointer"></i> Nhấp thẻ hoặc nhấn Space để lật</span>
@@ -92,7 +92,7 @@ import { Card, Deck } from '@models/index';
             <!-- Card Back (Vietnamese Meaning + Example) -->
             <div class="card-face card-back glass-panel">
               <span class="face-badge back-badge">Nghĩa Tiếng Việt</span>
-              <h3 class="card-meaning">{{ currentCard?.back }}</h3>
+              <h3 class="card-meaning">{{ currentCard?.meaning || currentCard?.back }}</h3>
               @if (currentCard?.example) {
                 <div class="example-box">
                   <p class="example-text">"{{ currentCard?.example }}"</p>
@@ -465,7 +465,7 @@ export class StudyComponent implements OnInit, OnDestroy {
         this.cards = res.content || [];
         this.loading = false;
         if (this.cards.length > 0) {
-          this.speakWord(this.cards[0].front);
+          this.speakWord(this.cards[0].word || this.cards[0].front || '');
         }
       },
       error: () => {
@@ -487,7 +487,7 @@ export class StudyComponent implements OnInit, OnDestroy {
     if (this.currentIndex < this.cards.length - 1) {
       this.currentIndex++;
       this.isFlipped = false;
-      this.speakWord(this.currentCard?.front || '');
+      this.speakWord(this.currentCard?.word || this.currentCard?.front || '');
     } else {
       this.isFinished = true;
       this.awardStudyRewards();
@@ -506,7 +506,7 @@ export class StudyComponent implements OnInit, OnDestroy {
     this.currentIndex = 0;
     this.isFlipped = false;
     this.isFinished = false;
-    this.speakWord(this.cards[0]?.front || '');
+    this.speakWord(this.cards[0]?.word || this.cards[0]?.front || '');
   }
 
   speak(event: Event, text: string): void {

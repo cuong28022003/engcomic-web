@@ -16,7 +16,7 @@
     <!-- ── Hero Card ── -->
     <div class="hero-card glass-panel">
       <div class="hero-top">
-        <div class="hero-word">{{ c.front }}</div>
+        <div class="hero-word">{{ c.word || c.front }}</div>
         <div class="hero-badges">
           <span class="badge badge-genre" *ngIf="c.topic">{{ c.topic }}</span>
           <span class="badge badge-primary">{{ getStageLabel(c.stage) }}</span>
@@ -30,7 +30,7 @@
         </button>
       </div>
 
-      <div class="hero-meaning">{{ c.back }}</div>
+      <div class="hero-meaning">{{ c.meaning || c.back }}</div>
 
       <div class="hero-definition" *ngIf="c.definitionEn">
         <i class="fa-solid fa-quote-left quote-icon"></i>
@@ -99,7 +99,7 @@
       <div class="relation-grid" *ngIf="activeRelTab() === 'family'">
         <div class="relation-chip" *ngFor="let rel of familyRelations">
           <div class="rel-main">
-            <span class="rel-text">{{ rel.relatedText }}</span>
+            <span class="rel-text">{{ rel.text || rel.relatedText || rel.word }}</span>
             <span class="rel-pos" *ngIf="rel.pos">{{ getPosLabel(rel.pos) }}</span>
           </div>
           <button
@@ -113,13 +113,13 @@
           <button
             class="rel-btn-add"
             *ngIf="!rel.relatedCardId"
-            [disabled]="addingPending().has(rel.relatedText)"
-            [class.added]="addedPending().has(rel.relatedText)"
+            [disabled]="addingPending().has(rel.text || rel.relatedText || rel.word || '')"
+            [class.added]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"
             (click)="addToPending(rel)"
           >
-            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
-               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
-            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.text || rel.relatedText || rel.word || '')"
+               [class.fa-check]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"></i>
+            {{ addedPending().has(rel.text || rel.relatedText || rel.word || '') ? 'Đã thêm' : 'Thêm' }}
           </button>
         </div>
         <div class="empty-tab" *ngIf="familyRelations.length === 0">Không có họ từ</div>
@@ -129,19 +129,19 @@
       <div class="relation-grid" *ngIf="activeRelTab() === 'collocation'">
         <div class="relation-chip" *ngFor="let rel of collocationRelations">
           <div class="rel-main">
-            <span class="rel-text">{{ rel.relatedText }}</span>
+            <span class="rel-text">{{ rel.text || rel.relatedText || rel.word }}</span>
           </div>
           <button class="rel-btn-learned" *ngIf="rel.relatedCardId"
                   (click)="navigateToRelated(rel.relatedCardId!)">
             <i class="fa-solid fa-check"></i> Đã học
           </button>
           <button class="rel-btn-add" *ngIf="!rel.relatedCardId"
-                  [disabled]="addingPending().has(rel.relatedText)"
-                  [class.added]="addedPending().has(rel.relatedText)"
+                  [disabled]="addingPending().has(rel.text || rel.relatedText || rel.word || '')"
+                  [class.added]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"
                   (click)="addToPending(rel)">
-            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
-               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
-            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.text || rel.relatedText || rel.word || '')"
+               [class.fa-check]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"></i>
+            {{ addedPending().has(rel.text || rel.relatedText || rel.word || '') ? 'Đã thêm' : 'Thêm' }}
           </button>
         </div>
         <div class="empty-tab" *ngIf="collocationRelations.length === 0">Không có cụm từ</div>
@@ -151,19 +151,19 @@
       <div class="relation-grid" *ngIf="activeRelTab() === 'synonym'">
         <div class="relation-chip" *ngFor="let rel of synonymRelations">
           <div class="rel-main">
-            <span class="rel-text">{{ rel.relatedText }}</span>
+            <span class="rel-text">{{ rel.text || rel.relatedText || rel.word }}</span>
           </div>
           <button class="rel-btn-learned" *ngIf="rel.relatedCardId"
                   (click)="navigateToRelated(rel.relatedCardId!)">
             <i class="fa-solid fa-check"></i> Đã học
           </button>
           <button class="rel-btn-add" *ngIf="!rel.relatedCardId"
-                  [disabled]="addingPending().has(rel.relatedText)"
-                  [class.added]="addedPending().has(rel.relatedText)"
+                  [disabled]="addingPending().has(rel.text || rel.relatedText || rel.word || '')"
+                  [class.added]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"
                   (click)="addToPending(rel)">
-            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.relatedText)"
-               [class.fa-check]="addedPending().has(rel.relatedText)"></i>
-            {{ addedPending().has(rel.relatedText) ? 'Đã thêm' : 'Thêm' }}
+            <i class="fa-solid" [class.fa-plus]="!addedPending().has(rel.text || rel.relatedText || rel.word || '')"
+               [class.fa-check]="addedPending().has(rel.text || rel.relatedText || rel.word || '')"></i>
+            {{ addedPending().has(rel.text || rel.relatedText || rel.word || '') ? 'Đã thêm' : 'Thêm' }}
           </button>
         </div>
         <div class="empty-tab" *ngIf="synonymRelations.length === 0">Không có từ đồng nghĩa</div>
@@ -180,7 +180,7 @@
            *ngFor="let r of reverseRelations()"
            (click)="navigateToRelated(r.id)">
           <i class="fa-solid fa-link"></i>
-          {{ r.front }}
+          {{ r.word || r.front }}
         </a>
       </div>
     </div>
