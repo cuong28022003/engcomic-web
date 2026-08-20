@@ -1,0 +1,21 @@
+<div class="app-search-box" [class.focused]="isFocused">
+  <i class="fa-solid fa-magnifying-glass search-icon"></i>
+  <input
+    type="text"
+    [placeholder]="placeholder"
+    [(ngModel)]="value"
+    (ngModelChange)="onInputChange($event)"
+    (focus)="isFocused = true"
+    (blur)="isFocused = false"
+    (keyup.enter)="onEnter()"
+  />
+  <button
+    *ngIf="value"
+    class="clear-btn"
+    (click)="clear()"
+    type="button"
+    title="Xóa tìm kiếm"
+  >
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>

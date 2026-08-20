@@ -1,0 +1,19 @@
+<div class="app-star-rating" [class.readonly]="readonly">
+  <button
+    *ngFor="let star of stars; let idx = index"
+    type="button"
+    class="star-btn"
+    [class.filled]="idx < rating"
+    [class.hovered]="!readonly && idx < hoverIndex"
+    [disabled]="readonly"
+    (mouseenter)="onHover(idx + 1)"
+    (mouseleave)="onHover(0)"
+    (click)="setRating(idx + 1)"
+    [title]="starTitles[idx] || (idx + 1) + ' sao'"
+  >
+    <i class="fa-solid fa-star"></i>
+  </button>
+  <span class="rating-text" *ngIf="showLabel && (rating > 0 || hoverIndex > 0)">
+    {{ starTitles[(hoverIndex || rating) - 1] || ((hoverIndex || rating) + '/5') }}
+  </span>
+</div>

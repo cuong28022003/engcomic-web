@@ -1,0 +1,73 @@
+<div class="session-wrapper">
+  <!-- Top Bar Navigation -->
+  <header class="session-topbar">
+    <div class="topbar-left">
+      <a routerLink="/reader" class="back-btn">← Danh sách đề</a>
+      <h1 class="session-title">{{ test?.testName || 'Đang tải đề thi...' }}</h1>
+    </div>
+
+    <!-- Mobile view switch tabs -->
+    <div class="mobile-tabs">
+      <button 
+        type="button" 
+        class="m-tab-btn" 
+        [class.active]="activeMobileTab === 'pdf'"
+        (click)="activeMobileTab = 'pdf'"
+      >
+        📄 Đề thi PDF
+      </button>
+      <button 
+        type="button" 
+        class="m-tab-btn" 
+        [class.active]="activeMobileTab === 'answers'"
+        (click)="activeMobileTab = 'answers'"
+      >
+        📝 Bảng đáp án
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <a routerLink="/reader/mistakes" class="queue-link">
+        🚨 Hàng đợi lỗi
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading / Error states -->
+  <div *ngIf="loading" class="session-loading">
+    <div class="spinner"></div>
+    <div>Đang tải dữ liệu bài thi...</div>
+  </div>
+
+  <div *ngIf="errorMessage" class="session-error">
+    <div class="err-icon">⚠️</div>
+    <div class="err-text">{{ errorMessage }}</div>
+    <button class="btn-retry" (click)="loadTestDetail()">Thử lại</button>
+  </div>
+
+  <!-- Main Split Layout -->
+  <main *ngIf="!loading && test" class="session-main">
+    <!-- Left Pane: PDF Viewer -->
+    <section 
+      class="pane-pdf" 
+      [class.mobile-hidden]="activeMobileTab !== 'pdf'"
+    >
+      <app-pdf-viewer [pdfUrl]="test.pdfUrl"></app-pdf-viewer>
+    </section>
+
+    <!-- Right Pane: Answer Sheet -->
+    <section 
+      class="pane-answers"
+      [class.mobile-hidden]="activeMobileTab !== 'answers'"
+    >
+      <app-answer-sheet
+        [testId]="test.id"
+        [testName]="test.testName"
+        [questions]="test.questions"
+        [isSubmitted]="isSubmitted"
+        [gradedResults]="gradedResults"
+        (submitAnswers)="onSubmitAnswers($event)"
+      ></app-answer-sheet>
+    </section>
+  </main>
+</div>

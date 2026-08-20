@@ -266,6 +266,13 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/vocab/vocab.routes').then((m) => m.VOCAB_ROUTES),
       },
+
+      // TOEIC Reader (Feature 003)
+      {
+        path: 'reader',
+        loadChildren: () =>
+          import('./features/reader/reader.routes').then((m) => m.READER_ROUTES),
+      },
     ],
   },
 

@@ -1,0 +1,156 @@
+<header class="navbar-wrapper">
+  <div class="navbar-container">
+    <!-- Logo -->
+    <a routerLink="/" class="logo-brand">
+      <div class="logo-icon">
+        <i class="fa-solid fa-book-open-reader"></i>
+      </div>
+      <span class="logo-text">Eng<span class="highlight">Comic</span></span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="nav-links">
+      <div class="dropdown-trigger" (click)="toggleCategoryModal()">
+        <span>Thể loại</span>
+        <i class="fa-solid fa-chevron-down chevron"></i>
+      </div>
+      <a routerLink="/comics" routerLinkActive="active" class="nav-item">Truyện tranh</a>
+      <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">Bảng xếp hạng</a>
+      <a routerLink="/gacha" routerLinkActive="active" class="nav-item gacha-link">
+        <i class="fa-solid fa-dice-d20"></i> Gacha
+      </a>
+      <a routerLink="/fighting-game" routerLinkActive="active" class="nav-item game-link">
+        <i class="fa-solid fa-gamepad"></i> Game
+      </a>
+      <a routerLink="/vocab" routerLinkActive="active" class="nav-item vocab-link">
+        <i class="fa-solid fa-brain"></i> Vocab
+      </a>
+      <a routerLink="/reader" routerLinkActive="active" class="nav-item reader-link">
+        <i class="fa-solid fa-file-lines"></i> TOEIC Reader
+      </a>
+      <a routerLink="/upgrade-premium" routerLinkActive="active" class="nav-item premium-link">
+        <i class="fa-solid fa-crown"></i> VIP
+      </a>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Tìm kiếm truyện tranh..."
+        [(ngModel)]="searchKeyword"
+        (keyup.enter)="onSearch()"
+      />
+      <button (click)="onSearch()" aria-label="Search" class="search-btn">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+
+    <!-- User Actions / Profile -->
+    <div class="user-section">
+      @if (currentUser) {
+        <!-- Streak counter -->
+        <div class="stat-badge streak-badge" title="Chuỗi ngày đăng nhập">
+          <i class="fa-solid fa-fire fire-icon"></i>
+          <span>{{ userStats?.streakDays || 1 }} ngày</span>
+        </div>
+
+        <!-- Diamonds counter -->
+        <a routerLink="/diamond-topup" class="stat-badge diamond-badge" title="Kim cương - Nạp thêm">
+          <i class="fa-solid fa-gem gem-icon"></i>
+          <span>{{ userStats?.diamonds || 0 }}</span>
+          <i class="fa-solid fa-plus plus-icon"></i>
+        </a>
+
+        <!-- Upload Comic CTA -->
+        <a routerLink="/comics/create" class="btn-primary upload-btn">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span class="btn-text">Đăng truyện</span>
+        </a>
+
+        <!-- Avatar & Menu Dropdown -->
+        <div class="profile-dropdown-wrapper">
+          <button class="profile-btn" (click)="toggleProfileMenu()">
+            <img
+              [src]="currentUser.avatarUrl || 'assets/image/avt.png'"
+              alt="Avatar"
+              class="user-avatar"
+              (error)="onAvatarError($event)"
+            />
+            <span class="user-name">{{ currentUser.username }}</span>
+            <i class="fa-solid fa-angle-down"></i>
+          </button>
+
+          @if (isProfileMenuOpen) {
+            <div class="dropdown-menu glass-panel" (click)="$event.stopPropagation()">
+              <div class="menu-header">
+                <p class="name">{{ currentUser.username }}</p>
+                <p class="email">{{ currentUser.email }}</p>
+                @if (userStats?.rank) {
+                  <span class="badge badge-primary">{{ userStats?.rank?.name }}</span>
+                }
+              </div>
+              <hr class="menu-divider" />
+              <a [routerLink]="['/user', currentUser.userId, 'profile']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-user"></i> Hồ sơ cá nhân
+              </a>
+              <a [routerLink]="['/user', currentUser.userId, 'bookshelf']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-bookmark"></i> Tủ truyện
+              </a>
+              <a routerLink="/deck" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-layer-group"></i> Quản lý thẻ từ vựng
+              </a>
+              <a [routerLink]="['/user', currentUser.userId, 'collection']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ sưu tập Gacha
+              </a>
+              <a [routerLink]="['/user', currentUser.userId, 'rank']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-trophy"></i> Cấp bậc & Thành tích
+              </a>
+              @if (isAdmin) {
+                <hr class="menu-divider" />
+                <a routerLink="/admin" (click)="closeProfileMenu()" class="menu-item admin-item">
+                  <i class="fa-solid fa-shield-halved"></i> Quản trị Admin
+                </a>
+              }
+              <hr class="menu-divider" />
+              <button (click)="logout()" class="menu-item logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="auth-buttons">
+          <a routerLink="/login" class="btn-secondary btn-sm">Đăng nhập</a>
+          <a routerLink="/register" class="btn-primary btn-sm">Đăng ký</a>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<!-- Categories Modal / Backdrop -->
+@if (isCategoryModalOpen) {
+  <div class="category-modal-backdrop" (click)="toggleCategoryModal()">
+    <div class="category-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-tags"></i> Khám phá theo thể loại</h3>
+        <button class="close-btn" (click)="toggleCategoryModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="genre-grid">
+        @for (genre of genres; track genre) {
+          <a
+            [routerLink]="['/search']"
+            [queryParams]="{ genre: genre }"
+            (click)="toggleCategoryModal()"
+            class="genre-chip"
+          >
+            {{ genre }}
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+}

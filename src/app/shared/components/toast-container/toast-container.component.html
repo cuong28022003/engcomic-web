@@ -1,0 +1,13 @@
+@if (toastService.toast$ | async; as toast) {
+  <div class="toast-wrapper" [ngClass]="'toast-' + toast.type">
+    <div class="toast-icon">
+      @switch (toast.type) {
+        @case ('success') { <i class="fa-solid fa-circle-check"></i> }
+        @case ('error') { <i class="fa-solid fa-circle-exclamation"></i> }
+        @case ('warning') { <i class="fa-solid fa-triangle-exclamation"></i> }
+        @case ('info') { <i class="fa-solid fa-circle-info"></i> }
+      }
+    </div>
+    <div class="toast-msg">{{ toast.message }}</div>
+  </div>
+}

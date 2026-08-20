@@ -1,0 +1,73 @@
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-icon">📄</div>
+    <div>
+      <h2 class="step-title">Bước 1: Thông tin đề thi & Tệp PDF</h2>
+      <p class="step-desc">Nhập tên bài thi và tải lên tệp đề thi PDF để hiển thị trong giao diện làm bài.</p>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Tên bài thi <span class="required">*</span></label>
+    <input 
+      type="text" 
+      class="form-input" 
+      placeholder="Ví dụ: ETS TOEIC 2024 Test 5 - Reading" 
+      [(ngModel)]="testName"
+    />
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Tệp đề thi (PDF)</label>
+    
+    <div 
+      *ngIf="!selectedFile" 
+      class="dropzone" 
+      [class.drag-active]="isDragging"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (click)="fileInput.click()"
+    >
+      <input #fileInput type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)" style="display: none;" />
+      <div class="drop-icon">☁️</div>
+      <div class="drop-text">Kéo thả tệp PDF vào đây hoặc <span class="browse-link">chọn từ máy</span></div>
+      <div class="drop-hint">Hỗ trợ định dạng PDF tối đa 50MB</div>
+    </div>
+
+    <!-- File preview when selected -->
+    <div *ngIf="selectedFile" class="file-preview-card">
+      <div class="file-icon">📑</div>
+      <div class="file-info">
+        <div class="file-name">{{ selectedFile.name }}</div>
+        <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • Sẵn sàng tải lên</div>
+      </div>
+      <button type="button" class="btn-remove" (click)="removeFile()" title="Đổi file khác">✕</button>
+    </div>
+  </div>
+
+  <div class="divider-text">hoặc</div>
+
+  <div class="form-group">
+    <label class="form-label">Đường dẫn PDF trực tuyến (URL)</label>
+    <input 
+      type="url" 
+      class="form-input" 
+      placeholder="https://example.com/toeic-test-5.pdf" 
+      [(ngModel)]="pdfUrl"
+      [disabled]="!!selectedFile"
+    />
+    <span class="input-hint">Có thể dán trực tiếp link file PDF trên Google Drive / Cloudinary</span>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <div class="step-actions">
+    <div></div>
+    <button type="button" class="btn-primary" (click)="onNext()">
+      Tiếp tục sang Bước 2 →
+    </button>
+  </div>
+</div>

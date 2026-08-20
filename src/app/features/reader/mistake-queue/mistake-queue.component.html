@@ -1,0 +1,80 @@
+<div class="queue-container">
+  <!-- Header -->
+  <div class="queue-header">
+    <div class="header-left">
+      <a routerLink="/reader" class="back-link">← Danh sách đề thi</a>
+      <h1 class="queue-title">🚨 Hàng Đợi Lỗi Sai (Mistake Queue)</h1>
+      <p class="queue-desc">Tập hợp các câu bạn đã làm sai từ tất cả các bài thi TOEIC để phân tích, giải thích với AI và ôn tập.</p>
+    </div>
+
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn-batch-ai"
+        [disabled]="pendingCount === 0"
+        (click)="showPromptModal = true"
+      >
+        🤖 Tạo AI Prompt hàng loạt ({{ pendingCount }} câu)
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-row">
+    <div class="stat-pill" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">
+      <span class="stat-num">{{ mistakes.length }}</span>
+      <span class="stat-label">Tất cả lỗi</span>
+    </div>
+    <div class="stat-pill pending" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">
+      <span class="stat-num">{{ pendingCount }}</span>
+      <span class="stat-label">Chờ AI giải thích</span>
+    </div>
+    <div class="stat-pill explained" [class.active]="activeTab === 'explained'" (click)="activeTab = 'explained'">
+      <span class="stat-num">{{ explainedCount }}</span>
+      <span class="stat-label">Đã có giải thích</span>
+    </div>
+    <div class="stat-pill resolved" [class.active]="activeTab === 'resolved'" (click)="activeTab = 'resolved'">
+      <span class="stat-num">{{ resolvedCount }}</span>
+      <span class="stat-label">Đã hiểu ✓</span>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls -->
+  <div class="controls-bar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Tìm theo tên đề thi hoặc số câu..." 
+        [(ngModel)]="searchQuery"
+      />
+    </div>
+  </div>
+
+  <!-- Mistakes List -->
+  <div class="mistakes-list">
+    <app-mistake-item
+      *ngFor="let item of filteredMistakes"
+      [mistake]="item"
+      (saveExplanation)="onSaveExplanation($event)"
+      (markResolved)="onMarkResolved($event)"
+      (deleteMistake)="onDeleteMistake($event)"
+    ></app-mistake-item>
+  </div>
+
+  <!-- Empty state -->
+  <app-empty-state
+    *ngIf="filteredMistakes.length === 0"
+    icon="🎉"
+    title="Không có lỗi sai nào"
+    description="Bạn chưa có câu hỏi nào trong danh sách này, hoặc đã giải quyết hết các lỗi!"
+  ></app-empty-state>
+</div>
+
+<!-- AI Prompt Modal -->
+<app-ai-prompt-builder
+  *ngIf="showPromptModal"
+  [mistakes]="mistakes"
+  (close)="showPromptModal = false"
+></app-ai-prompt-builder>

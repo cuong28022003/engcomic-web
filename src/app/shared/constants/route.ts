@@ -52,6 +52,10 @@ export const ROUTE = {
   // Game
   FIGHTING_GAME: 'fighting-game',
 
+  // Vocab & Reader
+  VOCAB: 'vocab',
+  READER: 'reader',
+
   // Admin
   ADMIN: 'admin',
   ADMIN_USERS: 'users',

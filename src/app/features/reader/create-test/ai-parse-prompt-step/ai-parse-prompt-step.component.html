@@ -1,0 +1,50 @@
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-icon">🤖</div>
+    <div>
+      <h2 class="step-title">Bước 2: Hướng dẫn nhờ AI trích xuất Đáp án</h2>
+      <p class="step-desc">Sử dụng ChatGPT hoặc Claude để tự động đọc bảng đáp án từ PDF và tạo chuỗi JSON chuẩn.</p>
+    </div>
+  </div>
+
+  <!-- Instruction list -->
+  <div class="guide-grid">
+    <div class="guide-item">
+      <div class="guide-num">1</div>
+      <div class="guide-text">Mở <strong>ChatGPT</strong> hoặc <strong>Claude</strong> trong tab mới.</div>
+    </div>
+    <div class="guide-item">
+      <div class="guide-num">2</div>
+      <div class="guide-text">Đính kèm tệp <strong>PDF đề thi</strong> vừa chọn vào ô chat.</div>
+    </div>
+    <div class="guide-item">
+      <div class="guide-num">3</div>
+      <div class="guide-text">Sao chép <strong>Prompt chuẩn</strong> bên dưới và dán vào AI.</div>
+    </div>
+    <div class="guide-item">
+      <div class="guide-num">4</div>
+      <div class="guide-text">Nhận kết quả JSON từ AI và sang <strong>Bước 3</strong> để dán vào.</div>
+    </div>
+  </div>
+
+  <!-- Prompt Box -->
+  <div class="prompt-box-container">
+    <div class="prompt-box-header">
+      <span class="prompt-badge">AI PARSE PROMPT TEMPLATE</span>
+      <button type="button" class="btn-copy" [class.copied]="copied" (click)="copyPrompt()">
+        <span *ngIf="!copied">📋 Sao chép Prompt</span>
+        <span *ngIf="copied">✓ Đã sao chép vào bộ nhớ!</span>
+      </button>
+    </div>
+    <textarea class="prompt-textarea" readonly [value]="promptText" rows="12"></textarea>
+  </div>
+
+  <div class="step-actions">
+    <button type="button" class="btn-secondary" (click)="onBack()">
+      ← Quay lại Bước 1
+    </button>
+    <button type="button" class="btn-primary" (click)="onNext()">
+      Đã có JSON, tiếp tục Bước 3 →
+    </button>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+.app-star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.star-btn {
+  background: transparent;
+  border: none;
+  padding: 3px;
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.22);
+  }
+
+  &.filled {
+    color: #ffb800;
+    text-shadow: 0 0 10px rgba(255, 184, 0, 0.5);
+  }
+
+  &.hovered {
+    color: #ffc933;
+  }
+}
+
+.readonly .star-btn {
+  cursor: default;
+  font-size: 1rem;
+  padding: 1px;
+}
+
+.rating-text {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffb800;
+  white-space: nowrap;
+}

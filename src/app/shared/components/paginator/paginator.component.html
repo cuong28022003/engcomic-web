@@ -1,0 +1,58 @@
+<div class="app-paginator" *ngIf="totalPages > 1">
+  <!-- First page -->
+  <button
+    class="page-btn nav-btn"
+    (click)="goToPage(0)"
+    [disabled]="currentPage === 0"
+    title="Trang đầu"
+  >
+    <i class="fa-solid fa-angles-left"></i>
+  </button>
+
+  <!-- Previous page -->
+  <button
+    class="page-btn nav-btn"
+    (click)="goToPage(currentPage - 1)"
+    [disabled]="currentPage === 0"
+    title="Trang trước"
+  >
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+  <!-- Page Numbers -->
+  <div class="page-numbers">
+    <ng-container *ngFor="let page of visiblePages">
+      <button
+        *ngIf="page !== -1; else dotsTpl"
+        class="page-btn num-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page + 1 }}
+      </button>
+      <ng-template #dotsTpl>
+        <span class="dots">...</span>
+      </ng-template>
+    </ng-container>
+  </div>
+
+  <!-- Next page -->
+  <button
+    class="page-btn nav-btn"
+    (click)="goToPage(currentPage + 1)"
+    [disabled]="currentPage >= totalPages - 1"
+    title="Trang tiếp"
+  >
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+
+  <!-- Last page -->
+  <button
+    class="page-btn nav-btn"
+    (click)="goToPage(totalPages - 1)"
+    [disabled]="currentPage >= totalPages - 1"
+    title="Trang cuối"
+  >
+    <i class="fa-solid fa-angles-right"></i>
+  </button>
+</div>

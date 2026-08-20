@@ -1,0 +1,89 @@
+<div class="answer-sheet-container">
+  <!-- Top Header Stats -->
+  <div class="sheet-header">
+    <div class="header-main">
+      <div class="timer-box" [class.submitted]="isSubmitted">
+        <span class="timer-icon">⏱</span>
+        <span class="timer-val">{{ formatTimer(secondsElapsed) }}</span>
+      </div>
+      <div class="progress-info">
+        <div class="progress-labels">
+          <span class="progress-text">Đã làm: <strong>{{ answeredCount }}/{{ questions.length }}</strong></span>
+          <span *ngIf="flaggedCount > 0" class="flag-count">⚑ {{ flaggedCount }} câu đánh dấu</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div 
+            class="progress-bar-fill" 
+            [style.width.%]="questions.length > 0 ? (answeredCount / questions.length) * 100 : 0"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Jump Mini Grid -->
+  <div class="jump-grid-wrapper">
+    <div class="jump-grid-header">Bảng chuyển nhanh:</div>
+    <div class="jump-grid">
+      <button 
+        *ngFor="let q of questions"
+        type="button"
+        class="jump-cell"
+        [class.answered]="!!userAnswersMap.get(q.number)?.answer"
+        [class.flagged]="!!userAnswersMap.get(q.number)?.flagged"
+        [class.correct]="isSubmitted && getGradedInfo(q.number)?.isCorrect"
+        [class.wrong]="isSubmitted && getGradedInfo(q.number)?.isCorrect === false"
+        (click)="scrollToQuestion(q.number)"
+      >
+        {{ q.number }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'all'" (click)="filterTab = 'all'">
+      Tất cả ({{ questions.length }})
+    </button>
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'unanswered'" (click)="filterTab = 'unanswered'">
+      Chưa làm ({{ questions.length - answeredCount }})
+    </button>
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'flagged'" (click)="filterTab = 'flagged'">
+      ⚑ Đánh dấu ({{ flaggedCount }})
+    </button>
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'p5'" (click)="filterTab = 'p5'">Part 5</button>
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'p6'" (click)="filterTab = 'p6'">Part 6</button>
+    <button type="button" class="tab-btn" [class.active]="filterTab === 'p7'" (click)="filterTab = 'p7'">Part 7</button>
+  </div>
+
+  <!-- Questions List -->
+  <div class="questions-scroll-list">
+    <app-question-row
+      *ngFor="let q of filteredQuestions"
+      [questionNumber]="q.number"
+      [part]="q.part"
+      [selectedAnswer]="userAnswersMap.get(q.number)?.answer"
+      [flagged]="!!userAnswersMap.get(q.number)?.flagged"
+      [isSubmitted]="isSubmitted"
+      [isCorrect]="getGradedInfo(q.number)?.isCorrect"
+      [correctAnswer]="getGradedInfo(q.number)?.correctAnswer"
+      (answerSelected)="onAnswerSelected(q.number, $event)"
+      (flagToggled)="onFlagToggled(q.number)"
+    ></app-question-row>
+  </div>
+
+  <!-- Submit / Result action footer -->
+  <div class="sheet-footer">
+    <button 
+      *ngIf="!isSubmitted"
+      type="button" 
+      class="btn-submit"
+      (click)="onSubmitClick()"
+    >
+      📝 Nộp bài thi
+    </button>
+    <div *ngIf="isSubmitted" class="submitted-msg">
+      ✓ Bài thi đã hoàn thành và chấm điểm
+    </div>
+  </div>
+</div>

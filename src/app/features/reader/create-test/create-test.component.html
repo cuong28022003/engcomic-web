@@ -1,0 +1,56 @@
+<div class="create-test-container">
+  <div class="header-nav">
+    <a routerLink="/reader" class="back-link">← Quay lại danh sách đề thi</a>
+    <h1 class="page-title">Tạo Đề Thi TOEIC Mới</h1>
+  </div>
+
+  <!-- Stepper Indicator -->
+  <div class="stepper-bar">
+    <div class="step-item" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="currentStep = 1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Thông tin & Tệp PDF</div>
+    </div>
+    <div class="step-line" [class.active]="currentStep > 1"></div>
+    <div class="step-item" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="testName ? currentStep = 2 : null">
+      <div class="step-circle">2</div>
+      <div class="step-label">Hướng dẫn AI Prompt</div>
+    </div>
+    <div class="step-line" [class.active]="currentStep > 2"></div>
+    <div class="step-item" [class.active]="currentStep === 3" (click)="testName ? currentStep = 3 : null">
+      <div class="step-circle">3</div>
+      <div class="step-label">Nhập JSON Đáp án</div>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-toast">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <div *ngIf="submitting" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Đang tải lên PDF và tạo đề thi... Vui lòng đợi trong giây lát.</div>
+  </div>
+
+  <!-- Step 1 -->
+  <app-pdf-upload-step
+    *ngIf="currentStep === 1"
+    [testName]="testName"
+    [pdfUrl]="pdfUrl"
+    [selectedFile]="pdfFile"
+    (stepCompleted)="onStep1Completed($event)"
+  ></app-pdf-upload-step>
+
+  <!-- Step 2 -->
+  <app-ai-parse-prompt-step
+    *ngIf="currentStep === 2"
+    (prevStep)="onStep2Back()"
+    (nextStep)="onStep2Next()"
+  ></app-ai-parse-prompt-step>
+
+  <!-- Step 3 -->
+  <app-answer-key-import-step
+    *ngIf="currentStep === 3"
+    (prevStep)="onStep3Back()"
+    (submitTest)="onSubmitTest($event)"
+  ></app-answer-key-import-step>
+</div>

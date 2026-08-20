@@ -27,26 +27,29 @@ class ComicApiService { ... }
 
 ---
 
-## 2. Cách tạo Component mới
+## 2. Cách tạo Component mới (Chuẩn Angular 21)
 
-### Tạo thủ công (recommended)
-```bash
-# Tạo file component trong feature tương ứng
-# src/app/features/<feature>/<name>/<name>.component.ts
-```
+> [!IMPORTANT]
+> **Quy tắc bất di bất dịch**: MỌI component đều phải tách biệt thành **3 tệp độc lập** trong cùng 1 thư mục:
+> 1. `<name>.component.ts` (Logic, Class, Signals)
+> 2. `<name>.component.html` (Template với Native Control Flow `@if`, `@for`)
+> 3. `<name>.component.scss` (Scoped Styles)
 
 ```typescript
-import { Component } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-<name>',
+  selector: 'app-sample',
   standalone: true,
   imports: [CommonModule],
-  template: `<div>...</div>`,
-  styles: [`...`]
+  templateUrl: './sample.component.html',
+  styleUrls: ['./sample.component.scss']
 })
-export class MyNewComponent { }
+export class SampleComponent {
+  readonly title = input<string>('Tiêu đề');
+  readonly actionClick = output<void>();
+}
 ```
 
 ### Đăng ký lazy route trong `app.routes.ts`

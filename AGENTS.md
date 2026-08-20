@@ -1,175 +1,51 @@
-# AI Agent Rules — EngComic Angular
+# EngComic Angular Master Guide & Hub (Angular 21 Ready)
 
-> Đây là file hướng dẫn cho AI assistant làm việc với project này.
-> Đọc file này **trước tiên** trước khi làm bất kỳ thay đổi nào.
-
----
-
-## 📚 Tài liệu cần đọc theo thứ tự
-
-Khi nhận task mới, AI phải đọc theo thứ tự ưu tiên:
-
-1. **`specs/`** — Thư mục đặc tả từng tính năng (`spec.md` cho yêu cầu, `plan.md` cho kiến trúc frontend, `tasks.md` cho checklist thực thi). Khi làm feature mới, copy từ `specs/000-template/`.
-2. **`BACKEND_CONTRACT.md`** — Đọc trước khi viết bất kỳ API call nào. Chứa response format thực tế, field name thực tế, và các bugs đã fix.
-3. **`UI_STYLE_GUIDE.md`** — Đọc trước khi viết bất kỳ UI/template/style nào. Chứa color tokens, component patterns, animation rules, DO/DON'T.
-4. **`ARCHITECTURE.md`** — Đọc khi cần thêm feature mới hoặc refactor. Chứa cấu trúc folder, pattern, design system tokens.
-5. **`DEVELOPMENT_GUIDE.md`** — Đọc khi cần biết cách đặt tên, tạo component/service/model mới.
-6. **`API_REFERENCE.md`** — Tham khảo danh sách endpoint. Nhưng **luôn ưu tiên** `BACKEND_CONTRACT.md` nếu có mâu thuẫn.
-7. **`README.md`** — Tổng quan project.
+Tài liệu này là trung tâm điều hướng và đặc tả quy chuẩn phát triển cho toàn bộ ứng dụng `EngComic_angular`.
 
 ---
 
-## ⚠️ Quy tắc bắt buộc
-
-### 1. Không giả định field name của backend
-Backend EngComic_backend **không** dùng camelCase chuẩn nhất quán. Trước khi code:
-- Kiểm tra `BACKEND_CONTRACT.md`
-- Hoặc xem file `*Controller.java` tương ứng trong `EngComic_backend/src/main/java/mobile/apis/`
-- Đặc biệt: Comic dùng `name` (không phải `title`), `imageUrl` (không phải `coverImage`), `genre` string (không phải `genres` array)
-
-### 2. Không giả định endpoint path
-- Kiểm tra `BACKEND_CONTRACT.md` hoặc dùng `grep @RequestMapping` trong backend
-- Đặc biệt: `/api/ratings` (có `s`), `/api/comment?comicUrl=` (query param), `/api/userstats/me`
-
-### 3. Không dùng relative path trong AuthService
-`AuthService` gọi thẳng đến backend, KHÔNG đi qua `ApiBaseService`:
-```typescript
-// ✅ Đúng
-private readonly BASE = `${environment.apiUrl}/auth`;
-
-// ❌ Sai — gọi vào Angular dev server
-private readonly BASE = '/auth';
-```
-
-### 4. Luôn unwrap response envelope khi cần
-Backend auth trả về `{ success, data: { id, username, ... } }` — không phải `CurrentUser` trực tiếp.
-`AuthService.login()` đã xử lý mapping này — đừng thay đổi hàm `login()` mà không đọc kỹ.
-
-### 5. Không hardcode port hay origin vào CORS
-CORS được cấu hình bằng `allowedOriginPatterns("http://localhost:*")` ở backend.
-Không cần sửa Angular để fix CORS — sửa backend `CorsConfig.java`.
-
-### 6. Luôn ưu tiên tái sử dụng Shared Suite (`@shared`)
-Đã có đầy đủ các thành phần trong `src/app/shared/`. **TUYỆT ĐỐI KHÔNG** code lại thủ công:
-- **Components**:
-  - `PaginatorComponent` (`<app-paginator [currentPage]="p" [totalPages]="t" (pageChange)="onPage($event)" />`)
-  - `SearchBoxComponent` (`<app-search-box [placeholder]="..." (searchChange)="onSearch($event)" />`)
-  - `EmptyStateComponent` (`<app-empty-state [title]="..." [description]="..." (actionClick)="..." />`)
-  - `StarRatingComponent` (`<app-star-rating [rating]="r" (ratingChange)="onRate($event)" />`)
-  - `ConfirmDialogService` (`this.confirmDialog.confirm({ title, message, type: 'danger' }).subscribe(ok => ...)`)
-- **Pipes**: `SafeHtmlPipe`, `TimeAgoPipe`, `TruncatePipe`, `StageLabelPipe`
-- **Directives**: `ClickOutsideDirective` (`(appClickOutside)="..."`), `ScrollEventDirective`, `SwipeDirective`, `TooltipDirective` (`[appTooltip]="..."`)
-- **Enums**: Luôn import từ `src/app/shared/enums/` (`CardStatus`, `PracticeStage`, `ComicStatus`, `UserRole`, `RelationType`, `FormalityLevel`...) thay vì dùng string literals tùy tiện.
-
-### 7. Luôn áp dụng Live Auto-Filter (Debounce) khi làm tìm kiếm
-Khi tạo ô input tìm kiếm hoặc bộ lọc text:
-- **BẮT BUỘC** dùng `Subject` với `debounceTime(250)` hoặc `(ngModelChange)` để tự động lọc dữ liệu khi người dùng gõ phím.
-- **KHÔNG** bắt người dùng phải nhấn nút Tìm kiếm hay nhấn Enter mới thực hiện lọc.
-
-### 8. Luôn subscribe `route.paramMap` cho các trang chi tiết (`:id`)
-- Khi màn hình có thể chuyển đổi giữa các đối tượng cùng loại (ví dụ: từ từ vựng này sang từ liên quan khác `/vocab/word/:id`):
-- **BẮT BUỘC** dùng `this.route.paramMap.subscribe(...)`.
-- **TUYỆT ĐỐI KHÔNG** chỉ dùng `route.snapshot.paramMap.get('id')` vì cơ chế Route Reuse của Angular sẽ không reload dữ liệu khi đổi ID.
-
-### 9. Luôn chạy `ng build` để verify trước khi kết luận "done"
-```bash
-cd d:\Others\my-projects\EngComic_angular
-npx ng build --configuration=development
-```
-Build phải **không có lỗi** (warnings về `?.` là chấp nhận được).
+## 🧭 Mục Lục Tài Liệu Đặc Tả Kỹ Thuật:
+- 🚀 **[Kế Hoạch & Lộ Trình Nâng Cấp Công Nghệ (Zoneless & Signals)](./docs/tech-stack-upgrade-plan.md)**: Chi tiết kiến trúc Zoneless, Signal primitives, native control flow và tối ưu bundle.
+- 🎨 **[Quy Chuẩn UI / Design System (Glassmorphism)](./UI_STYLE_GUIDE.md)**: Hệ thống màu sắc HSL, CSS variables (`var(--bg-card)`, `var(--primary-gradient)`), hiệu ứng đổ bóng, typography, button states, modal & animations.
+- 🏗️ **[Kiến Trúc Ứng Dụng & Cấu Trúc Thư Mục](./docs/ARCHITECTURE.md)**: Phân tầng `core`, `shared`, `features`, luồng dữ liệu một chiều và quản trị trạng thái (Signals/RxJS).
+- 🔌 **[Hợp Đồng API & Backend Contract](./docs/BACKEND_CONTRACT.md)**: Định dạng DTOs, Authentication JWT token, các mã phản hồi chuẩn, RESTful guidelines.
+- 📖 **[Danh Mục Endpoint & API Reference](./docs/API_REFERENCE.md)**: Danh sách đầy đủ các REST API theo từng phân hệ.
+- 🛠️ **[Quy Trình Phát Triển & Kiểm Thử](./docs/DEVELOPMENT_GUIDE.md)**: Hướng dẫn khởi chạy, quy chuẩn Git, kiểm thử và build production.
 
 ---
 
-## 🗂️ Cấu trúc Services quan trọng
+## 📌 Quy Chuẩn Phát Triển Chi Tiết
 
-### Các service dùng `ApiBaseService` (gọi qua `environment.apiUrl`):
-- `ComicApiService`, `ChapterApiService`, `DeckApiService`, `CardApiService`
-- `UserApiService`, `UserStatsApiService`, `GachaApiService`
-- `RatingApiService`, `SavedApiService`, `TopupApiService`, `ReportApiService`
-- `ReadingApiService`, `TranslatorApiService`, `CharacterApiService`, `AdminApiService`
+### 1. Cấu Trúc File Component (BẮT BUỘC SỐ 1)
+- **MỌI Component** (ở `src/app/shared/components/` và `src/app/features/`) **BẮT BUỘC** phải tách thành 3 tệp riêng biệt trong cùng thư mục component:
+  - `[name].component.ts`: Chỉ chứa Component Decorator (`templateUrl`, `styleUrls`), Class logic, Signal Inputs/Outputs, Injections, Lifecycle hooks.
+  - `[name].component.html`: Chứa toàn bộ cấu trúc HTML và Native Control Flow (`@if`, `@for`, `@switch`).
+  - `[name].component.scss`: Chứa toàn bộ scoped CSS/SCSS.
+- **TUYỆT ĐỐI KHÔNG** dùng inline `template: \`...\`` hoặc `styles: [\`...\`]`.
 
-### Các service **KHÔNG** dùng `ApiBaseService`:
-- **`AuthService`** — Dùng `HttpClient` trực tiếp với `BASE = \`${environment.apiUrl}/auth\``
+### 2. Standalone & Path Aliases
+- 100% components là standalone (`standalone: true`). Import đầy đủ các modules/pipes mà component sử dụng.
+- Sử dụng đúng các path alias đã định nghĩa trong `tsconfig.json`:
+  - `@shared/*` -> `src/app/shared/*`
+  - `@core/*` -> `src/app/core/*`
+  - `@features/*` -> `src/app/features/*`
+  - `@models/*` -> `src/app/shared/models/*` (hoặc `@models/index`)
+  - `@env/*` -> `src/environments/*`
 
----
+### 3. Zoneless Reactivity & State Management
+- Ứng dụng hoạt động theo kiến trúc **Zoneless** (không phụ thuộc `zone.js`).
+- Sử dụng Angular **Signals** (`signal()`, `computed()`, `input()`, `output()`, `model()`) kết hợp RxJS Interop (`toSignal()`, `toObservable()`).
+- Luôn giải phóng tài nguyên Observable trong `ngOnDestroy()` hoặc dùng `takeUntilDestroyed()`.
 
-## 🎨 Design System — Class names chuẩn
+### 4. Native Control Flow
+- 100% template sử dụng cú pháp điều khiển luồng hiện đại:
+  - `@if (condition) { ... } @else { ... }`
+  - `@for (item of list; track item.id) { ... } @empty { ... }`
+  - `@switch (expression) { @case ('value') { ... } @default { ... } }`
 
-Dùng các class sau thay vì viết CSS inline:
-
-```html
-<!-- Layout panels -->
-<div class="glass-panel">      <!-- Dark glassmorphism card -->
-<div class="container">        <!-- Max-width container -->
-<div class="page-header">      <!-- Page title section -->
-
-<!-- Buttons -->
-<button class="btn-primary">   <!-- Pink gradient CTA -->
-<button class="btn-secondary"> <!-- Outline button -->
-<button class="btn-icon">      <!-- Icon-only round button -->
-
-<!-- Badges -->
-<span class="badge badge-primary">   <!-- Pink badge -->
-<span class="badge badge-vip">       <!-- Gold VIP badge -->
-<span class="badge badge-genre">     <!-- Dark genre tag -->
-
-<!-- Feedback -->
-<span class="loading-spinner">
-<div class="empty-state">
-```
-
-CSS tokens dùng trong `styles` của component:
-```scss
-var(--primary-color)     // #ff3377
-var(--bg-card)           // #161926
-var(--bg-main)           // #0e0f1a
-var(--text-muted)        // #8892a4
-var(--border-color)      // rgba(255,255,255,0.07)
-var(--success-color)     // #10b981
-var(--danger-color)      // #ef4444
-var(--radius-md)         // 10px
-var(--radius-lg)         // 18px
-```
-
----
-
-## 📦 Model conventions
-
-- Tất cả interfaces trong `src/app/shared/models/index.ts`
-- Import: `import { Comic } from '@models/index'`
-- Khi thêm field mới vào interface, thêm `?` optional vì backend có thể không trả về tất cả fields
-- `Comic` interface hỗ trợ cả `name` và `title` (cả hai optional) vì backend không nhất quán
-
----
-
-## 🔀 Pattern async trong components
-
-```typescript
-// ✅ Luôn handle cả next + error
-this.someApi.getData().subscribe({
-  next: (data) => {
-    this.data = data;
-    this.loading = false;
-  },
-  error: () => {
-    this.toast.error('Không tải được dữ liệu');
-    this.loading = false;
-  }
-});
-
-// ❌ Không dùng .subscribe(callback) một mình
-this.someApi.getData().subscribe(data => this.data = data);
-```
-
----
-
-## 🗺️ Path Aliases
-
-```typescript
-@core/*      → src/app/core/*
-@shared/*    → src/app/shared/*
-@features/*  → src/app/features/*
-@models/*    → src/app/shared/models/*
-@services/*  → src/app/core/services/*
-@env/*       → src/environments/*
-```
+### 5. Quy Trình Kiểm Tra & Biên Dịch
+- Sau khi hoàn thành tạo mới hoặc chỉnh sửa code, luôn chạy xác thực biên dịch:
+  ```bash
+  npx ng build --configuration=development
+  ```
+- Đảm bảo **0 lỗi TypeScript (TS) và 0 lỗi Angular Compiler (NG)** trước khi kết thúc task.

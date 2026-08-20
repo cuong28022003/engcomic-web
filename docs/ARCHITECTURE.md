@@ -2,7 +2,7 @@
 
 ## 1. Tổng quan kiến trúc
 
-EngComic Angular áp dụng kiến trúc **Feature-based Standalone Components** theo chuẩn Angular 19, không sử dụng `NgModule`.
+EngComic Angular áp dụng kiến trúc **Feature-based Standalone Components** theo chuẩn **Angular 21 (Zoneless Change Detection)**, loại bỏ hoàn toàn `zone.js` và `NgModule` để đạt hiệu năng tối đa.
 
 ```
 ┌─────────────────────────────────────────────────────┐

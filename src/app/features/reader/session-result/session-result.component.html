@@ -1,0 +1,94 @@
+<div class="result-container">
+  <div class="result-header">
+    <span class="badge-success">HOÀN THÀNH BÀI THI</span>
+    <h1 class="result-title">{{ result?.testName || 'Kết quả bài thi TOEIC' }}</h1>
+  </div>
+
+  <div *ngIf="!result" class="no-result-card">
+    <p>Chưa có dữ liệu kết quả vừa nộp.</p>
+    <a routerLink="/reader" class="btn-primary">Quay lại danh sách đề thi</a>
+  </div>
+
+  <div *ngIf="result" class="result-content">
+    <!-- Top Stats 3 Cards -->
+    <div class="stats-row">
+      <div class="stat-box primary">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-val">{{ result.rawScore }} / {{ result.totalQuestions }}</div>
+        <div class="stat-lbl">Số câu đúng</div>
+      </div>
+      <div class="stat-box success">
+        <div class="stat-icon">📊</div>
+        <div class="stat-val">{{ result.accuracyPercentage }}%</div>
+        <div class="stat-lbl">Tỷ lệ chính xác</div>
+      </div>
+      <div class="stat-box info">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-val">{{ formatDuration(result.duration) }}</div>
+        <div class="stat-lbl">Thời gian làm bài</div>
+      </div>
+    </div>
+
+    <!-- Part Breakdown Table -->
+    <div class="card-section">
+      <h2 class="section-title">Thống kê theo từng Phần (Part)</h2>
+      <div class="part-grid">
+        <div *ngFor="let p of result.partBreakdown" class="part-card">
+          <div class="part-num">Part {{ p.part }}</div>
+          <div class="part-score">{{ p.correctCount }}/{{ p.totalCount }} câu</div>
+          <div class="part-bar">
+            <div class="part-bar-fill" [style.width.%]="p.accuracyPercentage"></div>
+          </div>
+          <div class="part-pct">{{ p.accuracyPercentage }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mistakes List Section -->
+    <div class="card-section">
+      <div class="mistakes-header">
+        <div>
+          <h2 class="section-title">Danh sách câu sai ({{ wrongQuestions.length }} câu)</h2>
+          <p class="section-desc">Hệ thống đã tự động thêm các câu sai này vào <strong>Hàng đợi lỗi</strong> để bạn phân tích với AI.</p>
+        </div>
+        <a routerLink="/reader/mistakes" class="btn-goto-queue">
+          🤖 Đến Hàng Đợi Lỗi →
+        </a>
+      </div>
+
+      <div *ngIf="wrongQuestions.length === 0" class="perfect-banner">
+        🎉 Xuất sắc! Bạn đã trả lời đúng 100% tất cả các câu hỏi!
+      </div>
+
+      <div *ngIf="wrongQuestions.length > 0" class="wrong-list">
+        <div *ngFor="let w of wrongQuestions" class="wrong-card">
+          <div class="wrong-left">
+            <span class="w-num">Câu {{ w.questionNumber }}</span>
+            <span class="w-part">Part {{ w.part }}</span>
+          </div>
+          <div class="wrong-mid">
+            <div class="choice-tag wrong">
+              Bạn chọn: <strong>{{ w.userAnswer || 'Bỏ qua' }}</strong>
+            </div>
+            <div class="choice-tag correct">
+              Đáp án đúng: <strong>{{ w.correctAnswer }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <a [routerLink]="['/reader', testId]" class="btn-outline">
+        👁 Xem lại bài làm
+      </a>
+      <a routerLink="/reader" class="btn-primary">
+        🏠 Về danh sách đề thi
+      </a>
+      <a routerLink="/reader/mistakes" class="btn-accent">
+        🚨 Phân tích lỗi với AI
+      </a>
+    </div>
+  </div>
+</div>

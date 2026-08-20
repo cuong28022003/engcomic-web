@@ -1,0 +1,46 @@
+<div 
+  class="question-row" 
+  [id]="'q-' + questionNumber"
+  [class.flagged]="flagged"
+  [class.answered]="!!selectedAnswer && !isSubmitted"
+  [class.correct-row]="isSubmitted && isCorrect"
+  [class.wrong-row]="isSubmitted && isCorrect === false"
+>
+  <div class="q-meta">
+    <span class="q-num">Câu {{ questionNumber }}</span>
+    <span class="q-part">P{{ part }}</span>
+    <button 
+      type="button" 
+      class="btn-flag" 
+      [class.active]="flagged"
+      [disabled]="isSubmitted"
+      (click)="toggleFlag($event)"
+      title="Đánh dấu câu hỏi cần xem lại"
+    >
+      ⚑
+    </button>
+  </div>
+
+  <div class="q-options">
+    <button 
+      *ngFor="let opt of options"
+      type="button"
+      class="opt-btn"
+      [class.selected]="selectedAnswer === opt"
+      [class.opt-correct]="isSubmitted && correctAnswer === opt"
+      [class.opt-wrong]="isSubmitted && selectedAnswer === opt && !isCorrect"
+      [disabled]="isSubmitted"
+      (click)="selectOption(opt)"
+    >
+      <span class="opt-letter">{{ opt }}</span>
+    </button>
+  </div>
+
+  <!-- After submit feedback -->
+  <div *ngIf="isSubmitted" class="q-result-badge">
+    <span *ngIf="isCorrect" class="badge-correct">✓ Đúng</span>
+    <span *ngIf="!isCorrect" class="badge-wrong">
+      ✗ Sai (Đ/A: <strong>{{ correctAnswer }}</strong>)
+    </span>
+  </div>
+</div>

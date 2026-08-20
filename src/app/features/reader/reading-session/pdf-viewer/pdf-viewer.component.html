@@ -1,0 +1,28 @@
+<div class="pdf-viewer-container">
+  <div class="viewer-toolbar">
+    <div class="toolbar-title">
+      <span class="pdf-badge">PDF VIEWER</span>
+      <span class="toolbar-hint">Cuộn đọc trực tiếp như trên Edge / Chrome</span>
+    </div>
+    <div class="toolbar-actions">
+      <button type="button" class="tool-btn" (click)="openInNewTab()" title="Mở trong tab mới">
+        ↗ Mở toàn màn hình
+      </button>
+    </div>
+  </div>
+
+  <div class="iframe-wrapper">
+    <iframe 
+      *ngIf="resolvedPdfUrl" 
+      [src]="resolvedPdfUrl | safeResourceUrl" 
+      class="pdf-iframe"
+      title="TOEIC Test PDF"
+    ></iframe>
+
+    <div *ngIf="!resolvedPdfUrl" class="no-pdf-placeholder">
+      <div class="placeholder-icon">📑</div>
+      <div class="placeholder-title">Chưa có tệp PDF đề thi</div>
+      <div class="placeholder-desc">Bài thi này được tạo không kèm tệp PDF, bạn vẫn có thể trả lời các câu hỏi bên cạnh.</div>
+    </div>
+  </div>
+</div>

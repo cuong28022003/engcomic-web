@@ -1,0 +1,93 @@
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-icon">📥</div>
+    <div>
+      <h2 class="step-title">Bước 3: Dán JSON Đáp án & Kiểm tra</h2>
+      <p class="step-desc">Dán chuỗi JSON đã nhận từ AI vào đây để hệ thống tự động kiểm tra và nhập đáp án.</p>
+    </div>
+  </div>
+
+  <div class="input-actions-bar">
+    <label class="form-label">Nội dung JSON <span class="required">*</span></label>
+    <div class="header-btns">
+      <button type="button" class="btn-text" (click)="showSampleModal = true">💡 Xem mẫu JSON</button>
+      <button type="button" class="btn-action" (click)="onParse()">⚡ Kiểm tra & Xem trước</button>
+    </div>
+  </div>
+
+  <div class="textarea-wrapper">
+    <textarea 
+      class="json-textarea" 
+      rows="8" 
+      placeholder='Dán kết quả JSON từ AI vào đây... Ví dụ: {"questions": [{"number": 101, "part": 5, "correct_answer": "C"}]}'
+      [(ngModel)]="rawJson"
+      (input)="onParse()"
+    ></textarea>
+  </div>
+
+  <!-- Status / Validation Banner -->
+  <div *ngIf="parseResult">
+    <div *ngIf="parseResult.valid" class="status-banner success">
+      <div class="status-icon">✓</div>
+      <div class="status-content">
+        <div class="status-title">Hợp lệ: Đã nhận diện {{ parseResult.questions.length }} câu hỏi!</div>
+        <div class="status-desc">Cấu trúc dữ liệu chính xác, sẵn sàng lưu vào đề thi.</div>
+      </div>
+    </div>
+
+    <div *ngIf="!parseResult.valid" class="status-banner error">
+      <div class="status-icon">⚠️</div>
+      <div class="status-content">
+        <div class="status-title">Phát hiện {{ parseResult.errors.length }} lỗi trong dữ liệu JSON:</div>
+        <ul class="error-list">
+          <li *ngFor="let err of parseResult.errors">{{ err }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Table -->
+  <div *ngIf="parseResult && parseResult.questions.length > 0" class="preview-section">
+    <div class="preview-header">
+      <span class="preview-title">Bảng xem trước đáp án ({{ parseResult.questions.length }} câu)</span>
+    </div>
+    <div class="preview-grid">
+      <div *ngFor="let q of parseResult.questions" class="preview-chip">
+        <span class="chip-num">#{{ q.number }}</span>
+        <span class="chip-part">P{{ q.part }}</span>
+        <span class="chip-ans">{{ q.correctAnswer }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-actions">
+    <button type="button" class="btn-secondary" (click)="onBack()">
+      ← Quay lại Bước 2
+    </button>
+    <button 
+      type="button" 
+      class="btn-primary" 
+      [disabled]="!parseResult || !parseResult.valid"
+      (click)="onSubmit()"
+    >
+      💾 Lưu bài thi & Bắt đầu làm bài
+    </button>
+  </div>
+</div>
+
+<!-- Sample JSON Modal -->
+<div *ngIf="showSampleModal" class="modal-backdrop" (click)="showSampleModal = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Cấu trúc JSON Mẫu</h3>
+      <button class="modal-close" (click)="showSampleModal = false">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre class="code-preview"><code>{{ sampleJson }}</code></pre>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="showSampleModal = false">Đóng</button>
+      <button type="button" class="btn-primary" (click)="loadSample()">Dùng mẫu này để test</button>
+    </div>
+  </div>
+</div>
