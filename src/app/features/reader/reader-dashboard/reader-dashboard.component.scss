@@ -283,10 +283,150 @@
       transition: all 0.2s ease;
 
       &:hover {
-        background: #6366f1;
+        background: #2563eb;
         color: #fff;
+        transform: translateY(-2px);
       }
     }
+
+    .completed-card-actions {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 8px;
+
+      .btn-card-history {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px;
+        background: rgba(168, 85, 247, 0.15);
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        border-radius: 8px;
+        color: #d8b4fe;
+        font-weight: 700;
+        font-size: 0.825rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(168, 85, 247, 0.3);
+          color: #fff;
+          transform: translateY(-1px);
+        }
+      }
+
+      .btn-card-retake {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 10px;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        border-radius: 8px;
+        color: #93c5fd;
+        font-weight: 700;
+        font-size: 0.825rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #2563eb;
+          color: #fff;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}
+
+.active-attempt-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(59, 130, 246, 0.12));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+  animation: pulse-border 3s infinite;
+
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .banner-badge {
+    background: rgba(234, 179, 8, 0.25);
+    border: 1px solid #eab308;
+    color: #fef08a;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    .banner-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .attempt-pill {
+        font-size: 0.75rem;
+        background: rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    }
+
+    .banner-subtitle {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+  }
+
+  .btn-resume-banner {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #000;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 8px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.25);
+
+    &:hover {
+      background: linear-gradient(135deg, #facc15, #eab308);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(234, 179, 8, 0.35);
+    }
+  }
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(234, 179, 8, 0.35);
+  }
+  50% {
+    border-color: rgba(234, 179, 8, 0.7);
   }
 }
 

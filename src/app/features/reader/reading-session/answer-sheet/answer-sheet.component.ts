@@ -1,25 +1,32 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QuestionRowComponent } from '../question-row/question-row.component';
-import { GradedQuestion, UserAnswerItem } from '../../models';
+import { PacingStatusBarComponent } from '../pacing-status-bar/pacing-status-bar.component';
+import { GradedQuestion, SubmitSessionPayload, UserAnswerItem } from '../../models';
 import { ConfirmDialogService } from '@shared/components/confirm-dialog/confirm-dialog.service';
+import { TestTimerService } from '../../services/test-timer.service';
+import { TestSessionService } from '../../services/test-session.service';
 
 @Component({
   selector: 'app-answer-sheet',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuestionRowComponent],
+  imports: [CommonModule, FormsModule, QuestionRowComponent, PacingStatusBarComponent],
   templateUrl: './answer-sheet.component.html',
   styleUrls: ['./answer-sheet.component.scss']
 })
 export class AnswerSheetComponent implements OnInit, OnDestroy {
+  readonly timerService = inject(TestTimerService);
+  private testSessionService = inject(TestSessionService);
+  private confirmDialog = inject(ConfirmDialogService);
+
   @Input() testId = '';
   @Input() testName = '';
   @Input() questions: Array<{ number: number; part: number }> = [];
   @Input() isSubmitted = false;
   @Input() gradedResults: GradedQuestion[] = [];
 
-  @Output() submitAnswers = new EventEmitter<{ duration: number; answers: UserAnswerItem[] }>();
+  @Output() submitAnswers = new EventEmitter<SubmitSessionPayload>();
 
   // Map from questionNumber to { answer, flagged }
   userAnswersMap = new Map<number, { answer?: string; flagged?: boolean }>();
@@ -30,8 +37,6 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
 
   // Filter
   filterTab: 'all' | 'unanswered' | 'flagged' | 'p5' | 'p6' | 'p7' = 'all';
-
-  constructor(private confirmDialog: ConfirmDialogService) {}
 
   ngOnInit() {
     this.restoreFromLocalStorage();
@@ -100,17 +105,53 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
     }
   }
 
+  get rawAnsweredMap(): Record<number, string> {
+    const res: Record<number, string> = {};
+    this.userAnswersMap.forEach((v, k) => {
+      if (v.answer) res[k] = v.answer;
+    });
+    return res;
+  }
+
+  loadAnswers(answers: Array<{ questionNumber: number; userAnswer?: string; flagged?: boolean }>) {
+    answers.forEach(a => {
+      this.userAnswersMap.set(a.questionNumber, { answer: a.userAnswer, flagged: a.flagged });
+    });
+    this.saveToLocalStorage();
+  }
+
   onAnswerSelected(questionNumber: number, answer: string) {
+    this.timerService.onQuestionFocus(questionNumber);
+    const qObj = this.questions.find(q => q.number === questionNumber);
+    const part = qObj ? qObj.part : 5;
     const existing = this.userAnswersMap.get(questionNumber) || {};
-    // If clicking same answer, keep it or toggle
     this.userAnswersMap.set(questionNumber, { ...existing, answer });
     this.saveToLocalStorage();
+
+    this.testSessionService.onAnswerSelected(
+      questionNumber,
+      part,
+      answer,
+      this.timerService.getQuestionTiming(questionNumber),
+      existing.flagged || false
+    );
   }
 
   onFlagToggled(questionNumber: number) {
     const existing = this.userAnswersMap.get(questionNumber) || {};
-    this.userAnswersMap.set(questionNumber, { ...existing, flagged: !existing.flagged });
+    const flagged = !existing.flagged;
+    this.userAnswersMap.set(questionNumber, { ...existing, flagged });
     this.saveToLocalStorage();
+
+    const qObj = this.questions.find(q => q.number === questionNumber);
+    const part = qObj ? qObj.part : 5;
+    this.testSessionService.onAnswerSelected(
+      questionNumber,
+      part,
+      existing.answer,
+      this.timerService.getQuestionTiming(questionNumber),
+      flagged
+    );
   }
 
   get answeredCount(): number {
@@ -146,13 +187,14 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   }
 
   scrollToQuestion(qNum: number) {
+    this.timerService.onQuestionFocus(qNum);
     const el = document.getElementById(`q-${qNum}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  async onSubmitClick() {
+  onSubmitClick() {
     const total = this.questions.length;
     const answered = this.answeredCount;
     const unanswered = total - answered;
@@ -162,32 +204,42 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
       message = `Bạn vẫn còn ${unanswered} câu chưa làm. Các câu chưa làm sẽ tính là SAI. Bạn có chắc chắn muốn nộp bài?`;
     }
 
-    const confirmed = await this.confirmDialog.confirm({
+    this.confirmDialog.confirm({
       title: 'Xác nhận nộp bài thi',
       message: message,
       confirmText: 'Nộp bài ngay',
       cancelText: 'Làm tiếp',
       type: unanswered > 0 ? 'warning' : 'info'
+    }).subscribe((confirmed) => {
+      if (confirmed) {
+        this.timerService.stop();
+        this.stopTimer();
+        // Clear localStorage cache for this test
+        localStorage.removeItem(this.storageKey);
+
+        const answers: UserAnswerItem[] = this.questions.map(q => {
+          const u = this.userAnswersMap.get(q.number);
+          return {
+            questionNumber: q.number,
+            answer: u?.answer,
+            flagged: u?.flagged,
+            timeSpentSeconds: this.timerService.getQuestionTiming(q.number)
+          };
+        });
+
+        this.submitAnswers.emit({
+          duration: this.timerService.totalElapsed(),
+          timeMode: this.timerService.config()?.mode,
+          selectedParts: this.timerService.config()?.selectedParts,
+          part5TargetSeconds: this.timerService.getPartTarget(5),
+          part6TargetSeconds: this.timerService.getPartTarget(6),
+          part7TargetSeconds: this.timerService.getPartTarget(7),
+          part5ElapsedSeconds: this.timerService.getPartElapsed(5),
+          part6ElapsedSeconds: this.timerService.getPartElapsed(6),
+          part7ElapsedSeconds: this.timerService.getPartElapsed(7),
+          answers
+        });
+      }
     });
-
-    if (confirmed) {
-      this.stopTimer();
-      // Clear localStorage cache for this test
-      localStorage.removeItem(this.storageKey);
-
-      const answers: UserAnswerItem[] = this.questions.map(q => {
-        const u = this.userAnswersMap.get(q.number);
-        return {
-          questionNumber: q.number,
-          answer: u?.answer,
-          flagged: u?.flagged
-        };
-      });
-
-      this.submitAnswers.emit({
-        duration: this.secondsElapsed,
-        answers
-      });
-    }
   }
 }

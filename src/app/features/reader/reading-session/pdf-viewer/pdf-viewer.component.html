@@ -1,28 +1,77 @@
-<div class="pdf-viewer-container">
+<div class="pdf-viewer-container" #pdfContainer>
+  <!-- Viewer Control Toolbar -->
   <div class="viewer-toolbar">
     <div class="toolbar-title">
       <span class="pdf-badge">PDF VIEWER</span>
-      <span class="toolbar-hint">Cuộn đọc trực tiếp như trên Edge / Chrome</span>
+      <span class="toolbar-hint">Bôi đen chữ bất kỳ để tra từ & phát âm</span>
     </div>
+
     <div class="toolbar-actions">
-      <button type="button" class="tool-btn" (click)="openInNewTab()" title="Mở trong tab mới">
-        ↗ Mở toàn màn hình
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button type="button" class="tool-btn icon-only" (click)="zoomOut()" title="Thu nhỏ (Zoom -)">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button type="button" class="tool-btn zoom-text" (click)="fitPageWidth()" title="Vừa chiều rộng (Fit Page Width)">
+          {{ zoom() === 'page-width' ? 'Fit' : zoomPercent() + '%' }}
+        </button>
+        <button type="button" class="tool-btn icon-only" (click)="zoomIn()" title="Phóng to (Zoom +)">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <button type="button" class="tool-btn popout-btn" (click)="openInNewTab()" title="Mở tab mới">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Tab mới
       </button>
     </div>
   </div>
 
-  <div class="iframe-wrapper">
-    <iframe 
-      *ngIf="resolvedPdfUrl" 
-      [src]="resolvedPdfUrl | safeResourceUrl" 
-      class="pdf-iframe"
-      title="TOEIC Test PDF"
-    ></iframe>
+  <!-- PDF Document View Area -->
+  <div class="viewer-canvas-area">
+    @if (resolvedPdfUrl) {
+      <ngx-extended-pdf-viewer
+        [src]="resolvedPdfUrl"
+        [textLayer]="true"
+        [handTool]="false"
+        [showToolbar]="false"
+        [showSidebarButton]="false"
+        [showSecondaryToolbarButton]="false"
+        [showFindButton]="false"
+        [showHandToolButton]="false"
+        [zoom]="zoom()"
+        [pageViewMode]="'multiple'"
+        [scrollMode]="0"
+        [height]="'100%'"
+        [minifiedJSLibraries]="true"
+        (pdfLoaded)="onPdfLoaded()"
+        (pdfLoadingFailed)="onPdfLoadingFailed($event)"
+      >
+      </ngx-extended-pdf-viewer>
 
-    <div *ngIf="!resolvedPdfUrl" class="no-pdf-placeholder">
-      <div class="placeholder-icon">📑</div>
-      <div class="placeholder-title">Chưa có tệp PDF đề thi</div>
-      <div class="placeholder-desc">Bài thi này được tạo không kèm tệp PDF, bạn vẫn có thể trả lời các câu hỏi bên cạnh.</div>
-    </div>
+      @if (hasLoadError()) {
+        <div class="pdf-error-overlay">
+          <div class="error-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div class="error-msg">{{ loadErrorMessage() || 'Không thể tải trực tiếp file PDF.' }}</div>
+            <button class="btn-primary" (click)="openInNewTab()">Mở PDF trong Tab Mới</button>
+          </div>
+        </div>
+      }
+
+      <!-- Floating Word Lookup & Vocab Popup -->
+      @if (selectedText() && popupPosition()) {
+        <app-word-lookup-popup
+          [text]="selectedText()"
+          [position]="popupPosition()"
+          (close)="clearSelection()"
+        ></app-word-lookup-popup>
+      }
+    } @else {
+      <div class="no-pdf-placeholder">
+        <div class="placeholder-icon">📑</div>
+        <div class="placeholder-title">Chưa có tệp PDF đề thi</div>
+        <div class="placeholder-desc">Bài thi này được tạo không kèm tệp PDF, bạn vẫn có thể trả lời các câu hỏi bên cạnh.</div>
+      </div>
+    }
   </div>
 </div>

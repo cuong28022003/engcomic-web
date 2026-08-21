@@ -3,7 +3,7 @@
   <header class="session-topbar">
     <div class="topbar-left">
       <a routerLink="/reader" class="back-btn">← Danh sách đề</a>
-      <h1 class="session-title">{{ test?.testName || 'Đang tải đề thi...' }}</h1>
+      <h1 class="session-title">{{ test()?.testName || 'Đang tải đề thi...' }}</h1>
     </div>
 
     <!-- Mobile view switch tabs -->
@@ -11,63 +11,99 @@
       <button 
         type="button" 
         class="m-tab-btn" 
-        [class.active]="activeMobileTab === 'pdf'"
-        (click)="activeMobileTab = 'pdf'"
+        [class.active]="activeMobileTab() === 'pdf'"
+        (click)="setMobileTab('pdf')"
       >
         📄 Đề thi PDF
       </button>
       <button 
         type="button" 
         class="m-tab-btn" 
-        [class.active]="activeMobileTab === 'answers'"
-        (click)="activeMobileTab = 'answers'"
+        [class.active]="activeMobileTab() === 'answers'"
+        (click)="setMobileTab('answers')"
       >
         📝 Bảng đáp án
       </button>
     </div>
 
     <div class="topbar-right">
+      <button type="button" class="history-btn" (click)="openHistory()">
+        <i class="fas fa-history"></i> Lịch sử làm bài
+      </button>
       <a routerLink="/reader/mistakes" class="queue-link">
         🚨 Hàng đợi lỗi
       </a>
     </div>
   </header>
 
-  <!-- Loading / Error states -->
-  <div *ngIf="loading" class="session-loading">
-    <div class="spinner"></div>
-    <div>Đang tải dữ liệu bài thi...</div>
-  </div>
+  <!-- Resume Dang Do Attempt Modal -->
+  @if (showResumeModal() && activeAttempt()) {
+    <app-resume-attempt-modal
+      [isOpen]="showResumeModal()"
+      [attempt]="activeAttempt()"
+      (resume)="onResumeAttempt($event)"
+      (abandon)="onAbandonAttempt($event)"
+      (dismiss)="onCancelConfig()"
+    ></app-resume-attempt-modal>
+  }
 
-  <div *ngIf="errorMessage" class="session-error">
-    <div class="err-icon">⚠️</div>
-    <div class="err-text">{{ errorMessage }}</div>
-    <button class="btn-retry" (click)="loadTestDetail()">Thử lại</button>
-  </div>
+  <!-- Pre-Test Time Target Config Modal -->
+  @if (test() && showConfigModal()) {
+    <app-pre-test-config-modal
+      [isOpen]="showConfigModal()"
+      (startTest)="onStartTest($event)"
+      (cancel)="onCancelConfig()"
+    ></app-pre-test-config-modal>
+  }
 
-  <!-- Main Split Layout -->
-  <main *ngIf="!loading && test" class="session-main">
-    <!-- Left Pane: PDF Viewer -->
-    <section 
-      class="pane-pdf" 
-      [class.mobile-hidden]="activeMobileTab !== 'pdf'"
-    >
-      <app-pdf-viewer [pdfUrl]="test.pdfUrl"></app-pdf-viewer>
-    </section>
+  <!-- Attempt History Modal -->
+  @if (showHistoryModal()) {
+    <app-attempt-history-modal
+      [isOpen]="showHistoryModal()"
+      [attempts]="historyAttempts()"
+      [testTitle]="test()?.testName || ''"
+      (close)="closeHistory()"
+    ></app-attempt-history-modal>
+  }
 
-    <!-- Right Pane: Answer Sheet -->
-    <section 
-      class="pane-answers"
-      [class.mobile-hidden]="activeMobileTab !== 'answers'"
-    >
-      <app-answer-sheet
-        [testId]="test.id"
-        [testName]="test.testName"
-        [questions]="test.questions"
-        [isSubmitted]="isSubmitted"
-        [gradedResults]="gradedResults"
-        (submitAnswers)="onSubmitAnswers($event)"
-      ></app-answer-sheet>
-    </section>
-  </main>
+  <!-- Loading / Submitting / Error states via Shared Components -->
+  @if (submitting()) {
+    <app-loading [message]="'Đang nộp bài và chấm điểm... Vui lòng đợi trong giây lát!'"></app-loading>
+  } @else if (loading()) {
+    <app-loading [message]="'Đang tải dữ liệu bài thi...'"></app-loading>
+  } @else if (errorMessage()) {
+    <app-error-state
+      [title]="'Không thể tải bài thi'"
+      [message]="errorMessage()"
+      (retry)="loadTestDetailAndCheckAttempt()"
+    ></app-error-state>
+  } @else {
+    @if (test(); as t) {
+      <!-- Main Split Layout -->
+      <main class="session-main">
+        <!-- Left Pane: PDF Viewer -->
+        <section 
+          class="pane-pdf" 
+          [class.mobile-hidden]="activeMobileTab() !== 'pdf'"
+        >
+          <app-pdf-viewer [pdfUrl]="t.pdfUrl"></app-pdf-viewer>
+        </section>
+
+        <!-- Right Pane: Answer Sheet -->
+        <section 
+          class="pane-answers" 
+          [class.mobile-hidden]="activeMobileTab() !== 'answers'"
+        >
+          <app-answer-sheet
+            [testId]="t.id"
+            [testName]="t.testName"
+            [questions]="filteredQuestions()"
+            [isSubmitted]="isSubmitted()"
+            [gradedResults]="gradedResults()"
+            (submitAnswers)="onSubmitAnswers($event)"
+          ></app-answer-sheet>
+        </section>
+      </main>
+    }
+  }
 </div>

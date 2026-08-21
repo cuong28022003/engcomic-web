@@ -1,0 +1,10 @@
+<div class="error-state-card glass-panel">
+  <div class="error-icon-wrapper">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+  </div>
+  <h3 class="error-title">{{ title() }}</h3>
+  <p class="error-message">{{ message() }}</p>
+  <button type="button" class="btn-retry" (click)="onRetry()">
+    <i class="fa-solid fa-rotate-right"></i> Thử lại
+  </button>
+</div>

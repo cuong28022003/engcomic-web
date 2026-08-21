@@ -1,0 +1,44 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'⏸ Phát Hiện Lượt Làm Bài Dang Dở'"
+  [size]="'md'"
+  (close)="onDismiss()">
+  <div class="resume-modal-body">
+    @if (attempt()) {
+      <div class="attempt-card">
+        <div class="attempt-header">
+          <span class="badge-attempt">Lượt {{ attempt()?.attemptNumber }}</span>
+          <span class="attempt-date">{{ attempt()?.startedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        <div class="attempt-stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Số câu đã làm</span>
+            <span class="stat-value text-accent">{{ answeredCount() }} / {{ totalCount() }}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Thời gian đã làm</span>
+            <span class="stat-value text-info">{{ formatTime(attempt()?.totalElapsedSeconds || 0) }}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Phạm vi làm bài</span>
+            <span class="stat-value">{{ formatParts(attempt()?.selectedParts) }}</span>
+          </div>
+        </div>
+
+        <p class="resume-hint">
+          Bạn có muốn tiếp tục làm bài từ đúng vị trí và thời gian đã dừng lại, hay bỏ qua lượt này để bắt đầu một lượt làm mới hoàn toàn?
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline-danger" (click)="onAbandon()">
+          <i class="fas fa-trash-alt"></i> Bỏ qua, làm mới
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onResume()">
+          <i class="fas fa-play"></i> Tiếp tục làm bài
+        </button>
+      </div>
+    }
+  </div>
+</app-modal>

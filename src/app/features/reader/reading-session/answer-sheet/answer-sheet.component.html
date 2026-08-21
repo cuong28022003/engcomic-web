@@ -1,11 +1,14 @@
 <div class="answer-sheet-container">
+  <!-- Pacing Status Bar & Timing Controls -->
+  @if (!isSubmitted) {
+    <div class="pacing-bar-container">
+      <app-pacing-status-bar [answeredQuestions]="rawAnsweredMap"></app-pacing-status-bar>
+    </div>
+  }
+
   <!-- Top Header Stats -->
   <div class="sheet-header">
     <div class="header-main">
-      <div class="timer-box" [class.submitted]="isSubmitted">
-        <span class="timer-icon">⏱</span>
-        <span class="timer-val">{{ formatTimer(secondsElapsed) }}</span>
-      </div>
       <div class="progress-info">
         <div class="progress-labels">
           <span class="progress-text">Đã làm: <strong>{{ answeredCount }}/{{ questions.length }}</strong></span>

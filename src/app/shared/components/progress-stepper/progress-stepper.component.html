@@ -1,0 +1,23 @@
+<div class="stepper-container">
+  @for (step of steps(); track $index) {
+    <div 
+      class="stepper-item" 
+      [class.active]="currentStep() === $index"
+      [class.completed]="currentStep() > $index"
+      (click)="onStepClick($index)"
+    >
+      <div class="step-circle">
+        @if (currentStep() > $index) {
+          <i class="fa-solid fa-check"></i>
+        } @else {
+          <span>{{ $index + 1 }}</span>
+        }
+      </div>
+      <span class="step-label">{{ step }}</span>
+    </div>
+
+    @if ($index < steps().length - 1) {
+      <div class="step-connector" [class.filled]="currentStep() > $index"></div>
+    }
+  }
+</div>

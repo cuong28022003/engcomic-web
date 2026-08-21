@@ -1,0 +1,45 @@
+<div 
+  class="file-dropzone glass-panel" 
+  [class.is-dragover]="isDragOver()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+  (click)="fileInput.click()"
+>
+  <input 
+    #fileInput 
+    type="file" 
+    [accept]="accept()" 
+    (change)="onFileChange($event)" 
+    style="display: none;" 
+  />
+
+  @if (selectedFile()) {
+    <div class="file-preview-card" (click)="$event.stopPropagation()">
+      <div class="file-icon">
+        @if (selectedFile()?.type?.includes('pdf') || selectedFile()?.name?.endsWith('.pdf')) {
+          <i class="fa-solid fa-file-pdf pdf-color"></i>
+        } @else {
+          <i class="fa-solid fa-file-image img-color"></i>
+        }
+      </div>
+      <div class="file-details">
+        <span class="file-name">{{ selectedFile()?.name }}</span>
+        <span class="file-size">{{ formatFileSize(selectedFile()?.size || 0) }}</span>
+      </div>
+      <button type="button" class="remove-btn" (click)="clearFile()" title="Xoá tệp">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  } @else {
+    <div class="dropzone-content">
+      <div class="upload-icon-circle">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+      </div>
+      <p class="dropzone-label">{{ label() }}</p>
+      @if (hint()) {
+        <span class="dropzone-hint">{{ hint() }}</span>
+      }
+    </div>
+  }
+</div>

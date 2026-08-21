@@ -1,0 +1,150 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="modalTitle()"
+  [size]="'lg'"
+  (close)="onClose()">
+  <div class="review-modal-content">
+    @if (item(); as r) {
+      <!-- Top Meta Tags -->
+      <div class="review-meta-bar">
+        <div class="meta-left">
+          <span class="part-pill">Part {{ r.part }}</span>
+          <span class="error-badge" [ngClass]="r.errorType">
+            {{ formatErrorType(r.errorType) }}
+          </span>
+        </div>
+        @if (r.errorSubtype) {
+          <div class="error-subtype">
+            <i class="fas fa-tag"></i> {{ r.errorSubtype }}
+          </div>
+        }
+      </div>
+
+      <!-- Passage Excerpt (if available) -->
+      @if (r.passageExcerpt) {
+        <div class="passage-box">
+          <div class="box-label"><i class="fas fa-book-open"></i> Trích đoạn liên quan</div>
+          <div class="passage-text">{{ r.passageExcerpt }}</div>
+        </div>
+      }
+
+      <!-- Question Text & Options -->
+      <div class="question-box">
+        @if (r.questionText) {
+          <div class="question-text">
+            <strong>Câu {{ r.questionNumber }}:</strong> {{ r.questionText }}
+          </div>
+        }
+
+        @if (r.options && hasOptions(r.options)) {
+          <div class="options-grid">
+            @for (optKey of ['A', 'B', 'C', 'D']; track optKey) {
+              @if (r.options[optKey]) {
+                <div 
+                  class="option-pill"
+                  [class.is-correct]="optKey === correctAnswer()"
+                  [class.is-user-wrong]="optKey === userAnswer() && userAnswer() !== correctAnswer()"
+                  [class.is-user-choice]="optKey === userAnswer()"
+                >
+                  <span class="opt-label">{{ optKey }}</span>
+                  <span class="opt-text">{{ r.options[optKey] }}</span>
+                  @if (optKey === correctAnswer()) {
+                    <span class="badge-tag correct-tag">✓ Đáp án đúng</span>
+                  }
+                  @if (optKey === userAnswer() && userAnswer() !== correctAnswer()) {
+                    <span class="badge-tag wrong-tag">✗ Bạn đã chọn</span>
+                  }
+                </div>
+              }
+            }
+          </div>
+        } @else {
+          <!-- Fallback user choice comparison -->
+          <div class="answer-comparison-box">
+            <div class="cmp-item user">
+              <span class="cmp-lbl">Bạn đã chọn:</span>
+              <span class="cmp-val" [class.wrong]="userAnswer() !== correctAnswer()">{{ userAnswer() || 'Bỏ qua' }}</span>
+            </div>
+            <div class="cmp-item correct">
+              <span class="cmp-lbl">Đáp án đúng:</span>
+              <span class="cmp-val">{{ correctAnswer() }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Explanation & Tips -->
+      <div class="explanation-card">
+        <div class="card-section">
+          <div class="section-title"><i class="fas fa-lightbulb"></i> Phân Tích & Giải Thích Chi Tiết</div>
+          <div class="explanation-body">{{ r.explanation }}</div>
+        </div>
+
+        @if (r.tip) {
+          <div class="card-section tip-section">
+            <div class="section-title text-tip"><i class="fas fa-bullseye"></i> Mẹo Làm Bài & Tránh Bẫy</div>
+            <div class="tip-body">{{ r.tip }}</div>
+          </div>
+        }
+      </div>
+
+      <!-- Key Vocabulary (Word Collector Integration) -->
+      @if (r.keyVocab && r.keyVocab.length > 0) {
+        <div class="vocab-collector-card">
+          <div class="vocab-header">
+            <span class="vocab-title"><i class="fas fa-bookmark"></i> Từ Vựng Trọng Tâm Nên Học</span>
+            <span class="vocab-hint">Nhấn nút <strong>[+ Thêm]</strong> để lưu vào Sổ từ vựng</span>
+          </div>
+
+          <div class="vocab-items-list">
+            @for (v of r.keyVocab; track v.word) {
+              <div class="vocab-item-row">
+                <div class="vocab-info">
+                  <span class="vocab-word">{{ v.word }}</span>
+                  <span class="vocab-meaning">{{ v.meaningVi }}</span>
+                </div>
+                <button 
+                  type="button" 
+                  class="btn-add-vocab" 
+                  [class.added]="addedWords().has(v.word)"
+                  (click)="addWordToCollector(v.word)"
+                >
+                  @if (addedWords().has(v.word)) {
+                    <i class="fas fa-check"></i> Đã thêm
+                  } @else {
+                    <i class="fas fa-plus"></i> Thêm vào Sổ từ
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Modal Footer Quick Navigation -->
+      <div class="modal-nav-footer">
+        <button 
+          type="button" 
+          class="btn-nav" 
+          [disabled]="!hasPrev()" 
+          (click)="onPrev()"
+        >
+          <i class="fas fa-chevron-left"></i> Câu trước
+        </button>
+
+        <span class="nav-indicator">
+          Câu {{ currentIndex() + 1 }} / {{ totalItems() }}
+        </span>
+
+        <button 
+          type="button" 
+          class="btn-nav" 
+          [disabled]="!hasNext()" 
+          (click)="onNext()"
+        >
+          Câu tiếp theo <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    }
+  </div>
+</app-modal>

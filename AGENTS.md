@@ -23,7 +23,20 @@ Tài liệu này là trung tâm điều hướng và đặc tả quy chuẩn ph�
   - `[name].component.scss`: Chứa toàn bộ scoped CSS/SCSS.
 - **TUYỆT ĐỐI KHÔNG** dùng inline `template: \`...\`` hoặc `styles: [\`...\`]`.
 
-### 2. Standalone & Path Aliases
+### 2. Thư Viện Shared Components & Quy Tắc Ưu Tiên Tái Sử Dụng (BẮT BUỘC)
+- Khi phát triển bất kỳ tính năng nào (`src/app/features/*`), AI **BẮT BUỘC** phải ưu tiên tái sử dụng các component dùng chung từ `@shared/components`:
+  - `<app-loading>`: Trạng thái đang tải dữ liệu (hỗ trợ inline và fullscreen overlay).
+  - `<app-error-state>`: Báo lỗi tải dữ liệu/API kèm nút Thử lại.
+  - `<app-empty-state>`: Trạng thái danh sách rỗng kèm icon & action.
+  - `<app-status-badge>`: Badge trạng thái (VIP, Admin, Rarity, Level, Status).
+  - `<app-modal>`: Khung Modal Popup tùy biến chuẩn Dark Glassmorphism.
+  - `<app-form-input>`: Ô nhập liệu form kèm icon & error message.
+  - `<app-file-uploader>`: Khung kéo thả tải PDF đề thi, ảnh truyện.
+  - `<app-progress-stepper>`: Thanh hiển thị tiến trình các bước.
+  - `<app-paginator>`, `<app-search-box>`, `<app-star-rating>`, `<app-comic-card>`.
+- **TUYỆT ĐỐI CẤM** viết lại mã HTML/CSS spinner, error box, empty state hoặc modal tùy tiện inline.
+
+### 3. Standalone & Path Aliases
 - 100% components là standalone (`standalone: true`). Import đầy đủ các modules/pipes mà component sử dụng.
 - Sử dụng đúng các path alias đã định nghĩa trong `tsconfig.json`:
   - `@shared/*` -> `src/app/shared/*`
@@ -32,18 +45,18 @@ Tài liệu này là trung tâm điều hướng và đặc tả quy chuẩn ph�
   - `@models/*` -> `src/app/shared/models/*` (hoặc `@models/index`)
   - `@env/*` -> `src/environments/*`
 
-### 3. Zoneless Reactivity & State Management
+### 4. Zoneless Reactivity & State Management
 - Ứng dụng hoạt động theo kiến trúc **Zoneless** (không phụ thuộc `zone.js`).
 - Sử dụng Angular **Signals** (`signal()`, `computed()`, `input()`, `output()`, `model()`) kết hợp RxJS Interop (`toSignal()`, `toObservable()`).
 - Luôn giải phóng tài nguyên Observable trong `ngOnDestroy()` hoặc dùng `takeUntilDestroyed()`.
 
-### 4. Native Control Flow
+### 5. Native Control Flow
 - 100% template sử dụng cú pháp điều khiển luồng hiện đại:
   - `@if (condition) { ... } @else { ... }`
   - `@for (item of list; track item.id) { ... } @empty { ... }`
   - `@switch (expression) { @case ('value') { ... } @default { ... } }`
 
-### 5. Quy Trình Kiểm Tra & Biên Dịch
+### 6. Quy Trình Kiểm Tra & Biên Dịch
 - Sau khi hoàn thành tạo mới hoặc chỉnh sửa code, luôn chạy xác thực biên dịch:
   ```bash
   npx ng build --configuration=development

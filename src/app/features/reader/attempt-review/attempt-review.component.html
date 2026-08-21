@@ -1,0 +1,318 @@
+<div class="review-page-wrapper">
+  <!-- Top Bar Navigation -->
+  <header class="review-topbar">
+    <div class="topbar-left">
+      <a routerLink="/reader" class="back-link">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách đề thi
+      </a>
+      <div class="test-meta">
+        <h1 class="test-title">{{ attempt()?.testName || 'Xem Lại Bài Thi' }}</h1>
+        @if (attempt(); as att) {
+          <span class="attempt-badge">Lượt #{{ att.attemptNumber }}</span>
+          <span class="attempt-score">{{ att.rawScore }}/{{ att.totalQuestions }} ({{ att.accuracyPercentage }}%)</span>
+        }
+      </div>
+    </div>
+
+    <!-- Mobile view switch tabs -->
+    <div class="mobile-tabs">
+      <button 
+        type="button" 
+        class="m-tab-btn" 
+        [class.active]="activeMobileTab() === 'pdf'"
+        (click)="activeMobileTab.set('pdf')"
+      >
+        📄 Đề thi PDF
+      </button>
+      <button 
+        type="button" 
+        class="m-tab-btn" 
+        [class.active]="activeMobileTab() === 'answers'"
+        (click)="activeMobileTab.set('answers')"
+      >
+        🧠 Lời giải & Phân tích
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <button type="button" class="btn-ai-import" (click)="openAiImportModal()">
+        <i class="fas fa-robot"></i> Import Phân Tích AI
+      </button>
+      <a routerLink="/reader/mistakes" class="btn-queue-link">
+        🚨 Hàng đợi lỗi
+      </a>
+    </div>
+  </header>
+
+  <!-- Loading / Error states -->
+  @if (loading()) {
+    <app-loading [message]="'Đang tải dữ liệu bài làm và lời giải AI...'"></app-loading>
+  } @else if (errorMessage()) {
+    <app-error-state
+      [title]="'Không thể tải dữ liệu lượt làm'"
+      [message]="errorMessage()"
+      (retry)="loadData()"
+    ></app-error-state>
+  } @else {
+    <main class="review-workspace-layout">
+      <!-- Left Pane: 100% Full-height PDF Viewer -->
+      <section 
+        class="pane-pdf-viewer" 
+        [class.mobile-hidden]="activeMobileTab() !== 'pdf'"
+      >
+        @if (test()?.pdfUrl; as pdfUrl) {
+          <app-pdf-viewer [pdfUrl]="pdfUrl"></app-pdf-viewer>
+        }
+      </section>
+
+      <!-- Right Pane: Non-blocking Side-by-Side Review Panel -->
+      <section 
+        class="pane-review-details" 
+        [class.mobile-hidden]="activeMobileTab() !== 'answers'"
+      >
+        <!-- Filter Pills & Question Matrix Strip -->
+        <div class="matrix-filter-card">
+          <div class="filter-pills-row">
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterMode() === 'wrong'"
+              (click)="setFilterMode('wrong')"
+            >
+              ❌ Sai ({{ countWrong() }})
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterMode() === 'flagged'"
+              (click)="setFilterMode('flagged')"
+            >
+              🚩 Phân vân ({{ countFlagged() }})
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn correct-tab" 
+              [class.active]="filterMode() === 'correct'"
+              (click)="setFilterMode('correct')"
+            >
+              ✅ Đúng ({{ countCorrect() }})
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterMode() === 'reviewed'"
+              (click)="setFilterMode('reviewed')"
+            >
+              📝 Có AI ({{ countReviewed() }})
+            </button>
+            <button 
+              type="button" 
+              class="pill-btn" 
+              [class.active]="filterMode() === 'all'"
+              (click)="setFilterMode('all')"
+            >
+              Tất cả ({{ allQuestionsCount() }})
+            </button>
+          </div>
+
+          <!-- Compact Horizontal/Wrapped Question Matrix -->
+          <div class="matrix-strip">
+            @for (q of filteredQuestions(); track q.questionNumber) {
+              <button 
+                type="button" 
+                class="matrix-btn"
+                [class.selected]="selectedQuestionNumber() === q.questionNumber"
+                [class.is-correct]="isAnswerCorrect(q) && !q.flagged"
+                [class.is-wrong]="!isAnswerCorrect(q)"
+                [class.is-flagged]="q.flagged"
+                [class.has-review]="hasReviewItem(q.questionNumber)"
+                (click)="selectQuestion(q.questionNumber)"
+              >
+                <span class="q-num">{{ q.questionNumber }}</span>
+                @if (q.flagged) { <span class="badge-icon">🚩</span> }
+                @if (hasReviewItem(q.questionNumber)) { <span class="badge-icon">📝</span> }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Selected Question Deep Analysis Container -->
+        @if (selectedQuestionNumber(); as qNum) {
+          <div class="active-question-panel">
+            <!-- Header with Question Info & Prev/Next Buttons -->
+            <div class="question-nav-header">
+              <div class="header-left">
+                <span class="q-title-badge">Câu {{ qNum }} (Part {{ currentAnswer()?.part || 5 }})</span>
+                @if (selectedReviewItem()?.errorType; as errType) {
+                  <span class="err-tag" [ngClass]="errType">
+                    {{ formatErrorType(errType) }}
+                  </span>
+                }
+              </div>
+
+              <div class="nav-btn-group">
+                <button 
+                  type="button" 
+                  class="btn-nav" 
+                  [disabled]="!hasPrevQuestion()"
+                  (click)="prevQuestion()"
+                  title="Câu trước"
+                >
+                  <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span class="nav-count">{{ currentFilteredIndex() + 1 }} / {{ filteredQuestions().length }}</span>
+                <button 
+                  type="button" 
+                  class="btn-nav" 
+                  [disabled]="!hasNextQuestion()"
+                  (click)="nextQuestion()"
+                  title="Câu tiếp theo"
+                >
+                  Sau <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Result Status Banner -->
+            @if (isAnswerCorrect(currentAnswer()) && !currentAnswer()?.flagged) {
+              <div class="result-status-banner is-correct">
+                <i class="fas fa-check-circle"></i>
+                <span><strong>Làm đúng (+1 điểm)</strong> — Bạn đã chọn chính xác đáp án cho câu này.</span>
+              </div>
+            } @else if (!isAnswerCorrect(currentAnswer())) {
+              <div class="result-status-banner is-wrong">
+                <i class="fas fa-times-circle"></i>
+                <span><strong>Trả lời sai</strong> — Đáp án bạn chọn không chính xác.</span>
+              </div>
+            } @else if (currentAnswer()?.flagged) {
+              <div class="result-status-banner is-flagged">
+                <i class="fas fa-flag"></i>
+                <span><strong>Đúng nhưng phân vân</strong> — Bạn đã trả lời đúng nhưng có đánh dấu nghi ngờ.</span>
+              </div>
+            }
+
+            <!-- Answer Comparison Strip -->
+            <div class="answer-comparison-strip">
+              <div class="choice-box user-choice" [class.is-correct]="isAnswerCorrect(currentAnswer())" [class.is-wrong]="!isAnswerCorrect(currentAnswer())">
+                <span class="box-lbl">Bạn đã chọn:</span>
+                <span class="box-val">
+                  <strong>{{ currentAnswer()?.userAnswer || 'Bỏ qua' }}</strong>
+                  @if (isAnswerCorrect(currentAnswer())) {
+                    <i class="fas fa-check-circle text-success"></i>
+                  } @else {
+                    <i class="fas fa-times-circle text-danger"></i>
+                  }
+                </span>
+              </div>
+
+              <div class="choice-box correct-choice">
+                <span class="box-lbl">Đáp án đúng:</span>
+                <span class="box-val">
+                  <strong>{{ currentAnswer()?.correctAnswer }}</strong>
+                  <i class="fas fa-check-circle text-success"></i>
+                </span>
+              </div>
+
+              @if (currentAnswer()?.timeSpentSeconds; as timeSpent) {
+                <div class="choice-box time-box">
+                  <span class="box-lbl">Thời gian làm:</span>
+                  <span class="box-val time">{{ timeSpent }}s</span>
+                </div>
+              }
+            </div>
+
+            <!-- Subtype tag if available -->
+            @if (selectedReviewItem()?.errorSubtype; as subtype) {
+              <div class="error-subtype-banner">
+                <i class="fas fa-bullseye"></i> <strong>Đặc điểm lỗi:</strong> {{ subtype }}
+              </div>
+            }
+
+            <!-- AI Explanation & Tip Section -->
+            @if (hasReviewItem(qNum)) {
+              @if (selectedReviewItem(); as review) {
+                <!-- Detail Explanation -->
+                <div class="explanation-box">
+                  <div class="box-heading">
+                    <i class="fas fa-lightbulb"></i> Phân Tích & Giải Thích Chi Tiết
+                  </div>
+                  <div class="explanation-content">
+                    {{ review.explanation }}
+                  </div>
+                </div>
+
+                <!-- Tip / Trap Warning -->
+                @if (review.tip) {
+                  <div class="tip-box">
+                    <div class="box-heading">
+                      <i class="fas fa-shield-alt"></i> Mẹo Làm Bài & Tránh Bẫy
+                    </div>
+                    <div class="tip-content">
+                      {{ review.tip }}
+                    </div>
+                  </div>
+                }
+
+                <!-- Key Vocabulary Section (Word Collector Integration) -->
+                @if (review.keyVocab && review.keyVocab.length > 0) {
+                  <div class="key-vocab-card">
+                    <div class="vocab-card-header">
+                      <span class="card-title"><i class="fas fa-bookmark"></i> Từ Vựng Trọng Tâm Cần Học</span>
+                      <span class="card-sub">Bấm <strong>[+ Thêm]</strong> để lưu vào Sổ từ vựng</span>
+                    </div>
+
+                    <div class="vocab-list">
+                      @for (v of review.keyVocab; track v.word) {
+                        <div class="vocab-row">
+                          <div class="vocab-text">
+                            <span class="v-word">{{ v.word }}</span>
+                            <span class="v-meaning">{{ v.meaningVi }}</span>
+                          </div>
+                          <button 
+                            type="button" 
+                            class="btn-collect-word"
+                            [class.collected]="addedWords().has(v.word)"
+                            (click)="addWordToCollector(v.word)"
+                          >
+                            @if (addedWords().has(v.word)) {
+                              <i class="fas fa-check"></i> Đã thêm
+                            } @else {
+                              <i class="fas fa-plus"></i> Thêm vào Sổ từ
+                            }
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            } @else {
+              <!-- Fallback placeholder if no AI explanation imported yet -->
+              <div class="no-ai-card">
+                <div class="no-ai-icon">🤖</div>
+                <div class="no-ai-text">
+                  <h3>Chưa có phân tích chi tiết từ AI cho câu này</h3>
+                  <p>Hãy bấm nút bên dưới để sinh Prompt kèm file PDF đề thi và import giải thích chi tiết từ ChatGPT / Claude.</p>
+                </div>
+                <button type="button" class="btn-import-prompt-trigger" (click)="openAiImportModal()">
+                  <i class="fas fa-magic"></i> Tạo Prompt & Import Phân Tích
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </main>
+  }
+
+  <!-- AI Review Import Modal -->
+  @if (showImportModal()) {
+    <app-ai-review-import-modal
+      [isOpen]="showImportModal()"
+      [testName]="test()?.testName || ''"
+      [questionsToReview]="questionsNeedingReview()"
+      (importData)="handleImportReviews($event)"
+      (close)="closeAiImportModal()"
+    ></app-ai-review-import-modal>
+  }
+</div>

@@ -329,3 +329,42 @@ reader/services/
 - [ ] **Rule 7**: Mistake Queue badge cập nhật real-time trên nav.
 - [ ] **Rule 8**: PDF panel và Answer panel cuộn **độc lập nhau**.
 - [ ] **Rule 9**: Responsive — mobile collapse 2 panel thành tabs (PDF tab / Câu hỏi tab).
+
+---
+
+## 10. Chế Độ Luyện Tập Theo Part & Tính Giờ Mục Tiêu (v4 Extension)
+
+### 10.1 Màn hình Thiết lập Mục tiêu (`PreTestConfigModalComponent`)
+Hiển thị modal trước khi bắt đầu làm bài:
+1. **Phần chọn phạm vi luyện tập (Part Scope)**:
+   - Các preset nút bấm: *Toàn bộ đề (100 câu)*, *Chỉ Part 5 (30 câu)*, *Chỉ Part 6 (16 câu)*, *Chỉ Part 7 (54 câu)*.
+   - Checkbox độc lập cho từng Part (Part 5: 101-130, Part 6: 131-146, Part 7: 147-200).
+   - Tự động đếm tổng số câu hỏi được chọn.
+2. **Chế độ tính giờ**:
+   - `full_test`: Chuẩn TOEIC theo các Part đã chọn (Part 5: 20p, Part 6: 10p, Part 7: 45p).
+   - `per_part`: Tự do chỉnh số phút cho từng Part.
+   - `untimed`: Không giới hạn thời gian (chỉ đo thời gian làm bài thực tế).
+3. **Ghi nhớ cấu hình mặc định**: Lưu vào `localStorage` (`toeic_user_time_settings`).
+
+### 10.2 Thanh Trạng Thái Nhịp Độ (`PacingStatusBarComponent`)
+- Tích hợp trực tiếp trên đỉnh Bảng đáp án (`AnswerSheetComponent`).
+- Đồng hồ Part hiện tại & Tổng thời gian đếm ngược (hoặc đếm xuôi nếu untimed).
+- 2 thanh Progress bar so sánh trực tiếp:
+  - Thanh 1: `% Thời gian đã dùng của Part`.
+  - Thanh 2: `% Số câu đã làm của Part`.
+- Pacing Badge hiển thị trạng thái nhịp độ:
+  - 🟢 **Nhanh hơn dự kiến (`ahead`)**
+  - 🔵 **Đúng nhịp độ (`on_track`)**
+  - 🔴 **Cần tăng tốc (`behind`)**
+
+### 10.3 Bảng Đáp Án Tinh Gọn Cho Từng Part
+- Khi người dùng chỉ chọn luyện một số Part (ví dụ Part 5), Answer Sheet và Quick Jump Grid chỉ render 30 câu hỏi (101 - 130).
+- Chấm điểm và phân tích kết quả tính toán chính xác trên số câu đã chọn (ví dụ: 27/30 câu đúng ➔ 90%).
+
+---
+
+## 11. Tái Sử Dụng Thư Viện Shared Component Chuẩn
+- `<app-modal>`: Khung cửa sổ modal cho cấu hình mục tiêu.
+- `<app-loading>` & `<app-error-state>`: Trạng thái tải và báo lỗi kết nối.
+- `<app-paginator>`: Bộ phân trang chuẩn Angular Signals (chọn số lượng trang, nhảy trang, cửa sổ trượt trang) dùng trong Mistake Queue (`/reader/mistakes`).
+- Feature-scoped `WordLookupPopupComponent`: Popup tra từ điển nhanh tức thì khi bôi đen chữ trong PDF viewer, tích hợp Google Translate backend và Web Speech API.

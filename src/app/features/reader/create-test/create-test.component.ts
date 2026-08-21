@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { PdfUploadStepComponent } from './pdf-upload-step/pdf-upload-step.component';
@@ -6,6 +6,7 @@ import { AiParsePromptStepComponent } from './ai-parse-prompt-step/ai-parse-prom
 import { AnswerKeyImportStepComponent } from './answer-key-import-step/answer-key-import-step.component';
 import { ReaderApiService } from '../services/reader-api.service';
 import { CreateTestPayload } from '../models';
+import { ToastService } from '@core/services/toast.service';
 
 @Component({
   selector: 'app-create-test',
@@ -21,6 +22,10 @@ import { CreateTestPayload } from '../models';
   styleUrls: ['./create-test.component.scss']
 })
 export class CreateTestComponent {
+  private readerApi = inject(ReaderApiService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
+
   currentStep: 1 | 2 | 3 = 1;
 
   testName = '';
@@ -30,11 +35,6 @@ export class CreateTestComponent {
 
   submitting = false;
   errorMessage = '';
-
-  constructor(
-    private readerApi: ReaderApiService,
-    private router: Router
-  ) {}
 
   onStep1Completed(data: { testName: string; pdfFile: File | null; pdfUrl: string }) {
     this.testName = data.testName;
@@ -67,14 +67,16 @@ export class CreateTestComponent {
     };
 
     this.readerApi.createTestMultipart(payload, this.pdfFile || undefined).subscribe({
-      next: (created) => {
+      next: () => {
         this.submitting = false;
-        // Redirect to reading session immediately
-        this.router.navigate(['/reader', created.id]);
+        this.toast.success('Đã tạo đề thi thành công!');
+        // Return to TOEIC tests list dashboard
+        this.router.navigate(['/reader']);
       },
       error: (err) => {
         this.submitting = false;
         this.errorMessage = err.message || 'Không thể tạo bài thi. Vui lòng thử lại.';
+        this.toast.error(this.errorMessage);
       }
     });
   }

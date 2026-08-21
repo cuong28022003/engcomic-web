@@ -1,4 +1,4 @@
-﻿# Tasks: TOEIC Reader — Frontend (003, v2)
+# Tasks: TOEIC Reader — Frontend (003, v2)
 
 > Simplified: PDF display-only, JSON-driven answer sheet.
 
@@ -43,12 +43,19 @@
 
 ## Phase 5: Integration & Polish
 
-- [ ] Thay `ReaderApiService` mock bằng backend thực
-- [ ] Nav badge: inject `MistakeQueueService.getPendingCount()` vào nav component
-- [ ] Mobile responsive: PDF panel + Answer panel → tabs
-- [ ] Timer (đếm ngược) — optional, có thể skip cho MVP
-- [ ] Loading skeleton cho AnswerSheet khi load test
-- [ ] Error state + retry
-- [ ] Unit test `GradingService.grade()` với các edge case (unanswered → wrong)
-- [ ] Unit test `AnswerKeyService.parseJson()` — valid/invalid/partial JSON
+- [x] Thay `ReaderApiService` mock bằng backend thực
+- [x] Nav badge: inject `MistakeQueueService.getPendingCount()` vào nav component
+- [x] Mobile responsive: PDF panel + Answer panel → tabs
+- [x] Loading state (`<app-loading>`) và Error state (`<app-error-state>`)
+- [x] Unit test & verify build 0 errors
 
+## Phase 6: Pacing Timer, Part-Practice & Shared Components (v4 Extension)
+
+- [x] Xây dựng `TestTimerService` (Angular 21 Signals, Zoneless) quản lý thời gian 3 tầng và tính toán `pacingStatus` (ahead, on_track, behind).
+- [x] Xây dựng `PreTestConfigModalComponent` (`app-modal`) chọn phạm vi Part 5/6/7 và tùy chỉnh giờ mục tiêu với tính năng ghi nhớ mặc định (`localStorage`).
+- [x] Xây dựng `PacingStatusBarComponent` hiển thị 2 thanh Progress bar so sánh thời gian vs tiến độ câu hỏi theo Part.
+- [x] Cập nhật `AnswerSheetComponent` và `ReadingSessionComponent` lọc và hiển thị chính xác các câu hỏi thuộc `selectedParts`.
+- [x] Nâng cấp `PaginatorComponent` (`@shared/components/paginator`) chuẩn Signals với dropdown page size và ô nhảy trang trực tiếp trong Mistake Queue (`/reader/mistakes`).
+- [x] Tích hợp `WordLookupPopupComponent` tra từ điển Google Translate tức thì khi bôi đen chữ trong PDF.
+- [x] Cập nhật `SessionResultComponent` hiển thị phân tích thời gian theo từng Part và cảnh báo câu hỏi mất nhiều thời gian.
+- [x] Biên dịch `npx ng build --configuration=development` đạt 0 errors.

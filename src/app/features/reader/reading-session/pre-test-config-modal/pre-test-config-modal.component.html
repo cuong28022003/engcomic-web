@@ -1,0 +1,229 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'⚙️ Thiết Lập Mục Tiêu Trước Khi Làm Bài'"
+  [size]="'md'"
+  [closeOnBackdrop]="false"
+  (closed)="onCancel()"
+>
+  <div class="config-modal-body">
+    <!-- SECTION 1: PART SELECTION -->
+    <div class="config-section">
+      <div class="section-header">
+        <span class="section-badge">1</span>
+        <span class="section-title">Chọn phần luyện tập (Part Scope):</span>
+      </div>
+
+      <!-- Quick Part Presets -->
+      <div class="preset-buttons">
+        <button 
+          type="button" 
+          class="preset-btn" 
+          [class.active]="isAllPartsSelected()"
+          (click)="selectAllParts()"
+        >
+          Toàn bộ đề (100 câu)
+        </button>
+        <button 
+          type="button" 
+          class="preset-btn" 
+          [class.active]="includePart5() && !includePart6() && !includePart7()"
+          (click)="selectSinglePart(5)"
+        >
+          Chỉ Part 5 (30 câu)
+        </button>
+        <button 
+          type="button" 
+          class="preset-btn" 
+          [class.active]="includePart6() && !includePart5() && !includePart7()"
+          (click)="selectSinglePart(6)"
+        >
+          Chỉ Part 6 (16 câu)
+        </button>
+        <button 
+          type="button" 
+          class="preset-btn" 
+          [class.active]="includePart7() && !includePart5() && !includePart6()"
+          (click)="selectSinglePart(7)"
+        >
+          Chỉ Part 7 (54 câu)
+        </button>
+      </div>
+
+      <!-- Checkbox Group -->
+      <div class="parts-checkbox-grid">
+        <label class="part-checkbox-card" [class.checked]="includePart5()" (click)="togglePart(5)">
+          <input type="checkbox" [checked]="includePart5()" (change)="$event.stopPropagation(); togglePart(5)" />
+          <div class="card-info">
+            <span class="c-title">Part 5</span>
+            <span class="c-desc">30 câu (101 - 130)</span>
+          </div>
+        </label>
+
+        <label class="part-checkbox-card" [class.checked]="includePart6()" (click)="togglePart(6)">
+          <input type="checkbox" [checked]="includePart6()" (change)="$event.stopPropagation(); togglePart(6)" />
+          <div class="card-info">
+            <span class="c-title">Part 6</span>
+            <span class="c-desc">16 câu (131 - 146)</span>
+          </div>
+        </label>
+
+        <label class="part-checkbox-card" [class.checked]="includePart7()" (click)="togglePart(7)">
+          <input type="checkbox" [checked]="includePart7()" (change)="$event.stopPropagation(); togglePart(7)" />
+          <div class="card-info">
+            <span class="c-title">Part 7</span>
+            <span class="c-desc">54 câu (147 - 200)</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="scope-summary">
+        Đang chọn: <strong>{{ totalSelectedQuestions() }} câu hỏi</strong> (Part {{ selectedParts().join(', ') }})
+      </div>
+    </div>
+
+    <!-- SECTION 2: TIME MODE SELECTION -->
+    <div class="config-section">
+      <div class="section-header">
+        <span class="section-badge">2</span>
+        <span class="section-title">Chế độ tính giờ & Thời gian mục tiêu:</span>
+      </div>
+
+      <div class="mode-selection-group">
+        <label 
+          class="mode-card glass-panel" 
+          [class.selected]="selectedMode() === 'full_test'"
+          (click)="selectMode('full_test')"
+        >
+          <input type="radio" name="timeMode" [checked]="selectedMode() === 'full_test'" />
+          <div class="mode-info">
+            <div class="mode-title">
+              <span>⏱️ Chuẩn TOEIC theo phần đã chọn</span>
+              <span class="mode-badge">{{ totalCalculatedMinutes() }} phút</span>
+            </div>
+            <span class="mode-hint">Tự động tính: Part 5 (20p) / Part 6 (10p) / Part 7 (45p)</span>
+          </div>
+        </label>
+
+        <label 
+          class="mode-card glass-panel" 
+          [class.selected]="selectedMode() === 'per_part'"
+          (click)="selectMode('per_part')"
+        >
+          <input type="radio" name="timeMode" [checked]="selectedMode() === 'per_part'" />
+          <div class="mode-info">
+            <div class="mode-title">
+              <span>🎯 Đặt giờ mục tiêu riêng</span>
+              <span class="mode-badge custom-badge">Tự tùy chỉnh</span>
+            </div>
+            <span class="mode-hint">Tự điều chỉnh số phút để ép tốc độ làm bài nhanh hơn</span>
+          </div>
+        </label>
+
+        <label 
+          class="mode-card glass-panel" 
+          [class.selected]="selectedMode() === 'untimed'"
+          (click)="selectMode('untimed')"
+        >
+          <input type="radio" name="timeMode" [checked]="selectedMode() === 'untimed'" />
+          <div class="mode-info">
+            <div class="mode-title">
+              <span>♾️ Không giới hạn thời gian (Untimed)</span>
+            </div>
+            <span class="mode-hint">Chỉ đo thời gian làm bài thực tế, không đếm ngược áp lực</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Per-Part Settings inputs (Visible when per_part is selected) -->
+      @if (selectedMode() === 'per_part') {
+        <div class="per-part-config-box glass-panel">
+          <h4 class="box-title">Tùy chỉnh số phút cho các Part đã chọn:</h4>
+
+          @if (includePart5()) {
+            <div class="part-row">
+              <div class="part-label">
+                <span class="part-name">Part 5</span>
+                <span class="part-count">(30 câu)</span>
+              </div>
+              <div class="part-input-wrapper">
+                <input 
+                  type="number" 
+                  class="part-input" 
+                  min="1" 
+                  max="60" 
+                  [value]="part5Minutes()"
+                  (input)="onPartChange(5, $event)"
+                />
+                <span class="unit">phút</span>
+              </div>
+            </div>
+          }
+
+          @if (includePart6()) {
+            <div class="part-row">
+              <div class="part-label">
+                <span class="part-name">Part 6</span>
+                <span class="part-count">(16 câu)</span>
+              </div>
+              <div class="part-input-wrapper">
+                <input 
+                  type="number" 
+                  class="part-input" 
+                  min="1" 
+                  max="40" 
+                  [value]="part6Minutes()"
+                  (input)="onPartChange(6, $event)"
+                />
+                <span class="unit">phút</span>
+              </div>
+            </div>
+          }
+
+          @if (includePart7()) {
+            <div class="part-row">
+              <div class="part-label">
+                <span class="part-name">Part 7</span>
+                <span class="part-count">(54 câu)</span>
+              </div>
+              <div class="part-input-wrapper">
+                <input 
+                  type="number" 
+                  class="part-input" 
+                  min="1" 
+                  max="90" 
+                  [value]="part7Minutes()"
+                  (input)="onPartChange(7, $event)"
+                />
+                <span class="unit">phút</span>
+              </div>
+            </div>
+          }
+
+          <div class="total-calc-row">
+            <span>Tổng thời gian mục tiêu:</span>
+            <span class="total-val">{{ totalCalculatedMinutes() }} phút</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Save as Default Checkbox -->
+    <div class="default-save-row">
+      <label class="save-checkbox-label">
+        <input 
+          type="checkbox" 
+          [checked]="saveAsDefault()" 
+          (change)="toggleSaveDefault($event)"
+        />
+        <span>Ghi nhớ cấu hình này cho các lần làm bài sau</span>
+      </label>
+    </div>
+  </div>
+
+  <div modal-footer>
+    <button type="button" class="btn-cancel" (click)="onCancel()">Quay lại</button>
+    <button type="button" class="btn-start" (click)="onStartTest()">
+      <i class="fa-solid fa-play"></i> Bắt đầu làm bài ({{ totalSelectedQuestions() }} câu)
+    </button>
+  </div>
+</app-modal>

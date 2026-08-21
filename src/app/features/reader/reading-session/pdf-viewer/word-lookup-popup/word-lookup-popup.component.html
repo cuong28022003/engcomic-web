@@ -1,0 +1,91 @@
+<div 
+  class="lookup-popup-card glass-panel" 
+  [style.top.px]="position()?.top" 
+  [style.left.px]="position()?.left"
+  (click)="$event.stopPropagation()"
+  (mousedown)="$event.stopPropagation()"
+>
+  <div class="popup-header">
+    <div class="word-info">
+      <span class="selected-word">{{ text() }}</span>
+      @if (displayIpa()) {
+        <span class="ipa-tag">/{{ displayIpa() }}/</span>
+      }
+    </div>
+    <button class="close-btn" (click)="onClose()" title="Đóng">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Audio Pronunciation buttons (Native Web Speech fallback) -->
+  <div class="audio-actions">
+    <button 
+      type="button" 
+      class="audio-btn us-btn" 
+      (click)="speak('us')" 
+      [disabled]="isSpeaking()"
+      title="Phát âm tiếng Anh - Mỹ"
+    >
+      <i class="fa-solid fa-volume-high"></i> <span>US 🇺🇸</span>
+    </button>
+
+    <button 
+      type="button" 
+      class="audio-btn uk-btn" 
+      (click)="speak('uk')" 
+      [disabled]="isSpeaking()"
+      title="Phát âm tiếng Anh - Anh"
+    >
+      <i class="fa-solid fa-volume-high"></i> <span>UK 🇬🇧</span>
+    </button>
+  </div>
+
+  <!-- Translation / Meaning -->
+  <div class="popup-body">
+    @if (loading()) {
+      <div class="loading-spinner">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>Đang dịch nghĩa...</span>
+      </div>
+    } @else {
+      @if (translationData()?.meaning) {
+        <div class="meaning-box">
+          <p class="meaning-text">{{ translationData()?.meaning }}</p>
+        </div>
+      } @else {
+        <div class="empty-meaning">
+          <span>Không tìm thấy bản dịch tức thì.</span>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Action Bar -->
+  <div class="popup-actions">
+    <button 
+      type="button" 
+      class="action-btn save-btn" 
+      (click)="saveToVault()" 
+      [disabled]="saving() || isSaved()"
+      [class.saved]="isSaved()"
+      title="Lưu vào Vocab Vault / Thẻ nhớ SRS"
+    >
+      @if (saving()) {
+        <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+      } @else if (isSaved()) {
+        <i class="fa-solid fa-check"></i> Đã lưu vào Vault
+      } @else {
+        <i class="fa-solid fa-bookmark"></i> Lưu vào Vocab Vault
+      }
+    </button>
+
+    <button 
+      type="button" 
+      class="action-btn copy-btn" 
+      (click)="copyText()" 
+      title="Sao chép từ"
+    >
+      <i class="fa-solid fa-copy"></i> Copy
+    </button>
+  </div>
+</div>

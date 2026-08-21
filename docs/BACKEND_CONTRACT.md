@@ -236,3 +236,73 @@ Response trả về flat fields thay vì nested `stats`:
 | `Cannot read properties of undefined (reading 'dueToday')` | Backend `GET /api/card/dashboard` trả về `totalCards`, `dueToday`, `newCount`... ở root object thay vì nested trong `stats` | Cập nhật `DashboardResponse` interface và map trực tiếp từ `res.totalCards`, `res.dueToday` |
 | `ExampleSentence` và `WordRelation` chỉ lưu `_id` | `BatchImportCardInteractor` map cứng key `en`, `vi`, `context`, `word`, `meaning` trong khi AI trả `text`, `formality`, `pos`... | Cập nhật hàm `getString()` hỗ trợ đa dạng alias (snake_case + camelCase) và map đầy đủ vào entity |
 | Thuật ngữ `front`/`back` khó hình dung | Thuật ngữ cũ từ flashcard | Đã đổi sang `word` (từ tiếng Anh) và `meaning` (nghĩa tiếng Việt) trên cả Backend và Frontend |
+| Data câu sai trả về thiếu (cắt ở 50 câu) & thứ tự lộn xộn | `getMistakes` default size 50 và backend sắp xếp theo createdAt DESC | Tăng default size lên 1000 và backend/frontend sắp xếp theo `questionNumber ASC` |
+
+---
+
+## 📖 TOEIC Reader & Translator Contract
+
+### `POST /api/toeic/tests/{id}/submit`
+Payload gửi lên:
+```json
+{
+  "duration": 1200,
+  "timeMode": "per_part",
+  "selectedParts": [5],
+  "part5TargetSeconds": 1200,
+  "part6TargetSeconds": 0,
+  "part7TargetSeconds": 0,
+  "part5ElapsedSeconds": 1150,
+  "part6ElapsedSeconds": 0,
+  "part7ElapsedSeconds": 0,
+  "answers": [
+    { "questionNumber": 101, "answer": "C", "flagged": false, "timeSpentSeconds": 25 }
+  ]
+}
+```
+
+Response trả về:
+```json
+{
+  "testId": "68a...",
+  "testName": "ETS 2024 Test 5",
+  "rawScore": 27,
+  "totalQuestions": 30,
+  "accuracyPercentage": 90.0,
+  "duration": 1150,
+  "partBreakdown": [
+    {
+      "part": 5,
+      "correctCount": 27,
+      "totalCount": 30,
+      "accuracyPercentage": 90.0,
+      "targetSeconds": 1200,
+      "elapsedSeconds": 1150,
+      "avgSecondsPerQuestion": 38.3
+    }
+  ],
+  "results": [
+    {
+      "questionNumber": 101,
+      "part": 5,
+      "userAnswer": "C",
+      "correctAnswer": "C",
+      "isCorrect": true,
+      "flagged": false,
+      "timeSpentSeconds": 25
+    }
+  ],
+  "newMistakes": []
+}
+```
+
+### `GET /api/translator/translate` (Public)
+- Query params: `text=hello`, `from=en`, `to=vi`
+- Response:
+```json
+{
+  "translatedText": "xin chào",
+  "sourceLanguage": "en",
+  "targetLanguage": "vi"
+}
+```

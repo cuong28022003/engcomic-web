@@ -8,6 +8,8 @@ import { inject } from '@angular/core';
 import { throwError, switchMap, catchError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+import { environment } from '@env/environment';
+
 // URLs that do NOT need auth token
 const PUBLIC_URLS = [
   '/auth/login',
@@ -26,6 +28,13 @@ const PUBLIC_URLS = [
 ];
 
 function isPublicUrl(url: string): boolean {
+  // Never attach auth header to 3rd party domains (e.g. dictionaryapi.dev, cloudinary)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (!url.startsWith(environment.apiUrl)) {
+      return true;
+    }
+  }
+
   return PUBLIC_URLS.some(
     (pub) =>
       url.includes(pub) &&

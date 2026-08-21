@@ -41,10 +41,18 @@ export class MistakeQueueService {
   }
 
   private updateState(items: MistakeItem[]): void {
-    this.mistakesSubject.next(items);
-    const pending = items.filter(m => m.status === 'pending').length;
+    const sorted = [...items].sort((a, b) => {
+      const testA = a.testName || '';
+      const testB = b.testName || '';
+      const cmp = testA.localeCompare(testB);
+      if (cmp !== 0) return cmp;
+      return (a.questionNumber || 0) - (b.questionNumber || 0);
+    });
+
+    this.mistakesSubject.next(sorted);
+    const pending = sorted.filter(m => m.status === 'pending').length;
     this.pendingCountSubject.next(pending);
-    this.saveToLocalStorage(items);
+    this.saveToLocalStorage(sorted);
   }
 
   public fetchFromBackend(): void {

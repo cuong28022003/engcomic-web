@@ -1,0 +1,72 @@
+<div class="pacing-status-card glass-panel">
+  <!-- Top Timer Counters -->
+  <div class="pacing-header">
+    <div class="timer-block part-timer">
+      <div class="timer-label">
+        <span class="part-badge">Part {{ timerService.currentPart() }}</span>
+        <span class="sub-label">Còn lại</span>
+      </div>
+      <div class="timer-value" [class.danger]="timerService.currentPartRemaining() <= 180 && timerService.config()?.mode !== 'untimed'">
+        {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(currentPartElapsed()) : timerService.formatSeconds(timerService.currentPartRemaining()) }}
+      </div>
+    </div>
+
+    <!-- Pacing Status Indicator Badge -->
+    <div class="pacing-badge-wrapper">
+      @switch (timerService.pacingStatus()) {
+        @case ('ahead') {
+          <span class="pacing-pill ahead" title="Bạn đang làm nhanh hơn tốc độ dự kiến">
+            <i class="fa-solid fa-bolt"></i> Nhanh hơn dự kiến
+          </span>
+        }
+        @case ('on_track') {
+          <span class="pacing-pill on-track" title="Tốc độ làm bài đang rất chuẩn">
+            <i class="fa-solid fa-circle-check"></i> Đúng nhịp độ
+          </span>
+        }
+        @case ('behind') {
+          <span class="pacing-pill behind" title="Thời gian trôi nhanh hơn số câu đã làm, hãy tăng tốc!">
+            <i class="fa-solid fa-triangle-exclamation"></i> Cần tăng tốc!
+          </span>
+        }
+      }
+    </div>
+
+    <div class="timer-block total-timer">
+      <div class="timer-label">
+        <span class="total-badge">Tổng thời gian</span>
+        <span class="sub-label">{{ timerService.config()?.mode === 'untimed' ? 'Đã làm' : 'Còn lại' }}</span>
+      </div>
+      <div class="timer-value total-val">
+        {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(timerService.totalElapsed()) : timerService.formatSeconds(timerService.totalRemaining()) }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Dual Comparison Progress Bar (Time vs Questions) -->
+  @if (timerService.config()?.mode !== 'untimed') {
+    <div class="pacing-progress-area">
+      <!-- Time Progress -->
+      <div class="progress-track-wrapper">
+        <div class="track-header">
+          <span class="track-title"><i class="fa-solid fa-hourglass-half"></i> Thời gian Part {{ timerService.currentPart() }}</span>
+          <span class="track-percent">{{ timerService.currentPartTimeProgress() }}%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill time-fill" [style.width.%]="timerService.currentPartTimeProgress()"></div>
+        </div>
+      </div>
+
+      <!-- Question Done Progress -->
+      <div class="progress-track-wrapper">
+        <div class="track-header">
+          <span class="track-title"><i class="fa-solid fa-list-check"></i> Tiến độ câu hỏi</span>
+          <span class="track-percent">{{ partQuestionsDone() }} / {{ partTotalQuestions() }} ({{ partQuestionsPercent() }}%)</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill question-fill" [style.width.%]="partQuestionsPercent()"></div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

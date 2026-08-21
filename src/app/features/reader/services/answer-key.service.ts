@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AnswerKeyParseResult } from '../models';
 
-export const TOEIC_AI_PARSE_PROMPT = `Đây là đề thi TOEIC. Hãy đọc phần Answer Key (đáp án) trong file và trả về JSON theo đúng format dưới đây. Chỉ trả về JSON thuần túy, không kèm giải thích hay markdown.
+export const TOEIC_AI_PARSE_PROMPT = `Đây là đề thi TOEIC. Hãy đọc phần Answer Key (đáp án) trong file và trả về JSON theo đúng format dưới đây. Chỉ trả về JSON thuần túy, không kèm giải thích, markdown hoặc bất kỳ nội dung nào khác.
 
 Format yêu cầu:
 {
@@ -9,15 +9,36 @@ Format yêu cầu:
   "questions": [
     { "number": 101, "part": 5, "correct_answer": "C" },
     { "number": 102, "part": 5, "correct_answer": "A" },
-    { "number": 147, "part": 7, "correct_answer": "D" }
+    { "number": 130, "part": 5, "correct_answer": "D" },
+    { "number": 131, "part": 6, "correct_answer": "B" },
+    { "number": 146, "part": 6, "correct_answer": "C" },
+    { "number": 147, "part": 7, "correct_answer": "D" },
+    { "number": 200, "part": 7, "correct_answer": "A" }
   ]
 }
 
+Quy tắc xác định Part:
+- Part 5: câu 101 đến 130.
+- Part 6: câu 131 đến 146.
+- Part 7: câu 147 đến 200.
+
+Mapping bắt buộc:
+- 101 <= number <= 130 → part = 5
+- 131 <= number <= 146 → part = 6
+- 147 <= number <= 200 → part = 7
+
 Lưu ý:
-- number: số câu từ 101 đến 200 (TOEIC Reading)
-- part: 5, 6, hoặc 7 (dựa theo cấu trúc đề)
-- correct_answer: chỉ là 1 ký tự "A", "B", "C", hoặc "D"
-- Trả về đủ 100 câu đọc (101-200)`;
+- number: số câu từ 101 đến 200 của TOEIC Reading.
+- part: chỉ được phép là 5, 6 hoặc 7 và phải tuân thủ chính xác mapping ở trên.
+- correct_answer: chỉ được phép là một trong bốn ký tự "A", "B", "C", "D".
+- Trả về chính xác đủ 100 câu, từ 101 đến 200, không được thiếu câu nào.
+- Các câu phải được sắp xếp theo thứ tự tăng dần từ 101 đến 200.
+- Không tự suy đoán hoặc thay đổi đáp án trong Answer Key.
+- Hãy đọc chính xác đáp án tương ứng với từng số câu trong Answer Key.
+- Nếu Answer Key được trình bày thành nhiều cột hoặc nhiều dòng, hãy đảm bảo ghép đúng số câu với đáp án tương ứng.
+- "test_name" là tên đề thi nếu có trong file. Nếu không xác định được tên đề, sử dụng "TOEIC Reading".
+
+Chỉ trả về JSON hợp lệ theo đúng format trên.`;
 
 @Injectable({
   providedIn: 'root'

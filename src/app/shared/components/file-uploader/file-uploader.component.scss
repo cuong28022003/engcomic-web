@@ -1,0 +1,111 @@
+.file-dropzone {
+  border: 2px dashed var(--border-color, rgba(255, 255, 255, 0.15));
+  border-radius: var(--radius-lg, 16px);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  box-sizing: border-box;
+
+  &:hover, &.is-dragover {
+    border-color: var(--primary-color, #ff3377);
+    background: rgba(255, 51, 119, 0.05);
+    box-shadow: 0 0 20px rgba(255, 51, 119, 0.15);
+  }
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 51, 119, 0.1);
+  border: 1px solid rgba(255, 51, 119, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.5rem;
+    color: var(--primary-color, #ff3377);
+  }
+}
+
+.dropzone-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.dropzone-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted, #a1a1aa);
+}
+
+.file-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 16px;
+  background: rgba(18, 22, 34, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md, 12px);
+  text-align: left;
+
+  .file-icon {
+    font-size: 1.8rem;
+
+    .pdf-color { color: #ef4444; }
+    .img-color { color: #3b82f6; }
+  }
+
+  .file-details {
+    flex: 1;
+    overflow: hidden;
+
+    .file-name {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 0.78rem;
+      color: var(--text-muted, #a1a1aa);
+    }
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #a1a1aa);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+
+    &:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+    }
+  }
+}

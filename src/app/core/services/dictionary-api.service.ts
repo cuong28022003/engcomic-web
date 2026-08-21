@@ -101,19 +101,47 @@ export class DictionaryApiService {
   /**
    * Phát âm bằng audio URL hoặc fallback qua Web Speech API (tự nhiên & chuẩn accent)
    */
+  private activeUtterance: SpeechSynthesisUtterance | null = null;
+
+  /**
+   * Phát âm bằng audio URL hoặc fallback qua Web Speech API (tự nhiên & chuẩn accent)
+   */
   speak(word: string, accent: 'us' | 'uk', audioUrl?: string): Promise<void> {
     return new Promise((resolve) => {
+      let resolved = false;
+      const safeResolve = () => {
+        if (!resolved) {
+          resolved = true;
+          resolve();
+        }
+      };
+
+      // Safety timeout: always release speaking lock after 3 seconds max
+      const timer = setTimeout(safeResolve, 1000);
+
       if (audioUrl) {
         const audio = new Audio(audioUrl);
-        audio.onended = () => resolve();
+        audio.onended = () => {
+          clearTimeout(timer);
+          safeResolve();
+        };
         audio.onerror = () => {
-          this.speakNative(word, accent).then(resolve);
+          this.speakNative(word, accent).then(() => {
+            clearTimeout(timer);
+            safeResolve();
+          });
         };
         audio.play().catch(() => {
-          this.speakNative(word, accent).then(resolve);
+          this.speakNative(word, accent).then(() => {
+            clearTimeout(timer);
+            safeResolve();
+          });
         });
       } else {
-        this.speakNative(word, accent).then(resolve);
+        this.speakNative(word, accent).then(() => {
+          clearTimeout(timer);
+          safeResolve();
+        });
       }
     });
   }
@@ -125,24 +153,37 @@ export class DictionaryApiService {
         return;
       }
 
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = accent === 'uk' ? 'en-GB' : 'en-US';
-      utterance.rate = 0.9; // Tốc độ tự nhiên, rõ ràng
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
 
-      const voices = window.speechSynthesis.getVoices();
-      const targetLang = accent === 'uk' ? 'en-GB' : 'en-US';
-      const selectedVoice = voices.find(
-        (v) => v.lang === targetLang || v.lang.replace('_', '-') === targetLang
-      );
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
+        const utterance = new SpeechSynthesisUtterance(text);
+        this.activeUtterance = utterance; // Retain reference to prevent GC in Chrome/Edge
+        utterance.lang = accent === 'uk' ? 'en-GB' : 'en-US';
+        utterance.rate = 0.9;
+
+        const voices = window.speechSynthesis.getVoices();
+        const targetLang = accent === 'uk' ? 'en-GB' : 'en-US';
+        const selectedVoice = voices.find(
+          (v) => v.lang === targetLang || v.lang.replace('_', '-') === targetLang
+        );
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+
+        utterance.onend = () => {
+          this.activeUtterance = null;
+          resolve();
+        };
+        utterance.onerror = () => {
+          this.activeUtterance = null;
+          resolve();
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        resolve();
       }
-
-      utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
-
-      window.speechSynthesis.speak(utterance);
     });
   }
 }

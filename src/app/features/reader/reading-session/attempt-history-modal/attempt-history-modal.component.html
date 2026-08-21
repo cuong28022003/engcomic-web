@@ -1,0 +1,112 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'📊 Lịch Sử Làm Bài — ' + (testTitle() || 'Chi Tiết Đề Thi')"
+  [size]="'lg'"
+  (close)="onClose()">
+  <div class="history-modal-body">
+    @if (attempts().length === 0) {
+      <app-empty-state
+        [icon]="'fa-history'"
+        [title]="'Chưa có lượt làm bài nào'"
+        [description]="'Bắt đầu làm bài để ghi nhận điểm số và theo dõi tiến độ của bạn!'">
+      </app-empty-state>
+    } @else {
+      <!-- Progress Trend Bar -->
+      <div class="trend-summary-card">
+        <div class="trend-header">
+          <span class="trend-title"><i class="fas fa-chart-line"></i> Tiến Bộ Qua Các Lượt</span>
+          <span class="trend-count">{{ completedAttemptsCount() }} lượt đã hoàn thành</span>
+        </div>
+        <div class="attempts-score-pills">
+          @for (att of completedAttempts(); track att.id) {
+            <div class="score-pill">
+              <span class="pill-attempt">Lượt {{ att.attemptNumber }}</span>
+              <span class="pill-score">{{ att.rawScore }}/{{ att.totalQuestions }}</span>
+              <span class="pill-acc" [class.high]="att.accuracyPercentage >= 80" [class.mid]="att.accuracyPercentage >= 50 && att.accuracyPercentage < 80">
+                {{ att.accuracyPercentage }}%
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- List of all attempts -->
+      <div class="attempts-table-container">
+        <table class="attempts-table">
+          <thead>
+            <tr>
+              <th>Lượt</th>
+              <th>Ngày Làm</th>
+              <th>Phạm Vi</th>
+              <th>Thời Gian</th>
+              <th>Điểm Số</th>
+              <th>Trạng Thái</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (att of attempts(); track att.id) {
+              <tr class="attempt-row" [class.active-row]="att.status === 'in_progress'">
+                <td>
+                  <span class="attempt-num-badge">#{{ att.attemptNumber }}</span>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="date-main">{{ att.startedAt | date:'dd/MM/yyyy' }}</span>
+                    <span class="date-time">{{ att.startedAt | date:'HH:mm' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="scope-tag">{{ formatParts(att.selectedParts) }}</span>
+                </td>
+                <td>
+                  <span class="time-text">{{ formatTime(att.totalElapsedSeconds || 0) }}</span>
+                </td>
+                <td>
+                  @if (att.status === 'completed') {
+                    <div class="score-cell">
+                      <span class="score-bold">{{ att.rawScore }}/{{ att.totalQuestions }}</span>
+                      <span class="score-percent" [class.good]="att.accuracyPercentage >= 80" [class.ok]="att.accuracyPercentage >= 50 && att.accuracyPercentage < 80">
+                        ({{ att.accuracyPercentage }}%)
+                      </span>
+                    </div>
+                  } @else {
+                    <span class="score-na">—</span>
+                  }
+                </td>
+                <td>
+                  @switch (att.status) {
+                    @case ('completed') {
+                      <span class="status-badge status-completed">
+                        <i class="fas fa-check-circle"></i> Hoàn thành
+                      </span>
+                    }
+                    @case ('in_progress') {
+                      <span class="status-badge status-progress">
+                        <i class="fas fa-spinner fa-spin"></i> Đang làm dở
+                      </span>
+                    }
+                    @case ('abandoned') {
+                      <span class="status-badge status-abandoned">
+                        <i class="fas fa-times-circle"></i> Đã bỏ qua
+                      </span>
+                    }
+                  }
+                </td>
+                <td>
+                  @if (att.status === 'completed') {
+                    <a [routerLink]="['/reader', att.testId, 'attempts', att.id, 'review']" class="btn-review-link" (click)="onClose()">
+                      Xem lại ➔
+                    </a>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</app-modal>

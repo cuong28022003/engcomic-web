@@ -1,58 +1,99 @@
-<div class="app-paginator" *ngIf="totalPages > 1">
-  <!-- First page -->
-  <button
-    class="page-btn nav-btn"
-    (click)="goToPage(0)"
-    [disabled]="currentPage === 0"
-    title="Trang đầu"
-  >
-    <i class="fa-solid fa-angles-left"></i>
-  </button>
+@if (totalItems() > 0) {
+  <div class="paginator-wrapper glass-panel">
+    <!-- Total items info -->
+    @if (showTotalInfo()) {
+      <div class="paginator-info">
+        Hiển thị <span class="highlight">{{ startItem() }} - {{ endItem() }}</span> trong số <span class="highlight">{{ totalItems() }}</span> mục
+      </div>
+    }
 
-  <!-- Previous page -->
-  <button
-    class="page-btn nav-btn"
-    (click)="goToPage(currentPage - 1)"
-    [disabled]="currentPage === 0"
-    title="Trang trước"
-  >
-    <i class="fa-solid fa-chevron-left"></i>
-  </button>
-
-  <!-- Page Numbers -->
-  <div class="page-numbers">
-    <ng-container *ngFor="let page of visiblePages">
-      <button
-        *ngIf="page !== -1; else dotsTpl"
-        class="page-btn num-btn"
-        [class.active]="page === currentPage"
-        (click)="goToPage(page)"
+    <!-- Center pagination navigation controls -->
+    <div class="paginator-controls">
+      <!-- First page button -->
+      <button 
+        type="button" 
+        class="page-btn nav-btn" 
+        [disabled]="currentPage() <= 1"
+        (click)="goToPage(1)"
+        title="Trang đầu tiên"
       >
-        {{ page + 1 }}
+        <i class="fa-solid fa-angles-left"></i>
       </button>
-      <ng-template #dotsTpl>
-        <span class="dots">...</span>
-      </ng-template>
-    </ng-container>
+
+      <!-- Prev page button -->
+      <button 
+        type="button" 
+        class="page-btn nav-btn" 
+        [disabled]="currentPage() <= 1"
+        (click)="goToPage(currentPage() - 1)"
+        title="Trang trước"
+      >
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
+
+      <!-- Page number buttons -->
+      @for (p of visiblePages(); track p) {
+        <button 
+          type="button" 
+          class="page-btn num-btn" 
+          [class.active]="currentPage() === p"
+          (click)="goToPage(p)"
+        >
+          {{ p }}
+        </button>
+      }
+
+      <!-- Next page button -->
+      <button 
+        type="button" 
+        class="page-btn nav-btn" 
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goToPage(currentPage() + 1)"
+        title="Trang kế tiếp"
+      >
+        <i class="fa-solid fa-angle-right"></i>
+      </button>
+
+      <!-- Last page button -->
+      <button 
+        type="button" 
+        class="page-btn nav-btn" 
+        [disabled]="currentPage() >= totalPages()"
+        (click)="goToPage(totalPages())"
+        title="Trang cuối cùng"
+      >
+        <i class="fa-solid fa-angles-right"></i>
+      </button>
+    </div>
+
+    <!-- Right side: Page size dropdown & Jump to page input -->
+    <div class="paginator-options">
+      @if (showPageSize()) {
+        <div class="page-size-picker">
+          <label class="opt-label">Hiển thị:</label>
+          <select class="page-size-select" [value]="pageSize()" (change)="onPageSizeSelect($event)">
+            @for (size of pageSizeOptions(); track size) {
+              <option [value]="size">{{ size }} / trang</option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (showJumpToPage() && totalPages() > 1) {
+        <div class="jump-to-page">
+          <label class="opt-label">Trang:</label>
+          <input 
+            type="number" 
+            class="jump-input" 
+            min="1" 
+            [max]="totalPages()" 
+            [value]="currentPage()" 
+            (keyup.enter)="onJumpToPage($event)"
+            (blur)="onJumpToPage($event)"
+          />
+          <span class="total-pages-label">/ {{ totalPages() }}</span>
+        </div>
+      }
+    </div>
   </div>
-
-  <!-- Next page -->
-  <button
-    class="page-btn nav-btn"
-    (click)="goToPage(currentPage + 1)"
-    [disabled]="currentPage >= totalPages - 1"
-    title="Trang tiếp"
-  >
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
-
-  <!-- Last page -->
-  <button
-    class="page-btn nav-btn"
-    (click)="goToPage(totalPages - 1)"
-    [disabled]="currentPage >= totalPages - 1"
-    title="Trang cuối"
-  >
-    <i class="fa-solid fa-angles-right"></i>
-  </button>
-</div>
+}

@@ -1,0 +1,10 @@
+<div class="loading-wrapper" [class.is-fullscreen]="fullscreen()">
+  <div class="loading-content glass-panel">
+    <div class="spinner-ring">
+      <div class="spinner-core"></div>
+    </div>
+    @if (message()) {
+      <p class="loading-text">{{ message() }}</p>
+    }
+  </div>
+</div>

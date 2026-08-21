@@ -1,4 +1,4 @@
-﻿# Implementation Plan: TOEIC Reader â€” Frontend (v2)
+# Implementation Plan: TOEIC Reader â€” Frontend (v2)
 
 > **Perspective**: Frontend Developer  
 > **Purpose**: Answer the question **"HOW"** (Technical Architecture & Implementation)
@@ -265,4 +265,54 @@ transform(value: string, type: 'html' | 'url' | 'resourceUrl' = 'url')
 | POST | `/api/v1/mistakes/batch` | `Mistake[]` | `Mistake[]` |
 | PATCH | `/api/v1/mistakes/:id` | `{status, explanation}` | `Mistake` |
 
+---
 
+## 9. Pacing Timer Engine, Shared Components & Part Practice Architecture (v4 Extension)
+
+### 9.1 Component Structure
+```
+src/app/features/reader/
+├── reading-session/
+│   ├── reading-session.component.ts/.html/.scss
+│   ├── pre-test-config-modal/
+│   │   └── pre-test-config-modal.component.ts/.html/.scss   -- Cấu hình Part & Giờ mục tiêu
+│   ├── pacing-status-bar/
+│   │   └── pacing-status-bar.component.ts/.html/.scss        -- Live Pacing indicator
+│   ├── answer-sheet/
+│   │   └── answer-sheet.component.ts/.html/.scss             -- Render câu hỏi theo selectedParts
+│   ├── question-row/
+│   │   └── question-row.component.ts/.html/.scss
+│   └── pdf-viewer/
+│       ├── pdf-viewer.component.ts/.html/.scss
+│       └── word-lookup-popup/                               -- Instant mouseup lookup popup
+│           └── word-lookup-popup.component.ts/.html/.scss
+├── mistake-queue/
+│   ├── mistake-queue.component.ts/.html/.scss               -- Tích hợp app-paginator
+│   └── mistake-item/
+│       └── mistake-item.component.ts/.html/.scss
+├── session-result/
+│   └── session-result.component.ts/.html/.scss              -- Timing breakdown & slow warnings
+└── services/
+    ├── reader-api.service.ts
+    ├── mistake-queue.service.ts
+    ├── answer-key.service.ts
+    └── test-timer.service.ts                                -- Core timing & pacing signals engine
+```
+
+### 9.2 `TestTimerService` (Angular 21 Zoneless Signal Primitives)
+- Quản lý trạng thái:
+  - `totalElapsed = signal(0)`
+  - `currentPart = signal<5 | 6 | 7>(5)`
+  - `partTimings = signal<Record<number, PartTiming>>({})`
+  - `questionTimings: Record<number, number> = {}`
+- Key Methods:
+  - `init(config: TimeTargetConfig, onExpire)`: Khởi tạo với `selectedParts` và mục tiêu thời gian từng Part.
+  - `onQuestionFocus(questionNum)`: Tính `timeSpentSeconds` cho câu vừa hoàn thành và tự động chuyển `currentPart`.
+  - `pacingStatus = computed(...)`: Tính toán tỷ lệ `% time elapsed` vs `% questions done` để đưa ra trạng thái `ahead` / `on_track` / `behind`.
+
+### 9.3 Custom Part Practice Data Flow
+1. User chọn Part (ví dụ: `[5]`) trong `PreTestConfigModalComponent`.
+2. `ReadingSessionComponent` tính `filteredQuestions = test.questions.filter(q => selectedParts.includes(q.part))`.
+3. `AnswerSheetComponent` nhận `[questions]="filteredQuestions()"` (30 câu).
+4. Khi submit, gửi `selectedParts: [5]` cùng `timeSpentSeconds` của 30 câu.
+5. Backend chấm điểm trên 30 câu và chỉ sinh lỗi sai cho các câu thuộc Part 5.

@@ -11,30 +11,30 @@
       <button 
         type="button" 
         class="btn-batch-ai"
-        [disabled]="pendingCount === 0"
-        (click)="showPromptModal = true"
+        [disabled]="mistakes().length === 0"
+        (click)="openImportModal()"
       >
-        🤖 Tạo AI Prompt hàng loạt ({{ pendingCount }} câu)
+        🤖 Tạo Prompt & Import Phân Tích AI ({{ pendingCount() > 0 ? pendingCount() + ' câu chờ' : mistakes().length + ' câu' }})
       </button>
     </div>
   </div>
 
   <!-- Stats Bar -->
   <div class="stats-row">
-    <div class="stat-pill" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">
-      <span class="stat-num">{{ mistakes.length }}</span>
+    <div class="stat-pill" [class.active]="activeTab() === 'all'" (click)="setTab('all')">
+      <span class="stat-num">{{ mistakes().length }}</span>
       <span class="stat-label">Tất cả lỗi</span>
     </div>
-    <div class="stat-pill pending" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">
-      <span class="stat-num">{{ pendingCount }}</span>
+    <div class="stat-pill pending" [class.active]="activeTab() === 'pending'" (click)="setTab('pending')">
+      <span class="stat-num">{{ pendingCount() }}</span>
       <span class="stat-label">Chờ AI giải thích</span>
     </div>
-    <div class="stat-pill explained" [class.active]="activeTab === 'explained'" (click)="activeTab = 'explained'">
-      <span class="stat-num">{{ explainedCount }}</span>
+    <div class="stat-pill explained" [class.active]="activeTab() === 'explained'" (click)="setTab('explained')">
+      <span class="stat-num">{{ explainedCount() }}</span>
       <span class="stat-label">Đã có giải thích</span>
     </div>
-    <div class="stat-pill resolved" [class.active]="activeTab === 'resolved'" (click)="activeTab = 'resolved'">
-      <span class="stat-num">{{ resolvedCount }}</span>
+    <div class="stat-pill resolved" [class.active]="activeTab() === 'resolved'" (click)="setTab('resolved')">
+      <span class="stat-num">{{ resolvedCount() }}</span>
       <span class="stat-label">Đã hiểu ✓</span>
     </div>
   </div>
@@ -47,34 +47,49 @@
         type="text" 
         class="search-input" 
         placeholder="Tìm theo tên đề thi hoặc số câu..." 
-        [(ngModel)]="searchQuery"
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
       />
     </div>
   </div>
 
   <!-- Mistakes List -->
-  <div class="mistakes-list">
-    <app-mistake-item
-      *ngFor="let item of filteredMistakes"
-      [mistake]="item"
-      (saveExplanation)="onSaveExplanation($event)"
-      (markResolved)="onMarkResolved($event)"
-      (deleteMistake)="onDeleteMistake($event)"
-    ></app-mistake-item>
-  </div>
+  @if (paginatedMistakes().length > 0) {
+    <div class="mistakes-list">
+      @for (item of paginatedMistakes(); track item.id) {
+        <app-mistake-item
+          [mistake]="item"
+          (saveExplanation)="onSaveExplanation($event)"
+          (markResolved)="onMarkResolved($event)"
+          (deleteMistake)="onDeleteMistake($event)"
+        ></app-mistake-item>
+      }
+    </div>
 
-  <!-- Empty state -->
-  <app-empty-state
-    *ngIf="filteredMistakes.length === 0"
-    icon="🎉"
-    title="Không có lỗi sai nào"
-    description="Bạn chưa có câu hỏi nào trong danh sách này, hoặc đã giải quyết hết các lỗi!"
-  ></app-empty-state>
+    <!-- Paginator Component from @shared/components -->
+    <app-paginator
+      [totalItems]="filteredMistakes().length"
+      [(currentPage)]="currentPage"
+      [(pageSize)]="pageSize"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+    ></app-paginator>
+  } @else {
+    <!-- Empty state -->
+    <app-empty-state
+      icon="🎉"
+      title="Không có lỗi sai nào"
+      description="Bạn chưa có câu hỏi nào trong danh sách này, hoặc đã giải quyết hết các lỗi!"
+    ></app-empty-state>
+  }
 </div>
 
-<!-- AI Prompt Modal -->
-<app-ai-prompt-builder
-  *ngIf="showPromptModal"
-  [mistakes]="mistakes"
-  (close)="showPromptModal = false"
-></app-ai-prompt-builder>
+<!-- AI Review Import Modal (Prompt Generator & JSON Importer) -->
+@if (showImportModal()) {
+  <app-ai-review-import-modal
+    [isOpen]="showImportModal()"
+    [testName]="'TOEIC Mistake Queue'"
+    [questionsToReview]="questionsNeedingReview()"
+    (importData)="handleImportMistakeReviews($event)"
+    (close)="closeImportModal()"
+  ></app-ai-review-import-modal>
+}

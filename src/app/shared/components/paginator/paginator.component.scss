@@ -1,56 +1,159 @@
-.app-paginator {
+.paginator-wrapper {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 24px;
-  user-select: none;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  margin-top: 20px;
+  border-radius: var(--radius-md, 12px);
+  background: rgba(18, 22, 34, 0.85);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+  }
 }
 
-.page-numbers {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.paginator-info {
+  font-size: 0.86rem;
+  color: var(--text-muted, #a1a1aa);
 
-.page-btn {
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    border-color: var(--primary-color);
+  .highlight {
+    font-weight: 700;
     color: #fff;
-    background: var(--bg-card-hover);
-    transform: translateY(-1px);
-  }
-
-  &.active {
-    background: var(--primary-gradient);
-    border-color: var(--primary-color);
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(255, 51, 119, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
   }
 }
 
-.dots {
-  color: var(--text-dim);
-  font-weight: bold;
-  padding: 0 4px;
+.paginator-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm, 8px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e4e4e7;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 51, 119, 0.15);
+      border-color: rgba(255, 51, 119, 0.4);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &.active {
+      background: var(--primary-gradient, linear-gradient(135deg, #ff3377 0%, #ff6b4a 100%));
+      border-color: #ff3377;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255, 51, 119, 0.4);
+      font-weight: 700;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    &.nav-btn {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.paginator-options {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .opt-label {
+    font-size: 0.84rem;
+    color: var(--text-dim, #71717a);
+    margin-right: 6px;
+  }
+
+  .page-size-picker {
+    display: flex;
+    align-items: center;
+
+    .page-size-select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm, 8px);
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      option {
+        background: #181c28;
+        color: #fff;
+      }
+
+      &:focus {
+        border-color: var(--primary-color, #ff3377);
+      }
+    }
+  }
+
+  .jump-to-page {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .jump-input {
+      width: 46px;
+      height: 32px;
+      padding: 0 4px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm, 8px);
+      color: #fff;
+      font-size: 0.84rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s;
+
+      /* Hide spin arrows */
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      &:focus {
+        border-color: var(--primary-color, #ff3377);
+        box-shadow: 0 0 8px rgba(255, 51, 119, 0.3);
+      }
+    }
+
+    .total-pages-label {
+      font-size: 0.84rem;
+      color: var(--text-muted, #a1a1aa);
+    }
+  }
 }

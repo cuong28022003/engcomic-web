@@ -36,4 +36,11 @@ export const READER_ROUTES: Routes = [
         (m) => m.SessionResultComponent
       ),
   },
+  {
+    path: ':testId/attempts/:attemptId/review',
+    loadComponent: () =>
+      import('./attempt-review/attempt-review.component').then(
+        (m) => m.AttemptReviewComponent
+      ),
+  },
 ];

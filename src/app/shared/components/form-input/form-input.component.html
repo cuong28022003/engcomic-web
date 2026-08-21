@@ -1,0 +1,33 @@
+<div class="form-input-group" [class.has-error]="errorMessage()">
+  @if (label()) {
+    <label class="form-label">{{ label() }}</label>
+  }
+  
+  <div class="input-container">
+    @if (icon()) {
+      <i [class]="icon()" class="input-icon"></i>
+    }
+    
+    <input
+      [type]="currentType()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [value]="value()"
+      (input)="onInputChange($event)"
+      class="form-control"
+    />
+
+    @if (type() === 'password') {
+      <button type="button" class="password-toggle-btn" (click)="togglePassword()">
+        <i [class]="showPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+      </button>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-feedback">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+</div>
