@@ -8,16 +8,17 @@
   box-sizing: border-box;
 }
 
-.session-topbar {
+.session-header-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  background: var(--bg-card, rgba(26, 31, 55, 0.7));
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  border-radius: 12px;
-  margin-bottom: 12px;
-  backdrop-filter: blur(10px);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.topbar-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .topbar-left {

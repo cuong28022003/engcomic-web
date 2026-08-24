@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LoadingComponent, ErrorStateComponent } from '@shared/components';
+import { LoadingComponent, ErrorStateComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
 import { PdfViewerComponent } from '../reading-session/pdf-viewer/pdf-viewer.component';
 import { AiReviewImportModalComponent } from '../reading-session/ai-review-import-modal/ai-review-import-modal.component';
 import { ReaderApiService } from '../services/reader-api.service';
@@ -19,7 +19,8 @@ import { ToastService } from '@core/services/toast.service';
     LoadingComponent,
     ErrorStateComponent,
     PdfViewerComponent,
-    AiReviewImportModalComponent
+    AiReviewImportModalComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './attempt-review.component.html',
   styleUrls: ['./attempt-review.component.scss']
@@ -38,6 +39,11 @@ export class AttemptReviewComponent implements OnInit {
   test = signal<TestDetail | null>(null);
   attempt = signal<ToeicAttempt | null>(null);
   reviewItems = signal<ToeicReviewItem[]>([]);
+
+  breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { label: 'Luyện Đề TOEIC', url: '/reader', icon: 'fa-solid fa-book-open-reader' },
+    { label: this.attempt()?.testName || 'Xem Lại Bài Thi' }
+  ]);
 
   loading = signal<boolean>(true);
   errorMessage = signal<string>('');

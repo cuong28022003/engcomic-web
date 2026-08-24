@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild, ChangeDetectorRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LoadingComponent, ErrorStateComponent } from '@shared/components';
+import { LoadingComponent, ErrorStateComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
 import { PdfViewerComponent } from './pdf-viewer/pdf-viewer.component';
 import { AnswerSheetComponent } from './answer-sheet/answer-sheet.component';
 import { PreTestConfigModalComponent } from './pre-test-config-modal/pre-test-config-modal.component';
@@ -27,7 +27,8 @@ import { ToastService } from '@core/services/toast.service';
     ResumeAttemptModalComponent,
     AttemptHistoryModalComponent,
     LoadingComponent, 
-    ErrorStateComponent
+    ErrorStateComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './reading-session.component.html',
   styleUrls: ['./reading-session.component.scss']
@@ -49,6 +50,11 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
   loading = signal<boolean>(true);
   submitting = signal<boolean>(false);
   errorMessage = signal<string>('');
+
+  breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { label: 'Luyện Đề TOEIC', url: '/reader', icon: 'fa-solid fa-book-open-reader' },
+    { label: this.test()?.testName || 'Phòng Thi TOEIC' }
+  ]);
 
   showConfigModal = signal<boolean>(false);
   showResumeModal = signal<boolean>(false);

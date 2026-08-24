@@ -21,3 +21,4 @@ export * from './ai-prompt-box/ai-prompt-box.component';
 export * from './form-select/form-select.component';
 export * from './json-textarea/json-textarea.component';
 export * from './level-indicator/level-indicator.component';
+export * from './breadcrumb/breadcrumb.component';

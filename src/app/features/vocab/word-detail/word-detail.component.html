@@ -1,17 +1,18 @@
 <div class="word-detail" *ngIf="!loading(); else loadingTpl">
   <ng-container *ngIf="card() as c">
 
-    <!-- ── Back + Actions ── -->
-    <div class="top-bar">
-      <button class="btn-icon" (click)="goBack()" title="Quay lại danh sách">
-        <i class="fa-solid fa-arrow-left"></i>
-      </button>
-      <div class="top-actions">
-        <button class="btn-primary" (click)="startPractice()">
+    <!-- ── Breadcrumb + Actions ── -->
+    <app-breadcrumb
+      [items]="breadcrumbItems()"
+      backUrl="/vocab"
+      backLabel="Kho Từ Vựng"
+    >
+      <div actions class="top-actions">
+        <button class="btn btn-primary btn-sm" (click)="startPractice()">
           <i class="fa-solid fa-bolt"></i> Luyện tập
         </button>
       </div>
-    </div>
+    </app-breadcrumb>
 
     <!-- ── Hero Card ── -->
     <div class="hero-card glass-panel">

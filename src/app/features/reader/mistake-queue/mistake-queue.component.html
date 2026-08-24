@@ -1,23 +1,21 @@
 <div class="queue-container">
-  <!-- Header -->
-  <div class="queue-header">
-    <div class="header-left">
-      <a routerLink="/reader" class="back-link">← Danh sách đề thi</a>
-      <h1 class="queue-title">🚨 Hàng Đợi Lỗi Sai (Mistake Queue)</h1>
-      <p class="queue-desc">Tập hợp các câu bạn đã làm sai từ tất cả các bài thi TOEIC để phân tích, giải thích với AI và ôn tập.</p>
-    </div>
-
-    <div class="header-actions">
+  <!-- Shared Breadcrumb Navigation -->
+  <app-breadcrumb
+    [items]="breadcrumbItems"
+    backUrl="/reader"
+    backLabel="Danh sách đề thi"
+  >
+    <div actions class="header-actions">
       <button 
         type="button" 
-        class="btn-batch-ai"
+        class="btn btn-primary btn-sm"
         [disabled]="mistakes().length === 0"
         (click)="openImportModal()"
       >
-        🤖 Tạo Prompt & Import Phân Tích AI ({{ pendingCount() > 0 ? pendingCount() + ' câu chờ' : mistakes().length + ' câu' }})
+        <i class="fas fa-robot"></i> Import AI ({{ pendingCount() > 0 ? pendingCount() + ' câu chờ' : mistakes().length + ' câu' }})
       </button>
     </div>
-  </div>
+  </app-breadcrumb>
 
   <!-- Stats Bar -->
   <div class="stats-row">

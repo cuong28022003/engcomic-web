@@ -11,6 +11,7 @@ import { ExerciseImportModalComponent } from '@shared/components/exercise-import
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 import { FormSelectComponent, FormSelectOption } from '@shared/components/form-select/form-select.component';
+import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-deck-detail',
@@ -24,6 +25,7 @@ import { FormSelectComponent, FormSelectOption } from '@shared/components/form-s
     StatusBadgeComponent,
     FormInputComponent,
     FormSelectComponent,
+    BreadcrumbComponent,
   ],
   templateUrl: './deck-detail.component.html',
   styleUrls: ['./deck-detail.component.scss'],
@@ -36,6 +38,11 @@ export class DeckDetailComponent implements OnInit {
   searchQuery = signal<string>('');
   filterTab = signal<'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'>('all');
   notFound = signal<boolean>(false);
+
+  breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { label: 'Bộ Thẻ', url: '/deck', icon: 'fa-solid fa-layer-group' },
+    { label: this.deck()?.name || 'Chi Tiết Bộ Thẻ' }
+  ]);
 
   readonly posOptions: FormSelectOption[] = [
     { label: 'Danh từ (noun)', value: 'noun' },

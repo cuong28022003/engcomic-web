@@ -1,0 +1,77 @@
+<nav class="breadcrumb-container glass-panel" aria-label="Breadcrumb">
+  <div class="breadcrumb-nav-group">
+    <!-- Optional Back Button -->
+    @if (backUrl()) {
+      <a [routerLink]="backUrl()" class="nav-back-btn" [title]="backLabel() || 'Quay lại'">
+        <i class="fa-solid fa-arrow-left"></i>
+        @if (backLabel()) {
+          <span class="back-text">{{ backLabel() }}</span>
+        }
+      </a>
+      <span class="breadcrumb-divider back-divider"></span>
+    }
+
+    <!-- Optional Home Icon -->
+    @if (showHome()) {
+      <a routerLink="/" class="breadcrumb-link home-link" title="Trang chủ">
+        <i class="fa-solid fa-house"></i>
+      </a>
+
+      @if (items().length > 0) {
+        <span class="breadcrumb-separator">
+          @if (separator() === 'chevron') {
+            <i class="fa-solid fa-chevron-right"></i>
+          } @else if (separator() === 'arrow') {
+            <i class="fa-solid fa-arrow-right"></i>
+          } @else {
+            /
+          }
+        </span>
+      }
+    }
+
+    <!-- Breadcrumb Items List -->
+    <ol class="breadcrumb-list">
+      @for (item of items(); track $index; let isLast = $last) {
+        <li class="breadcrumb-item" [class.active]="isLast" [attr.aria-current]="isLast ? 'page' : null">
+          @if (!isLast && item.url) {
+            <a
+              [routerLink]="item.url"
+              [queryParams]="item.queryParams"
+              class="breadcrumb-link"
+            >
+              @if (item.icon) {
+                <i [class]="item.icon + ' item-icon'"></i>
+              }
+              <span class="item-label">{{ item.label }}</span>
+            </a>
+          } @else {
+            <span class="current-page">
+              @if (item.icon) {
+                <i [class]="item.icon + ' item-icon'"></i>
+              }
+              <span class="item-label">{{ item.label }}</span>
+            </span>
+          }
+
+          @if (!isLast) {
+            <span class="breadcrumb-separator" aria-hidden="true">
+              @if (separator() === 'chevron') {
+                <i class="fa-solid fa-chevron-right"></i>
+              } @else if (separator() === 'arrow') {
+                <i class="fa-solid fa-arrow-right"></i>
+              } @else {
+                /
+              }
+            </span>
+          }
+        </li>
+      }
+    </ol>
+  </div>
+
+  <!-- Projected Actions Slot (e.g. Edit buttons, Action buttons) -->
+  <div class="breadcrumb-actions">
+    <ng-content select="[actions]"></ng-content>
+  </div>
+</nav>

@@ -160,11 +160,23 @@
             />
           </div>
 
+          <!-- Main Content: Compact 2-line layout -->
           <div class="card-main">
             <div class="card-word-row">
               <span class="card-word">{{ card.word || card.front }}</span>
+
               @if (card.ipa) {
                 <span class="card-ipa">{{ card.ipa }}</span>
+              }
+
+              @if (card.partOfSpeech) {
+                <span class="card-pos-pill">{{ card.partOfSpeech }}</span>
+              }
+
+              @if (card.audio) {
+                <button class="card-audio-btn" (click)="playAudio(card.audio, $event)" title="Phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
               }
 
               <!-- Deck Badge -->
@@ -195,14 +207,43 @@
                   <i class="fa-solid fa-tag"></i> {{ card.topic }}
                 </span>
               }
+
+              <button
+                class="card-fav-btn"
+                [class.favorited]="card.isFavorite"
+                (click)="toggleFavorite(card, $event)"
+                title="Đánh dấu yêu thích"
+              >
+                <i [class]="card.isFavorite ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+              </button>
             </div>
-            <div class="card-meaning">{{ card.meaning || card.back }}</div>
-            @if (card.definitionEn) {
-              <div class="card-definition">{{ card.definitionEn }}</div>
-            }
+
+            <!-- Meaning and definition on one sleek line -->
+            <div class="card-meaning-row">
+              <span class="card-meaning">{{ card.meaning || card.back }}</span>
+              @if (card.definitionEn) {
+                <span class="card-definition-en">• {{ card.definitionEn }}</span>
+              }
+            </div>
           </div>
 
+          <!-- Card Right Column: Mastery Level, Status & Next Review -->
           <div class="card-meta">
+            <app-status-badge
+              type="level"
+              [label]="'L' + (card.masteryLevel || 1)"
+              [title]="'Mastery Level ' + (card.masteryLevel || 1)"
+            ></app-status-badge>
+
+            <span class="status-badge" [class]="getStatusClass(card.status)">
+              {{ getStatusLabel(card.status) }}
+            </span>
+
+            <span class="next-review" [class.overdue]="isOverdue(card.nextReview, card.status)">
+              <i class="fa-regular fa-clock"></i>
+              {{ formatNextReview(card.nextReview, card.status) }}
+            </span>
+
             <button
               class="btn-icon change-deck-btn"
               (click)="openAssignDeckModal(card, $event)"
@@ -210,36 +251,23 @@
             >
               <i class="fa-solid fa-folder-tree"></i>
             </button>
-
-            <div class="stage-dots">
-              @for (filled of getStageDots(card.stage); track $index) {
-                <span class="dot" [class.filled]="filled"></span>
-              }
-              <span class="stage-label">{{ getStageLabel(card.stage) }}</span>
-            </div>
-            <span class="status-badge" [class]="getStatusClass(card.status)">
-              {{ getStatusLabel(card.status) }}
-            </span>
-            <span class="next-review" [class.overdue]="isOverdue(card.nextReview)">
-              <i class="fa-regular fa-clock"></i>
-              {{ formatNextReview(card.nextReview) }}
-            </span>
           </div>
         </div>
       }
     </div>
   }
 
-  <!-- ── Pagination ── -->
-  @if (totalPages() > 1) {
-    <div class="pagination">
-      <button class="btn-icon" (click)="prevPage()" [disabled]="currentPage() === 0">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <span class="page-info">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
-      <button class="btn-icon" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
+  <!-- ── Shared Paginator Component ── -->
+  @if (totalElements() > 0) {
+    <div class="paginator-container">
+      <app-paginator
+        [currentPage]="paginatorPage()"
+        [totalItems]="totalElements()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 20, 50, 100]"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      ></app-paginator>
     </div>
   }
 

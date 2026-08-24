@@ -1,40 +1,41 @@
 <div class="session-wrapper">
-  <!-- Top Bar Navigation -->
-  <header class="session-topbar">
-    <div class="topbar-left">
-      <a routerLink="/reader" class="back-btn">← Danh sách đề</a>
-      <h1 class="session-title">{{ test()?.testName || 'Đang tải đề thi...' }}</h1>
-    </div>
+  <!-- Top Bar Navigation with Shared Breadcrumb -->
+  <app-breadcrumb
+    [items]="breadcrumbItems()"
+    backUrl="/reader"
+    backLabel="Danh sách đề"
+  >
+    <div actions class="session-header-actions">
+      <!-- Mobile view switch tabs -->
+      <div class="mobile-tabs">
+        <button 
+          type="button" 
+          class="m-tab-btn" 
+          [class.active]="activeMobileTab() === 'pdf'"
+          (click)="setMobileTab('pdf')"
+        >
+          📄 Đề thi PDF
+        </button>
+        <button 
+          type="button" 
+          class="m-tab-btn" 
+          [class.active]="activeMobileTab() === 'answers'"
+          (click)="setMobileTab('answers')"
+        >
+          📝 Bảng đáp án
+        </button>
+      </div>
 
-    <!-- Mobile view switch tabs -->
-    <div class="mobile-tabs">
-      <button 
-        type="button" 
-        class="m-tab-btn" 
-        [class.active]="activeMobileTab() === 'pdf'"
-        (click)="setMobileTab('pdf')"
-      >
-        📄 Đề thi PDF
-      </button>
-      <button 
-        type="button" 
-        class="m-tab-btn" 
-        [class.active]="activeMobileTab() === 'answers'"
-        (click)="setMobileTab('answers')"
-      >
-        📝 Bảng đáp án
-      </button>
+      <div class="topbar-actions-right">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="openHistory()">
+          <i class="fas fa-history"></i> Lịch sử làm bài
+        </button>
+        <a routerLink="/reader/mistakes" class="btn btn-secondary btn-sm queue-link-btn">
+          🚨 Hàng đợi lỗi
+        </a>
+      </div>
     </div>
-
-    <div class="topbar-right">
-      <button type="button" class="history-btn" (click)="openHistory()">
-        <i class="fas fa-history"></i> Lịch sử làm bài
-      </button>
-      <a routerLink="/reader/mistakes" class="queue-link">
-        🚨 Hàng đợi lỗi
-      </a>
-    </div>
-  </header>
+  </app-breadcrumb>
 
   <!-- Resume Dang Do Attempt Modal -->
   @if (showResumeModal() && activeAttempt()) {

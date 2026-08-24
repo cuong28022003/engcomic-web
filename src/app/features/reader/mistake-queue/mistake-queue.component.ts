@@ -8,7 +8,7 @@ import { MistakeQueueService } from '../services/mistake-queue.service';
 import { ReaderApiService } from '../services/reader-api.service';
 import { MistakeItemComponent } from './mistake-item/mistake-item.component';
 import { AiReviewImportModalComponent } from '../reading-session/ai-review-import-modal/ai-review-import-modal.component';
-import { EmptyStateComponent, PaginatorComponent } from '@shared/components';
+import { EmptyStateComponent, PaginatorComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
 
 import { ToastService } from '@core/services/toast.service';
 
@@ -22,7 +22,8 @@ import { ToastService } from '@core/services/toast.service';
     MistakeItemComponent,
     AiReviewImportModalComponent,
     EmptyStateComponent,
-    PaginatorComponent
+    PaginatorComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './mistake-queue.component.html',
   styleUrls: ['./mistake-queue.component.scss']
@@ -31,6 +32,11 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
   private readerApi = inject(ReaderApiService);
   private toast = inject(ToastService);
   public mistakeQueueService = inject(MistakeQueueService);
+
+  readonly breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Luyện Đề TOEIC', url: '/reader', icon: 'fa-solid fa-book-open-reader' },
+    { label: 'Hàng Đợi Lỗi Sai' }
+  ];
 
   readonly mistakes = signal<MistakeItem[]>([]);
   private sub?: Subscription;

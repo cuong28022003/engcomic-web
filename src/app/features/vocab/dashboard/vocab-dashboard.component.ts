@@ -12,6 +12,8 @@ import { PendingCountService } from '@services/pending-count.service';
 import { Card, Deck, DashboardStats, PracticePromptResponse } from '@models/index';
 import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
 import { ExerciseImportModalComponent } from '@shared/components/exercise-import-modal/exercise-import-modal.component';
+import { PaginatorComponent } from '@shared/components/paginator/paginator.component';
+import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-vocab-dashboard',
@@ -22,6 +24,8 @@ import { ExerciseImportModalComponent } from '@shared/components/exercise-import
     RouterModule,
     VocabImportModalComponent,
     ExerciseImportModalComponent,
+    PaginatorComponent,
+    StatusBadgeComponent,
   ],
   templateUrl: './vocab-dashboard.component.html',
   styleUrls: ['./vocab-dashboard.component.scss'],
@@ -34,8 +38,13 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   cards = signal<Card[]>([]);
   decks = signal<Deck[]>([]);
   loading = signal(true);
-  totalPages = signal(0);
-  currentPage = signal(0);
+  totalPages = signal(1);
+  currentPage = signal(0); // 0-indexed for backend API
+  totalElements = signal<number>(0);
+  pageSize = signal<number>(20);
+
+  // 1-indexed page for PaginatorComponent
+  paginatorPage = computed(() => this.currentPage() + 1);
 
   // Shared Modals State
   isVocabModalOpen = signal<boolean>(false);
@@ -138,9 +147,10 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
 
   loadDashboard(page = 0) {
     this.loading.set(true);
+    const size = this.pageSize();
     const params: Record<string, string | number | boolean | undefined> = {
       page,
-      size: 20,
+      size,
       ...(this.searchQuery && { search: this.searchQuery }),
       ...(this.filterStatus && { status: this.filterStatus }),
       ...(this.filterTopic && { topic: this.filterTopic }),
@@ -159,7 +169,9 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
             leechCount: res.leechCount ?? res.stats?.leechCount ?? 0,
           });
           const cardPage = res.cards;
-          this.cards.set(cardPage?.content ?? (Array.isArray(cardPage) ? cardPage : []));
+          const list = cardPage?.content ?? (Array.isArray(cardPage) ? cardPage : []);
+          this.cards.set(list);
+          this.totalElements.set(cardPage?.totalElements ?? this.stats().total ?? list.length);
           this.totalPages.set(cardPage?.totalPages ?? 1);
           this.currentPage.set(page);
         }
@@ -183,64 +195,77 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboard(0);
   }
 
-  filterByTopic(topic?: string) {
-    if (!topic) return;
-    this.filterTopic = topic;
-    this.loadDashboard(0);
-  }
-
   clearFilters() {
     this.searchQuery = '';
     this.filterStatus = '';
     this.filterTopic = '';
     this.filterDeckId = '';
-    this.router.navigate([], { relativeTo: this.route, queryParams: {} });
     this.loadDashboard(0);
   }
 
-  // ─── Selection Logic ──────────────────────────────────────────
-
-  toggleSelectCard(cardId: string, event: Event): void {
-    event.stopPropagation();
-    this.selectedCardIds.update(set => {
-      const next = new Set(set);
-      if (next.has(cardId)) {
-        next.delete(cardId);
-      } else {
-        next.add(cardId);
-      }
-      return next;
-    });
+  onDeckChange() {
+    this.loadDashboard(0);
   }
 
-  toggleSelectAll(): void {
-    const list = this.cards();
+  setFilterStatus(status: string) {
+    this.filterStatus = status;
+    this.loadDashboard(0);
+  }
+
+  filterByTopic(topic: string): void {
+    this.filterTopic = topic;
+    this.loadDashboard(0);
+  }
+
+  clearTopicFilter(): void {
+    this.filterTopic = '';
+    this.loadDashboard(0);
+  }
+
+  // ─── Bulk Actions ─────────────────────────────────────────────
+
+  toggleSelectAll(event?: Event): void {
     if (this.isAllSelected()) {
       this.selectedCardIds.set(new Set());
     } else {
-      this.selectedCardIds.set(new Set(list.map(c => c.id)));
+      const allIds = new Set(this.cards().map(c => c.id));
+      this.selectedCardIds.set(allIds);
     }
   }
 
-  clearSelection(): void {
-    this.selectedCardIds.set(new Set());
+  toggleSelectCard(cardId: string, event: Event): void {
+    event.stopPropagation();
+    const current = new Set(this.selectedCardIds());
+    if (current.has(cardId)) {
+      current.delete(cardId);
+    } else {
+      current.add(cardId);
+    }
+    this.selectedCardIds.set(current);
   }
 
   isCardSelected(cardId: string): boolean {
     return this.selectedCardIds().has(cardId);
   }
 
-  // ─── Bulk Deck Assignment ─────────────────────────────────────
+  clearSelection(): void {
+    this.selectedCardIds.set(new Set());
+  }
 
   executeBulkAssignDeck(): void {
-    const ids = Array.from(this.selectedCardIds());
-    if (ids.length === 0 || this.isAssigningBulk()) return;
+    const cardIds = Array.from(this.selectedCardIds());
+    if (cardIds.length === 0 || this.isAssigningBulk()) return;
 
     this.isAssigningBulk.set(true);
-    this.cardApi.batchAssignDeck(ids, this.targetDeckIdForBulk).subscribe({
-      next: (res) => {
+    const targetDeckId = (this.targetDeckIdForBulk === 'unassigned' || !this.targetDeckIdForBulk)
+      ? undefined
+      : this.targetDeckIdForBulk;
+
+    this.cardApi.batchAssignDeck(cardIds, targetDeckId).subscribe({
+      next: (res: { totalAssigned: number; message: string }) => {
         this.isAssigningBulk.set(false);
-        this.toast.success(res.message || `Đã cập nhật ${ids.length} thẻ từ!`);
+        const deckName = this.deckNameMap().get(targetDeckId || '') || 'Chưa phân loại';
+        this.toast.success(`Đã chuyển ${res.totalAssigned || cardIds.length} thẻ từ vào [${deckName}]`);
         this.clearSelection();
         this.targetDeckIdForBulk = '';
         this.loadDashboard(this.currentPage());
@@ -248,12 +273,12 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isAssigningBulk.set(false);
-        this.toast.error('Lỗi khi gán bộ thẻ hàng loạt');
+        this.toast.error('Lỗi khi chuyển bộ thẻ hàng loạt');
       }
     });
   }
 
-  // ─── Single Card Deck Assignment ──────────────────────────────
+  // ─── Single Card Assign Deck Modal ────────────────────────────
 
   openAssignDeckModal(card: Card, event: Event): void {
     event.stopPropagation();
@@ -263,6 +288,7 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
 
   closeAssignDeckModal(): void {
     this.cardToAssignDeck.set(null);
+    this.singleTargetDeckId = '';
   }
 
   executeSingleAssignDeck(): void {
@@ -270,12 +296,14 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     if (!card || this.isAssigningSingle()) return;
 
     this.isAssigningSingle.set(true);
-    const targetDeckId = this.singleTargetDeckId || undefined;
+    const targetDeckId = (this.singleTargetDeckId === 'unassigned' || !this.singleTargetDeckId)
+      ? undefined
+      : this.singleTargetDeckId;
 
     this.cardApi.updateCard(card.id, {
       deckId: targetDeckId,
     }).subscribe({
-      next: (updated) => {
+      next: (updated: Card) => {
         this.isAssigningSingle.set(false);
         this.cards.update(list => list.map(c => c.id === updated.id ? { ...c, deckId: updated.deckId } : c));
         this.closeAssignDeckModal();
@@ -354,16 +382,33 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/vocab/leech']);
   }
 
+  playAudio(audioUrl?: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!audioUrl) return;
+    try {
+      const a = new Audio(audioUrl);
+      a.play().catch(() => {});
+    } catch {}
+  }
+
+  toggleFavorite(card: Card, event: Event): void {
+    event.stopPropagation();
+    const newFav = !(card.favorite || card.isFavorite);
+    this.cardApi.updateCard(card.id, { favorite: newFav } as Partial<Card>).subscribe({
+      next: (updated: Card) => {
+        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: updated.favorite ?? newFav, isFavorite: updated.isFavorite ?? newFav } : c));
+      },
+      error: () => {
+        this.toast.error('Không thể cập nhật yêu thích');
+      }
+    });
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────
 
   getDeckName(deckId?: string): string | null {
     if (!deckId) return null;
     return this.deckNameMap().get(deckId) || 'Bộ thẻ';
-  }
-
-  getStageLabel(stage?: number): string {
-    const labels = ['Mới', 'Nhận biết', 'Gợi nhớ', 'Phát âm', 'Điền từ', 'Thành thạo'];
-    return labels[stage ?? 0] ?? 'Mới';
   }
 
   getStatusClass(status?: string): string {
@@ -383,31 +428,34 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     return map[status ?? 'new'] ?? 'Mới';
   }
 
-  getStageDots(stage = 0): boolean[] {
-    return Array.from({ length: 5 }, (_, i) => i < stage);
-  }
-
-  isOverdue(nextReview?: string): boolean {
-    if (!nextReview) return false;
-    return new Date(nextReview) < new Date();
-  }
-
-  formatNextReview(nextReview?: string): string {
-    if (!nextReview) return '—';
+  isOverdue(nextReview?: string | Date, status?: string): boolean {
+    if (status === 'new' || !nextReview) return false;
     const d = new Date(nextReview);
+    if (isNaN(d.getTime())) return false;
+    return d.getTime() < Date.now();
+  }
+
+  formatNextReview(nextReview?: string | Date, status?: string): string {
+    if (status === 'new' || !nextReview) return 'Chưa học';
+    const d = new Date(nextReview);
+    if (isNaN(d.getTime())) return 'Chưa học';
     const now = new Date();
-    const diffDays = Math.ceil((d.getTime() - now.getTime()) / 86400000);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfTarget - startOfToday) / 86400000);
+
     if (diffDays < 0) return 'Quá hạn';
     if (diffDays === 0) return 'Hôm nay';
     if (diffDays === 1) return 'Ngày mai';
     return `${diffDays} ngày nữa`;
   }
 
-  prevPage() {
-    if (this.currentPage() > 0) this.loadDashboard(this.currentPage() - 1);
+  onPageChange(page1Indexed: number): void {
+    this.loadDashboard(page1Indexed - 1);
   }
 
-  nextPage() {
-    if (this.currentPage() < this.totalPages() - 1) this.loadDashboard(this.currentPage() + 1);
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.loadDashboard(0);
   }
 }

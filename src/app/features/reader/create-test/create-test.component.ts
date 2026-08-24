@@ -8,6 +8,8 @@ import { ReaderApiService } from '../services/reader-api.service';
 import { CreateTestPayload } from '../models';
 import { ToastService } from '@core/services/toast.service';
 
+import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
+
 @Component({
   selector: 'app-create-test',
   standalone: true,
@@ -16,7 +18,8 @@ import { ToastService } from '@core/services/toast.service';
     RouterModule,
     PdfUploadStepComponent,
     AiParsePromptStepComponent,
-    AnswerKeyImportStepComponent
+    AnswerKeyImportStepComponent,
+    BreadcrumbComponent
   ],
   templateUrl: './create-test.component.html',
   styleUrls: ['./create-test.component.scss']
@@ -25,6 +28,11 @@ export class CreateTestComponent {
   private readerApi = inject(ReaderApiService);
   private router = inject(Router);
   private toast = inject(ToastService);
+
+  readonly breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Luyện Đề TOEIC', url: '/reader', icon: 'fa-solid fa-book-open-reader' },
+    { label: 'Tạo Đề Thi Mới' }
+  ];
 
   currentStep: 1 | 2 | 3 = 1;
 

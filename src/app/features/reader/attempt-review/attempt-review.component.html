@@ -1,48 +1,45 @@
 <div class="review-page-wrapper">
-  <!-- Top Bar Navigation -->
-  <header class="review-topbar">
-    <div class="topbar-left">
-      <a routerLink="/reader" class="back-link">
-        <i class="fas fa-arrow-left"></i> Quay lại danh sách đề thi
-      </a>
-      <div class="test-meta">
-        <h1 class="test-title">{{ attempt()?.testName || 'Xem Lại Bài Thi' }}</h1>
+  <!-- Top Bar Navigation with Shared Breadcrumb -->
+  <app-breadcrumb
+    [items]="breadcrumbItems()"
+    backUrl="/reader"
+    backLabel="Danh sách đề"
+  >
+    <div actions class="review-header-actions">
+      <!-- Mobile view switch tabs -->
+      <div class="mobile-tabs">
+        <button 
+          type="button" 
+          class="m-tab-btn" 
+          [class.active]="activeMobileTab() === 'pdf'"
+          (click)="activeMobileTab.set('pdf')"
+        >
+          📄 Đề thi PDF
+        </button>
+        <button 
+          type="button" 
+          class="m-tab-btn" 
+          [class.active]="activeMobileTab() === 'answers'"
+          (click)="activeMobileTab.set('answers')"
+        >
+          🧠 Lời giải & Phân tích
+        </button>
+      </div>
+
+      <div class="topbar-actions-right">
         @if (attempt(); as att) {
           <span class="attempt-badge">Lượt #{{ att.attemptNumber }}</span>
           <span class="attempt-score">{{ att.rawScore }}/{{ att.totalQuestions }} ({{ att.accuracyPercentage }}%)</span>
         }
+        <button type="button" class="btn btn-secondary btn-sm" (click)="openAiImportModal()">
+          <i class="fas fa-robot"></i> Import AI
+        </button>
+        <a routerLink="/reader/mistakes" class="btn btn-secondary btn-sm queue-link-btn">
+          🚨 Hàng đợi lỗi
+        </a>
       </div>
     </div>
-
-    <!-- Mobile view switch tabs -->
-    <div class="mobile-tabs">
-      <button 
-        type="button" 
-        class="m-tab-btn" 
-        [class.active]="activeMobileTab() === 'pdf'"
-        (click)="activeMobileTab.set('pdf')"
-      >
-        📄 Đề thi PDF
-      </button>
-      <button 
-        type="button" 
-        class="m-tab-btn" 
-        [class.active]="activeMobileTab() === 'answers'"
-        (click)="activeMobileTab.set('answers')"
-      >
-        🧠 Lời giải & Phân tích
-      </button>
-    </div>
-
-    <div class="topbar-right">
-      <button type="button" class="btn-ai-import" (click)="openAiImportModal()">
-        <i class="fas fa-robot"></i> Import Phân Tích AI
-      </button>
-      <a routerLink="/reader/mistakes" class="btn-queue-link">
-        🚨 Hàng đợi lỗi
-      </a>
-    </div>
-  </header>
+  </app-breadcrumb>
 
   <!-- Loading / Error states -->
   @if (loading()) {

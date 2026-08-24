@@ -49,6 +49,8 @@ export interface Card {
   lastReviewed?: string;
   reviewCount?: number;
   seenExampleIds?: string[];
+  favorite?: boolean;
+  isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;
   // Legacy fields (backward compat)

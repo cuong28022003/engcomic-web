@@ -1,8 +1,10 @@
 <div class="create-test-container">
-  <div class="header-nav">
-    <a routerLink="/reader" class="back-link">← Quay lại danh sách đề thi</a>
-    <h1 class="page-title">Tạo Đề Thi TOEIC Mới</h1>
-  </div>
+  <!-- Shared Breadcrumb Navigation -->
+  <app-breadcrumb
+    [items]="breadcrumbItems"
+    backUrl="/reader"
+    backLabel="Danh sách đề thi"
+  ></app-breadcrumb>
 
   <!-- Stepper Indicator -->
   <div class="stepper-bar">

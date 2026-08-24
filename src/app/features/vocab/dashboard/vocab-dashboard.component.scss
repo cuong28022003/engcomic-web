@@ -231,34 +231,36 @@
 .card-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .vocab-card {
   display: flex;
   align-items: center;
-  padding: 16px 20px;
+  padding: 10px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  gap: 16px;
-  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 12px;
+  border-radius: var(--radius-md, 10px);
+  background: rgba(18, 18, 28, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 
   &:hover {
-    transform: translateX(4px);
-    border-color: var(--border-glow);
-    box-shadow: 0 4px 20px rgba(255, 51, 119, 0.12);
+    transform: translateY(-1px);
+    border-color: rgba(255, 51, 119, 0.4);
+    background: rgba(25, 25, 38, 0.85);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
 
   &.selected-row {
-    border-color: var(--primary-color);
-    background: rgba(255, 51, 119, 0.05);
+    border-color: var(--primary-color, #ff3377);
+    background: rgba(255, 51, 119, 0.08);
   }
 
   .card-checkbox-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
     flex-shrink: 0;
   }
 }
@@ -266,59 +268,138 @@
 .card-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .card-word-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+
+  .card-word {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+
+  .card-ipa {
+    font-size: 0.8rem;
+    color: var(--text-muted, #94a3b8);
+    font-family: var(--font-mono, monospace);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .card-pos-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: lowercase;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .card-audio-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim, #64748b);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      transform: scale(1.15);
+    }
+  }
+
+  .card-fav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim, #64748b);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: #eab308;
+      transform: scale(1.15);
+    }
+
+    &.favorited {
+      color: #eab308;
+      text-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+    }
+  }
 }
 
-.card-word {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fff;
-}
+.card-meaning-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
-.card-ipa {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-style: italic;
+  .card-meaning {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  .card-definition-en {
+    color: var(--text-dim, #64748b);
+    font-size: 0.8rem;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .badge-deck {
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(6, 182, 212, 0.12);
   color: #06b6d4;
-  border: 1px solid rgba(6, 182, 212, 0.35);
-  font-size: 0.75rem;
-  padding: 2px 8px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  font-size: 0.72rem;
+  padding: 1px 7px;
   border-radius: 9999px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(6, 182, 212, 0.3);
+    background: rgba(6, 182, 212, 0.25);
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 }
 
 .badge-unassigned {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
-  border: 1px dashed var(--border-color);
-  font-size: 0.72rem;
-  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #94a3b8);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  font-size: 0.7rem;
+  padding: 1px 6px;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
+    color: var(--primary-color, #ff3377);
+    border-color: var(--primary-color, #ff3377);
   }
 }
 
@@ -328,102 +409,70 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.72rem;
+  padding: 1px 6px;
 
   &:hover {
-    background: var(--primary-color);
+    background: var(--primary-color, #ff3377);
     color: #fff;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(255, 51, 119, 0.3);
   }
 }
 
-.card-meaning {
-  font-size: 0.92rem;
-  color: var(--text-main);
-  margin-bottom: 2px;
-}
-
-.card-definition {
-  font-size: 0.82rem;
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-// ── Card Meta ────────────────────────────────────────────────────────
+// ── Card Meta (Right Column) ─────────────────────────────────────────
 .card-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 
   .change-deck-btn {
     background: transparent;
     border: none;
-    color: var(--text-dim);
-    font-size: 0.95rem;
-    padding: 6px;
-    border-radius: var(--radius-sm);
+    color: var(--text-dim, #64748b);
+    font-size: 0.88rem;
+    padding: 4px;
+    border-radius: var(--radius-sm, 6px);
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
       color: #06b6d4;
-      background: rgba(6, 182, 212, 0.1);
+      background: rgba(6, 182, 212, 0.12);
     }
-  }
-}
-
-.stage-dots {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--bg-card-hover);
-    border: 1.5px solid rgba(255,255,255,0.15);
-    transition: all 0.2s;
-
-    &.filled {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-      box-shadow: 0 0 6px rgba(255, 51, 119, 0.5);
-    }
-  }
-
-  .stage-label {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    margin-left: 4px;
   }
 }
 
 .status-badge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 999px);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 
-  &.status-new { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
-  &.status-learning { background: rgba(255,184,0,0.12); color: #fbbf24; border: 1px solid rgba(255,184,0,0.3); }
-  &.status-mature { background: rgba(16,185,129,0.12); color: var(--success-color); border: 1px solid rgba(16,185,129,0.3); }
-  &.status-leech { background: rgba(239,68,68,0.12); color: var(--danger-color); border: 1px solid rgba(239,68,68,0.3); }
+  &.status-new { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+  &.status-learning { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+  &.status-mature { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  &.status-leech { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
 }
 
 .next-review {
-  font-size: 0.78rem;
-  color: var(--text-dim);
+  font-size: 0.76rem;
+  color: var(--text-dim, #64748b);
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 
-  &.overdue { color: var(--danger-color); }
+  &.overdue { color: #f87171; font-weight: 600; }
+}
+
+.paginator-container {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 // ── Floating Bulk Action Bar ─────────────────────────────────────────

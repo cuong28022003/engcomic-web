@@ -7,13 +7,15 @@ import { PendingItemApiService } from '@services/pending-item-api.service';
 import { PendingCountService } from '@services/pending-count.service';
 import { DictionaryApiService, WordPronunciationData } from '@services/dictionary-api.service';
 import { Card, WordRelation, CardDetailResponse } from '@models/index';
+import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
+import { computed } from '@angular/core';
 
 type RelationTab = 'family' | 'collocation' | 'synonym';
 
 @Component({
   selector: 'app-word-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, BreadcrumbComponent],
   templateUrl: './word-detail.component.html',
   styleUrls: ['./word-detail.component.scss'],
 })
@@ -24,6 +26,11 @@ export class WordDetailComponent implements OnInit, OnDestroy {
   activeRelTab = signal<RelationTab>('family');
   activeExampleFormality = signal<string>('all');
   addingPending = signal<Set<string>>(new Set());
+
+  breadcrumbItems = computed<BreadcrumbItem[]>(() => [
+    { label: 'Kho Từ Vựng', url: '/vocab', icon: 'fa-solid fa-book-bookmark' },
+    { label: this.card()?.word || 'Chi Tiết Từ' }
+  ]);
 
   // Pronunciation & Accents
   pronunciationData = signal<WordPronunciationData | null>(null);
@@ -77,7 +84,7 @@ export class WordDetailComponent implements OnInit, OnDestroy {
 
   loadPronunciation(word: string) {
     this.dictionaryApi.getPronunciation(word).subscribe({
-      next: (data) => {
+      next: (data: WordPronunciationData | null) => {
         this.pronunciationData.set(data);
       }
     });

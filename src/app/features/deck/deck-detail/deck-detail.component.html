@@ -1,21 +1,16 @@
 <div class="deck-detail-container">
-  <!-- Top Navigation & Action Bar -->
-  <header class="detail-header glass-panel">
-    <div class="breadcrumb-trail">
-      <a routerLink="/deck" class="nav-back-link" title="Quay lại danh sách bộ thẻ">
-        <i class="fa-solid fa-arrow-left"></i>
-        <span>Bộ Thẻ</span>
-      </a>
-      <span class="separator">/</span>
-      <span class="current-deck-name">{{ deck()?.name || 'Chi Tiết Bộ Thẻ' }}</span>
-    </div>
-
-    <div class="header-actions">
+  <!-- Top Navigation & Action Bar with Shared Breadcrumb -->
+  <app-breadcrumb
+    [items]="breadcrumbItems()"
+    backUrl="/deck"
+    backLabel="Bộ Thẻ"
+  >
+    <div actions class="header-actions">
       <button class="btn btn-secondary btn-sm" (click)="openEditDeckModal()" title="Chỉnh sửa tên và mô tả bộ thẻ">
         <i class="fa-solid fa-pen"></i> Sửa Bộ Thẻ
       </button>
     </div>
-  </header>
+  </app-breadcrumb>
 
   <main class="detail-main">
     <!-- Deck Hero Profile -->
