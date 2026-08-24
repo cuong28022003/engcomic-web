@@ -1,28 +1,18 @@
-# Feature Specification: TOEIC Reader — PDF Viewer & Answer Sheet
+# Feature Specification: TOEIC Reader — PDF Viewer & Exam Workspace (v4)
 
 > **Perspective**: Frontend Product Owner & UI/UX  
-> **Purpose**: Answer the question **"WHAT & WHY"** (UI / UX / Client Requirements)
-> **Version**: v3 — PDF pre-parsed by AI; JSON import with AI Parse Prompt helper
+> **Purpose**: Answer the question **"WHAT & WHY"** (UI / UX / Client Requirements)  
+> **Version**: v4 — Full Split-Screen PDF, Session Attempts, AI Non-blocking Review & Mistake Queue Integration
 
 ---
 
 ## 1. Overview & Objective
 
 - **Feature ID**: 003
-- **Feature Name**: TOEIC Reader — PDF Viewer & Answer Sheet
+- **Feature Name**: TOEIC Reader — PDF Viewer & Exam Workspace
 - **Priority**: P1
 - **Route**: `/reader`
-- **Objective**: Môi trường làm bài TOEIC tối giản và đáng tin cậy — PDF chỉ đóng vai trò hiển thị thuần túy (như Edge/Chrome PDF viewer), toàn bộ câu hỏi và đáp án đến từ JSON tự chuẩn bị. Người dùng cuộn đọc PDF bên trái, chọn đáp án bên phải, nộp bài, hệ thống chấm điểm và gom lỗi sai vào Mistake Queue để phân tích sau với AI.
-
-> **Điều đã loại bỏ so với v1**:
-> - ❌ Auto-parse PDF thành câu hỏi real-time (không cần, không đáng tin)
-> - ❌ Text layer extraction từ PDF
-> - ❌ Selection Popup tra từ từ PDF content (bỏ khỏi scope này)
-> - ❌ Passage/Question_text lưu trong DB
->
-> **Thay đổi so với v2**:
-> - ✅ PDF được parse sẵn bởi AI (ChatGPT/Claude) trước khi import — không parse real-time
-> - ✅ Thêm nút **"Copy AI Parse Prompt"** để hướng dẫn user nhờ AI đọc PDF → trả về JSON đúng format
+- **Objective**: Môi trường làm bài thi TOEIC Reading chuyên nghiệp (PDF chia đôi màn hình), chấm điểm tự động chuẩn ETS, lưu lịch sử làm bài theo session, không gian xem lại bài làm song song với đề thi PDF, trích xuất System Prompt cho AI và import JSON giải thích trực tiếp vào từng câu hỏi.
 
 ---
 
@@ -30,7 +20,7 @@
 
 - **Target Audience**: `USER` (người dùng đã đăng nhập)
 - **Guards**: `authGuard`
-- **Preconditions**: Người dùng có JWT token hợp lệ lưu trong localStorage.
+- **Preconditions**: Người dùng có JWT token hợp lệ lưu trong `localStorage`.
 
 ---
 
@@ -38,333 +28,154 @@
 
 ```
 [1] READER DASHBOARD (/reader)
-    → Danh sách bài đã tạo (test sessions)
-    → Nút "Tạo bài mới" → Wizard tạo test
+    → Danh sách đề thi & thẻ trạng thái (Chưa làm / Đã làm / Số lượt thi)
+    → Modal xem lịch sử các lần thi theo từng session (Attempt History Modal)
+    → Nút "Tạo đề mới" → Wizard tạo đề thi
         ↓
-[2] TẠO TEST — WIZARD 3 BƯỚC
-    Bước 1: Nhập tên đề + Upload PDF (để hiển thị trong split view)
-    Bước 2: Copy AI Parse Prompt → Dán vào ChatGPT cùng với đề thi
-             → AI trả về JSON đáp án đúng format
-    Bước 3: Paste JSON từ AI → Preview → Lưu (answer_keys)
+[2] TẠO ĐỀ THI (/reader/new)
+    → Bước 1: Nhập tên đề + Upload file PDF
+    → Bước 2: Copy AI Prompt hoặc Upload / Paste JSON Answer Key
+    → Bước 3: Lưu thành công → Tự động chuyển hướng về /reader kèm Toast thông báo
         ↓
 [3] LÀM BÀI — SPLIT VIEW (/reader/:testId)
-    ┌─────────────────────┬──────────────────┐
-    │  📄 PDF Viewer        │  ⏱ Đếm ngược     │
-    │  (cuộn, zoom)          │  ──────────────  │
-    │                       │  Câu 101 (Part 5)│
-    │                       │  ○A ○B ●C ○D    │
-    │                       │  Câu 102         │
-    │                       │  ●A ○B ○C ○D    │
-    │                       │  [Flag ⚑]        │
-    │                       │  ─────────────   │
-    │                       │  ▓▓▓░░ 45/100    │
-    │                       │  [Nộp bài]        │
-    └─────────────────────┴──────────────────┘
-    → Đáp án auto-save realtime khi chọn
+    ┌──────────────────────────────────┬─────────────────────────────────┐
+    │  📄 PDF Viewer (Bên trái)        │  ⏱ Bộ đếm Pacing (Bên phải)   │
+    │  - Cuộn trang, zoom, nhảy trang │  - Đếm ngược theo Part         │
+    │  - Tải stream từ backend         │  - Phiếu tô đáp án Matrix       │
+    │                                  │  - Đánh cờ câu hỏi (Flag ⚑)     │
+    │                                  │  - Tiến độ câu đã làm          │
+    │                                  │  - [Nộp bài]                    │
+    └──────────────────────────────────┴─────────────────────────────────┘
         ↓
-[4] NỘP BÀI → Chấm điểm
-    → Đúng: highlight xanh
-    → Sai: highlight đỏ + đáp án đúng hiện ra
-    → Câu sai → TỰ ĐỘNG push vào Mistake Queue
+[4] NỘP BÀI THI
+    → Modal xác nhận (Confirm Dialog) hiển thị số câu đã làm / bỏ trống
+    → Loading Indicator toàn màn hình khi đang chấm điểm (chống spam click)
+    → Chấm điểm tự động: Raw Score, Scaled Score (/495), % chính xác từng Part
+    → Tự động đẩy câu sai + câu đánh cờ vào Mistake Queue
         ↓
-[5] KẾT QUẢ SESSION (/reader/:testId/result)
-    → Score card, breakdown theo Part, thời gian
-    → Danh sách câu sai
+[5] KẾT QUẢ BÀI THI (/reader/:testId/result)
+    → Score Card tổng thể, phân tích tốc độ & độ chính xác theo Part 5, 6, 7
+    → Nút "Xem lại bài thi" & "Hàng đợi lỗi sai"
         ↓
-[6] MISTAKE QUEUE (/reader/mistakes)
-    → Xem lỗi tích lũy
-    → Tạo AI Prompt batch → Copy → ChatGPT
-    → Paste giải thích → Lưu → "Đã hiểu"
+[6] XEM LẠI BÀI THI — SPLIT REVIEW (/reader/:testId/attempts/:attemptId/review)
+    ┌──────────────────────────────────┬─────────────────────────────────┐
+    │  💡 Chi Tiết Bài Làm (Bên trái)  │  📄 Đề Thi PDF (Bên phải)       │
+    │  - Matrix câu hỏi phân biệt màu: │  - Giữ đề bên phải để so sánh   │
+    │    🟢 Xanh lá: Đúng              │    văn bản dài Part 7 & ảnh     │
+    │    🔴 Đỏ cam: Sai                │                                 │
+    │    🟡 Vàng: Đánh cờ              │                                 │
+    │  - So sánh Your Answer vs Key    │                                 │
+    │  - Lời giải AI chi tiết          │                                 │
+    │  - [Quay lại danh sách đề thi]   │                                 │
+    └──────────────────────────────────┴─────────────────────────────────┘
+        ↓
+[7] HÀNG ĐỢI LỖI SAI — MISTAKE QUEUE (/reader/mistakes)
+    → Danh sách các câu làm sai đang chờ ôn tập (`size=1000`, `questionNumber ASC`)
+    → Trích xuất System Prompt tối ưu cho ChatGPT/Claude
+    → Import JSON lời giải AI kèm Loading & Toast notification
+    → Đồng bộ lời giải ngược vào attempt tương ứng mà không tạo bản ghi trùng lặp
 ```
 
 ---
 
-## 4. UI Screens Overview
+## 4. Đặc Tả Chi Tiết Các Màn Hình UI
 
-### Screen A: Reader Dashboard (`/reader`)
-- **Stats Bar**: Tổng bài, Hoàn thành, Điểm trung bình %, Lỗi pending (badge).
-- **Test Cards Grid**: Mỗi card — tên đề, ngày làm, Part, điểm lần trước, trạng thái.
-- **Nút "Tạo bài mới"**: Mở Wizard tạo test.
-- **FAB "Mistake Queue"**: Badge đếm lỗi pending.
+### 4.1 Screen A: Reader Dashboard (`/reader`)
+- **Header & Stats Overview**: Thống kê số đề thi đã luyện, điểm cao nhất, điểm trung bình.
+- **Grid Danh Sách Đề Thi**:
+  - Đối với đề chưa từng làm: Hiển thị nút "Bắt đầu làm bài".
+  - Đối với đề đã từng làm: Hiển thị "Làm lại" và nút "Xem lịch sử làm bài".
+- **Attempt History Modal**:
+  - Xem danh sách các lần thi (`Lần 1`, `Lần 2`, `Lần 3`...) kèm điểm số, thời gian làm và ngày nộp.
+  - Chọn một session để chuyển thẳng sang màn hình Xem lại (`/reader/:testId/attempts/:attemptId/review`).
 
-### Screen B: Create Test Wizard (`/reader/new`)
+### 4.2 Screen B: Tạo Đề Thi Mới (`/reader/new`)
+- Input tên đề thi + Dropzone tải tệp PDF đề thi.
+- Parser đáp án đúng: Hỗ trợ copy Prompt cho AI trích xuất đáp án từ PDF hoặc dán JSON có sẵn.
+- Sau khi tạo đề thành công: Hiển thị Toast thông báo thành công và chuyển hướng về `/reader` để chọn làm bài.
 
-Wizard 3 bước — stepper indicator hiển thị tiến độ ở đầu trang.
+### 4.3 Screen C: Phòng Thi Chia Đôi Màn Hình (`/reader/:testId`)
+- **Khung PDF (Bên trái)**: Render PDF qua `<iframe>` stream nội bộ từ backend chống CORS và bảo mật.
+- **Khung Đáp Án (Bên phải)**:
+  - Phiếu tô trắc nghiệm (Bubble Sheet A/B/C/D) cho Part 5, 6, 7.
+  - Bộ đếm thời gian Pacing theo từng Part.
+  - Nút đánh cờ câu hỏi nghi vấn (`flagged`).
+- **Nộp bài**:
+  - Bấm nộp bài ➔ Mở Modal xác nhận.
+  - Khi người dùng xác nhận ➔ Bật loading indicator toàn màn hình và gọi API nộp bài.
 
----
+### 4.4 Screen D: Báo Cáo Kết Quả (`/reader/:testId/result`)
+- Hiển thị điểm Raw Score và Scaled Score (thang 5-495 điểm Reading TOEIC).
+- Phân tích chi tiết: % chính xác theo từng Part (5, 6, 7), thời gian trung bình từng câu.
+- Danh sách câu hỏi kèm trạng thái đúng/sai.
 
-**Bước 1 — Thông tin đề thi & Upload PDF:**
-- Input: Tên đề thi (bắt buộc, ví dụ: "ETS 2024 Test 5").
-- Dropzone upload file PDF — preview tên file + size.
-- PDF này sẽ được hiển thị trong split view khi làm bài.
-- Nút "Tiếp theo".
+### 4.5 Screen E: Không Gian Xem Lại Bài Thi (`/reader/:testId/attempts/:attemptId/review`)
+- **Giữ đề thi PDF bên phải**: Để người học đọc lại toàn bộ bài đọc hiểu Part 7 và hình ảnh Part 6 mà không bị khuất.
+- **Phân biệt màu sắc trực quan**:
+  - 🟢 **Xanh lá**: Trả lời đúng (`isCorrect === true`).
+  - 🔴 **Đỏ cam**: Trả lời sai (`isCorrect === false`).
+  - 🟡 **Vàng**: Câu đánh cờ (`flagged === true`).
+- **So sánh đáp án**: Hiển thị rõ ràng đáp án của người dùng và đáp án đúng.
+- **Lời giải AI**: Hiển thị bản dịch, điểm ngữ pháp và từ vựng trọng tâm.
+- Nút "Quay lại danh sách đề thi" điều hướng về `/reader`.
 
----
-
-**Bước 2 — Lấy JSON từ AI (hướng dẫn):**
-
-Đây là bước hướng dẫn thuần túy — không có form input. Giao diện hiển thị:
-
-```
-┌──────────────────────────────────────────────────────────┐
-│  📋 Bước 2: Nhờ AI đọc đề và trả về JSON đáp án          │
-│                                                          │
-│  1. Mở ChatGPT hoặc Claude                               │
-│  2. Upload file PDF đề thi vào cuộc trò chuyện            │
-│  3. Copy prompt bên dưới và gửi cho AI:                   │
-│                                                          │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ [AI Parse Prompt — readonly textarea]               │  │
-│  │  Đây là đề thi TOEIC. Hãy đọc phần Answer Key      │  │
-│  │  (đáp án) và trả về JSON theo đúng format...        │  │
-│  └────────────────────────────────────────────────────┘  │
-│                            [📋 Copy Prompt]               │
-│                                                          │
-│  4. Sau khi AI trả về JSON, copy và dán vào bước 3       │
-│                                                          │
-│            [← Quay lại]         [Tiếp theo →]            │
-└──────────────────────────────────────────────────────────┘
-```
-
-**AI Parse Prompt (template cố định, copy vào clipboard):**
-```
-Đây là đề thi TOEIC. Hãy đọc phần Answer Key (bảng đáp án) trong file
-và trả về JSON theo đúng format dưới đây. Chỉ trả về JSON thuần túy,
-không kèm giải thích hay markdown.
-
-Format yêu cầu:
-{
-  "test_name": "[Tên đề thi]",
-  "questions": [
-    { "number": 101, "part": 5, "correct_answer": "C" },
-    { "number": 102, "part": 5, "correct_answer": "A" },
-    ...
-  ]
-}
-
-Lưu ý:
-- number: số câu từ 101 đến 200 (TOEIC Reading)
-- part: 5, 6, hoặc 7 (dựa theo cấu trúc đề)
-- correct_answer: chỉ là 1 ký tự "A", "B", "C", hoặc "D"
-- Trả về tất cả 100 câu (101-200)
-```
+### 4.6 Screen F: Hàng Đợi Lỗi Sai (`/reader/mistakes`)
+- Tập hợp toàn bộ các câu hỏi làm sai từ tất cả các lần thi.
+- Nút **"Tạo Prompt Cho AI"**: Tự động sinh System Prompt có cấu trúc JSON cho ChatGPT/Claude.
+- Modal **"Import Lời Giải AI"**: Cho phép dán hoặc tải tệp JSON phân tích từ AI lên.
+  - Có Loading indicator khi đang import và Toast thông báo khi hoàn thành.
+  - Cập nhật trạng thái câu hỏi thành `explained` và đồng bộ vào session làm bài cũ.
 
 ---
 
-**Bước 3 — Paste & Import JSON:**
-- Textarea lớn: "Dán JSON từ AI vào đây".
-- Nút **"Parse & Preview"**:
-  - Bảng preview: STT, Số câu, Part, Đáp án đúng.
-  - Validation: cảnh báo thiếu trường, số câu ngoài range 101-200, đáp án không phải A/B/C/D.
-  - Hiển thị: "Đã parse được X câu, Y câu lỗi".
-- Nút **"Xem mẫu JSON"** → modal hiện JSON mẫu để đối chiếu.
-- Nút **"Lưu & Bắt đầu làm bài"** — chỉ enable khi parse thành công không có lỗi.
+## 5. Danh Mục Models & Interfaces (Frontend)
 
-**JSON Schema chuẩn (dùng cho preview + validation):**
-```json
-{
-  "test_name": "ETS 2024 Test 5 - Reading",
-  "questions": [
-    { "number": 101, "part": 5, "correct_answer": "C" },
-    { "number": 102, "part": 5, "correct_answer": "A" },
-    { "number": 147, "part": 7, "correct_answer": "D" }
-  ]
-}
-```
-
-### Screen C: Reading Session (`/reader/:testId`)
-
-#### C1. PDF Viewer Panel (trái / trên mobile)
-- Hiển thị PDF bằng `<iframe>` hoặc PDF.js (xem section 5).
-- Controls: Zoom in/out, trang hiện tại / tổng trang.
-- Chiều cao = 100vh, cuộn độc lập với panel phải.
-
-#### C2. Answer Sheet Panel (phải / dưới mobile)
-- **Header**: Timer đếm ngược (nếu có set thời gian), progress bar "X/Y câu đã trả lời".
-- **Câu hỏi**: Chỉ hiển thị **số câu + Part** (101-200) — KHÔNG hiển thị nội dung câu (vì nội dung đang đọc trên PDF).
-- **Lựa chọn**: 4 radio button A/B/C/D mỗi câu.
-- **Flag button ⚑**: Đánh dấu câu muốn xem lại (highlight vàng nhạt).
-- **States**:
-  - `unanswered` — neutral
-  - `answered` — lựa chọn highlight nhẹ
-  - `flagged` — viền vàng
-  - `correct` (sau nộp) — nền xanh
-  - `wrong` (sau nộp) — nền đỏ + hiện đáp án đúng
-- **Jump to question**: Mini-grid số câu ở trên cùng để nhảy nhanh.
-- **Nút "Nộp Bài"**: Confirm dialog → nộp.
-
-#### C3. Grading Overlay (sau nộp)
-- Answer Sheet lock (không thể thay đổi).
-- Mỗi câu sai hiện `✗ Bạn chọn: A  ✓ Đáp án: C`.
-- Câu sai auto-push vào Mistake Queue (silent, không cần user click).
-
-### Screen D: Session Result (`/reader/:testId/result`)
-- **Score Card**: Raw score (X/100), Scaled score (nếu có bảng quy đổi), thời gian.
-- **Part Breakdown**: Bảng % đúng theo Part 5/6/7.
-- **Câu sai**: Danh sách số câu sai (Part X, Câu Y — chọn A, đúng C).
-- **Actions**: "Xem lại bài" (quay về split view, readonly) / "Về Dashboard" / "Phân tích lỗi".
-
-### Screen E: Mistake Queue (`/reader/mistakes`)
-- **Filter tabs**: Pending / Explained / Resolved / All.
-- **Danh sách lỗi** (nhóm theo ngày):
-  - Câu số, Part, Tên đề, Ngày làm.
-  - Chọn ✗ vs Đúng ✓.
-  - Status badge.
-- **"Tạo AI Prompt"**: Gom tất cả `pending` → sinh prompt → copy clipboard.
-- **Textarea nhập giải thích**: Paste từ ChatGPT → Save → `explained`.
-- **"Đã hiểu"**: `→ resolved`.
-
----
-
-## 5. PDF Viewer — Implementation Choice
-
-### Option A: `<iframe>` (Recommended cho MVP)
-```html
-<iframe [src]="pdfUrl | safe" width="100%" height="100%"
-        style="border: none;"></iframe>
-```
-- **Ưu điểm**: Zero implementation, dùng browser native PDF viewer.
-- **Nhược điểm**: Không kiểm soát được style/zoom riêng.
-- **Dùng khi**: MVP, không cần custom UI.
-
-### Option B: PDF.js (Recommended cho production)
 ```typescript
-async loadPdf(fileUrl: string) {
-  const pdf = await pdfjsLib.getDocument(fileUrl).promise;
-  this.totalPages = pdf.numPages;
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: this.zoomLevel });
-    const canvas = this.createCanvasForPage(i, viewport);
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-  }
+export interface ToeicTest {
+  id: string;
+  title: string;
+  pdfUrl: string;
+  totalQuestions: number;
+  totalParts: number[];
+  attemptCount?: number;
+  lastAttemptScore?: number;
+  createdAt: string;
+}
+
+export interface GradedQuestion {
+  questionNumber: number;
+  part: number;
+  userAnswer?: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  flagged?: boolean;
+  timeSpentSeconds?: number;
+  aiExplanation?: string;
+}
+
+export interface ToeicAttempt {
+  id: string;
+  testId: string;
+  testTitle?: string;
+  pdfUrl?: string;
+  rawScore: number;
+  scaledScore: number;
+  totalQuestions: number;
+  durationSeconds: number;
+  completedAt: string;
+  answers: GradedQuestion[];
+}
+
+export interface MistakeQueueItem {
+  id: string;
+  testId: string;
+  attemptId: string;
+  questionNumber: number;
+  part: number;
+  userAnswer?: string;
+  correctAnswer: string;
+  status: 'pending' | 'reviewed' | 'explained';
+  aiExplanation?: string;
+  flagged?: boolean;
 }
 ```
-- **Ưu điểm**: Full control style, zoom custom, dark mode overlay.
-- **Nhược điểm**: Cần setup worker + bundle size lớn hơn.
-
-> **Quyết định**: Bắt đầu với `<iframe>` (MVP), migrate sang PDF.js sau nếu cần custom UI.
-
----
-
-## 6. Component Architecture
-
-```
-src/app/features/reader/
-├── reader.module.ts + reader-routing.module.ts
-│
-├── reader-dashboard/
-│   └── reader-dashboard.component.ts/.html/.scss
-│
-├── create-test/                          [Wizard 2 bước]
-│   ├── create-test.component.ts/.html/.scss
-│   ├── pdf-upload-step/
-│   │   └── pdf-upload-step.component.ts/.html/.scss
-│   └── answer-key-step/
-│       └── answer-key-step.component.ts/.html/.scss
-│
-├── reading-session/
-│   ├── reading-session.component.ts/.html/.scss    [orchestrator]
-│   ├── pdf-viewer/
-│   │   └── pdf-viewer.component.ts/.html/.scss     [dumb — nhận pdfUrl]
-│   └── answer-sheet/
-│       ├── answer-sheet.component.ts/.html/.scss    [smart — owns answer state]
-│       └── question-row/
-│           └── question-row.component.ts/.html/.scss  [dumb]
-│
-├── session-result/
-│   └── session-result.component.ts/.html/.scss
-│
-└── mistake-queue/
-    ├── mistake-queue.component.ts/.html/.scss
-    ├── mistake-item/
-    │   └── mistake-item.component.ts/.html/.scss
-    └── ai-prompt-builder/
-        └── ai-prompt-builder.component.ts/.html/.scss
-```
-
-**Services:**
-```
-reader/services/
-├── reader-api.service.ts       # HTTP calls
-├── mistake-queue.service.ts    # BehaviorSubject<Mistake[]> + localStorage
-├── answer-key.service.ts       # Parse + validate JSON import
-└── grading.service.ts          # Pure: compare user_answers vs answer_keys
-```
-
----
-
-## 7. State Management
-
-| State | Nơi lưu | Lifecycle |
-|:---|:---|:---|
-| Đáp án đang chọn | `AnswerSheet` component + `localStorage` (auto-save) | Session |
-| Flagged questions | `AnswerSheet` component | Session |
-| Timer | `ReadingSession` component | Session |
-| Kết quả sau chấm | `ReadingSession` component | Session |
-| Mistake Queue | `MistakeQueueService` (BehaviorSubject + localStorage) | App-wide |
-
----
-
-## 8. Reuse từ Shared Module
-
-| Shared | Dùng ở đâu |
-|:---|:---|
-| `app-confirm-dialog` | Confirm nộp bài |
-| `app-empty-state` | Dashboard khi chưa có test |
-| `SafeHtmlPipe` / `SafePipe` | `[src]="pdfUrl \| safe"` cho iframe |
-| `ClickOutsideDirective` | Dropdown/Popup trong answer sheet |
-| `TimeAgoPipe` | Ngày làm bài trên mistake queue |
-
----
-
-## 9. Business & UI Invariants
-
-- [ ] **Rule 1**: PDF chỉ là display — KHÔNG cần xử lý content, KHÔNG cần text layer.
-- [ ] **Rule 2**: `correct_answer` KHÔNG được hiển thị trước khi nộp bài.
-- [ ] **Rule 3**: Đáp án auto-save vào localStorage mỗi khi user chọn (tránh mất khi F5).
-- [ ] **Rule 4**: Nút "Nộp Bài" disabled nếu còn câu chưa trả lời (hoặc có confirm "Bạn còn X câu chưa trả lời").
-- [ ] **Rule 5**: Sau nộp bài — Answer Sheet LOCK, không cho thay đổi.
-- [ ] **Rule 6**: Câu sai AUTO push vào Mistake Queue — không cần user click.
-- [ ] **Rule 7**: Mistake Queue badge cập nhật real-time trên nav.
-- [ ] **Rule 8**: PDF panel và Answer panel cuộn **độc lập nhau**.
-- [ ] **Rule 9**: Responsive — mobile collapse 2 panel thành tabs (PDF tab / Câu hỏi tab).
-
----
-
-## 10. Chế Độ Luyện Tập Theo Part & Tính Giờ Mục Tiêu (v4 Extension)
-
-### 10.1 Màn hình Thiết lập Mục tiêu (`PreTestConfigModalComponent`)
-Hiển thị modal trước khi bắt đầu làm bài:
-1. **Phần chọn phạm vi luyện tập (Part Scope)**:
-   - Các preset nút bấm: *Toàn bộ đề (100 câu)*, *Chỉ Part 5 (30 câu)*, *Chỉ Part 6 (16 câu)*, *Chỉ Part 7 (54 câu)*.
-   - Checkbox độc lập cho từng Part (Part 5: 101-130, Part 6: 131-146, Part 7: 147-200).
-   - Tự động đếm tổng số câu hỏi được chọn.
-2. **Chế độ tính giờ**:
-   - `full_test`: Chuẩn TOEIC theo các Part đã chọn (Part 5: 20p, Part 6: 10p, Part 7: 45p).
-   - `per_part`: Tự do chỉnh số phút cho từng Part.
-   - `untimed`: Không giới hạn thời gian (chỉ đo thời gian làm bài thực tế).
-3. **Ghi nhớ cấu hình mặc định**: Lưu vào `localStorage` (`toeic_user_time_settings`).
-
-### 10.2 Thanh Trạng Thái Nhịp Độ (`PacingStatusBarComponent`)
-- Tích hợp trực tiếp trên đỉnh Bảng đáp án (`AnswerSheetComponent`).
-- Đồng hồ Part hiện tại & Tổng thời gian đếm ngược (hoặc đếm xuôi nếu untimed).
-- 2 thanh Progress bar so sánh trực tiếp:
-  - Thanh 1: `% Thời gian đã dùng của Part`.
-  - Thanh 2: `% Số câu đã làm của Part`.
-- Pacing Badge hiển thị trạng thái nhịp độ:
-  - 🟢 **Nhanh hơn dự kiến (`ahead`)**
-  - 🔵 **Đúng nhịp độ (`on_track`)**
-  - 🔴 **Cần tăng tốc (`behind`)**
-
-### 10.3 Bảng Đáp Án Tinh Gọn Cho Từng Part
-- Khi người dùng chỉ chọn luyện một số Part (ví dụ Part 5), Answer Sheet và Quick Jump Grid chỉ render 30 câu hỏi (101 - 130).
-- Chấm điểm và phân tích kết quả tính toán chính xác trên số câu đã chọn (ví dụ: 27/30 câu đúng ➔ 90%).
-
----
-
-## 11. Tái Sử Dụng Thư Viện Shared Component Chuẩn
-- `<app-modal>`: Khung cửa sổ modal cho cấu hình mục tiêu.
-- `<app-loading>` & `<app-error-state>`: Trạng thái tải và báo lỗi kết nối.
-- `<app-paginator>`: Bộ phân trang chuẩn Angular Signals (chọn số lượng trang, nhảy trang, cửa sổ trượt trang) dùng trong Mistake Queue (`/reader/mistakes`).
-- Feature-scoped `WordLookupPopupComponent`: Popup tra từ điển nhanh tức thì khi bôi đen chữ trong PDF viewer, tích hợp Google Translate backend và Web Speech API.

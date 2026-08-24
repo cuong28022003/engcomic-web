@@ -10,26 +10,17 @@
 
     <!-- Desktop Navigation -->
     <nav class="nav-links">
-      <div class="dropdown-trigger" (click)="toggleCategoryModal()">
-        <span>Thể loại</span>
-        <i class="fa-solid fa-chevron-down chevron"></i>
-      </div>
-      <a routerLink="/comics" routerLinkActive="active" class="nav-item">Truyện tranh</a>
-      <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">Bảng xếp hạng</a>
-      <a routerLink="/gacha" routerLinkActive="active" class="nav-item gacha-link">
-        <i class="fa-solid fa-dice-d20"></i> Gacha
-      </a>
-      <a routerLink="/fighting-game" routerLinkActive="active" class="nav-item game-link">
-        <i class="fa-solid fa-gamepad"></i> Game
-      </a>
       <a routerLink="/vocab" routerLinkActive="active" class="nav-item vocab-link">
-        <i class="fa-solid fa-brain"></i> Vocab
+        <i class="fa-solid fa-brain"></i> {{ 'nav.vocab' | translate }}
+      </a>
+      <a routerLink="/deck" routerLinkActive="active" class="nav-item deck-link">
+        <i class="fa-solid fa-layer-group"></i> {{ 'nav.decks' | translate }}
       </a>
       <a routerLink="/reader" routerLinkActive="active" class="nav-item reader-link">
-        <i class="fa-solid fa-file-lines"></i> TOEIC Reader
+        <i class="fa-solid fa-file-lines"></i> {{ 'nav.toeic' | translate }}
       </a>
-      <a routerLink="/upgrade-premium" routerLinkActive="active" class="nav-item premium-link">
-        <i class="fa-solid fa-crown"></i> VIP
+      <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">
+        <i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng
       </a>
     </nav>
 
@@ -37,7 +28,7 @@
     <div class="search-box">
       <input
         type="text"
-        placeholder="Tìm kiếm truyện tranh..."
+        placeholder="Tìm kiếm từ vựng, tài liệu..."
         [(ngModel)]="searchKeyword"
         (keyup.enter)="onSearch()"
       />
@@ -46,27 +37,47 @@
       </button>
     </div>
 
-    <!-- User Actions / Profile -->
+    <!-- User Actions / Profile & Language Switcher -->
     <div class="user-section">
+      <!-- Language Switcher Dropdown -->
+      <div class="lang-dropdown-wrapper">
+        <button class="lang-btn" (click)="toggleLangMenu()" [title]="'Chuyển đổi ngôn ngữ'">
+          <span class="lang-flag">{{ i18n.currentLanguageOption().flag }}</span>
+          <span class="lang-code">{{ i18n.currentLanguageOption().code.toUpperCase() }}</span>
+          <i class="fa-solid fa-angle-down"></i>
+        </button>
+
+        @if (isLangMenuOpen) {
+          <div class="lang-dropdown-menu glass-panel" (click)="$event.stopPropagation()">
+            @for (lang of i18n.availableLanguages; track lang.code) {
+              <button
+                class="lang-option"
+                [class.active]="lang.code === i18n.currentLang()"
+                (click)="changeLanguage(lang.code)"
+              >
+                <span class="flag">{{ lang.flag }}</span>
+                <span class="name">{{ lang.name }}</span>
+                @if (lang.code === i18n.currentLang()) {
+                  <i class="fa-solid fa-check check-icon"></i>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
+
       @if (currentUser) {
         <!-- Streak counter -->
-        <div class="stat-badge streak-badge" title="Chuỗi ngày đăng nhập">
+        <div class="stat-badge streak-badge" title="Chuỗi ngày học tập">
           <i class="fa-solid fa-fire fire-icon"></i>
           <span>{{ userStats?.streakDays || 1 }} ngày</span>
         </div>
 
         <!-- Diamonds counter -->
-        <a routerLink="/diamond-topup" class="stat-badge diamond-badge" title="Kim cương - Nạp thêm">
+        <div class="stat-badge diamond-badge" title="Điểm thưởng">
           <i class="fa-solid fa-gem gem-icon"></i>
           <span>{{ userStats?.diamonds || 0 }}</span>
-          <i class="fa-solid fa-plus plus-icon"></i>
-        </a>
-
-        <!-- Upload Comic CTA -->
-        <a routerLink="/comics/create" class="btn-primary upload-btn">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          <span class="btn-text">Đăng truyện</span>
-        </a>
+        </div>
 
         <!-- Avatar & Menu Dropdown -->
         <div class="profile-dropdown-wrapper">
@@ -94,17 +105,14 @@
               <a [routerLink]="['/user', currentUser.userId, 'profile']" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-user"></i> Hồ sơ cá nhân
               </a>
-              <a [routerLink]="['/user', currentUser.userId, 'bookshelf']" (click)="closeProfileMenu()" class="menu-item">
-                <i class="fa-solid fa-bookmark"></i> Tủ truyện
-              </a>
               <a routerLink="/deck" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-layer-group"></i> Quản lý thẻ từ vựng
               </a>
-              <a [routerLink]="['/user', currentUser.userId, 'collection']" (click)="closeProfileMenu()" class="menu-item">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ sưu tập Gacha
-              </a>
               <a [routerLink]="['/user', currentUser.userId, 'rank']" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-trophy"></i> Cấp bậc & Thành tích
+              </a>
+              <a [routerLink]="['/user', currentUser.userId, 'change-password']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-key"></i> Đổi mật khẩu
               </a>
               @if (isAdmin) {
                 <hr class="menu-divider" />
@@ -114,15 +122,15 @@
               }
               <hr class="menu-divider" />
               <button (click)="logout()" class="menu-item logout-btn">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> {{ 'nav.logout' | translate }}
               </button>
             </div>
           }
         </div>
       } @else {
         <div class="auth-buttons">
-          <a routerLink="/login" class="btn-secondary btn-sm">Đăng nhập</a>
-          <a routerLink="/register" class="btn-primary btn-sm">Đăng ký</a>
+          <a routerLink="/login" class="btn-secondary btn-sm">{{ 'nav.login' | translate }}</a>
+          <a routerLink="/register" class="btn-primary btn-sm">{{ 'nav.register' | translate }}</a>
         </div>
       }
     </div>

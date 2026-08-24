@@ -59,6 +59,16 @@
   gap: 12px;
   padding: 12px 16px;
 
+  .input-cell {
+    flex: 1;
+  }
+
+  .add-btn {
+    white-space: nowrap;
+    padding: 10px 18px;
+    height: 42px;
+  }
+
   .add-icon { color: var(--text-dim); }
 }
 

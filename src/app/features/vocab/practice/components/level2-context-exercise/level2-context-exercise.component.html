@@ -1,0 +1,66 @@
+<div class="exercise-card glass-panel">
+  <div class="exercise-header">
+    <span class="badge badge-info"><i class="fa-solid fa-comments"></i> Level 2: Ngữ Cảnh & Cụm Từ</span>
+  </div>
+
+  <div class="context-sentence-box">
+    <p class="sentence-text" [innerHTML]="sentence()"></p>
+  </div>
+
+  @if (exercise()?.collocationNote) {
+    <div class="collocation-hint">
+      <i class="fa-solid fa-lightbulb"></i>
+      <span>Gợi ý cụm từ: <strong>{{ exercise()?.collocationNote }}</strong></span>
+    </div>
+  }
+
+  <p class="question-prompt">{{ exercise()?.question || 'Chọn đáp án chính xác nhất để điền vào chỗ trống:' }}</p>
+
+  <div class="options-grid">
+    @for (option of options(); track $index) {
+      <button
+        class="option-card"
+        [class.selected]="selectedOptionIndex() === $index"
+        [class.correct]="isAnswered() && isOptionCorrect(option)"
+        [class.wrong]="isAnswered() && selectedOptionIndex() === $index && !isOptionCorrect(option)"
+        (click)="selectOption($index, option)"
+        [disabled]="isAnswered()"
+      >
+        <span class="option-letter">{{ ['A', 'B', 'C', 'D'][$index] || ($index + 1) }}</span>
+        <span class="option-text">{{ option.text }}</span>
+        @if (isAnswered()) {
+          @if (isOptionCorrect(option)) {
+            <i class="fa-solid fa-circle-check status-icon correct-icon"></i>
+          } @else if (selectedOptionIndex() === $index) {
+            <i class="fa-solid fa-circle-xmark status-icon wrong-icon"></i>
+          }
+        }
+      </button>
+    }
+  </div>
+
+  <!-- Feedback Banner & Manual Continue Button -->
+  @if (isAnswered()) {
+    <div class="feedback-banner" [class.feedback-correct]="isCorrect()" [class.feedback-wrong]="!isCorrect()">
+      <div class="feedback-info">
+        @if (isCorrect()) {
+          <i class="fa-solid fa-circle-check feedback-icon"></i>
+          <div>
+            <strong>Chính xác!</strong>
+            <p>Bạn đã nắm bắt chuẩn xác ngữ cảnh và cụm từ cố định.</p>
+          </div>
+        } @else {
+          <i class="fa-solid fa-circle-xmark feedback-icon"></i>
+          <div>
+            <strong>Chưa chính xác!</strong>
+            <p>Đáp án đúng: <span class="correct-text">{{ correctOption()?.text }}</span></p>
+          </div>
+        }
+      </div>
+
+      <button class="btn-continue" (click)="proceedNext()">
+        Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  }
+</div>

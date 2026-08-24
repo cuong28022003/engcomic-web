@@ -1,0 +1,57 @@
+<div class="ai-prompt-container">
+  @if (instruction()) {
+    <p class="prompt-instruction">{{ instruction() }}</p>
+  }
+
+  @if (deckName() || (wordCount() !== undefined && wordCount()! > 0)) {
+    <div class="meta-badge-row">
+      @if (deckName()) {
+        <span class="meta-badge deck-badge">
+          <i class="fa-solid fa-layer-group"></i> {{ deckName() }}
+        </span>
+      }
+      @if (wordCount() !== undefined) {
+        <span class="meta-badge count-badge">
+          <i class="fa-solid fa-spell-check"></i> {{ wordCount() }} từ vựng
+        </span>
+      }
+    </div>
+  }
+
+  <div class="code-terminal glass-panel">
+    <div class="terminal-header">
+      <div class="terminal-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="terminal-title">System Prompt (.json)</span>
+      <button class="terminal-copy-btn" (click)="copyToClipboard()" [class.copied]="copied()">
+        @if (copied()) {
+          <i class="fa-solid fa-check"></i> Đã sao chép!
+        } @else {
+          <i class="fa-regular fa-copy"></i> Sao chép Prompt (1-Click)
+        }
+      </button>
+    </div>
+
+    <div class="terminal-body">
+      <pre><code>{{ promptText() }}</code></pre>
+    </div>
+  </div>
+
+  @if (showPasteAction()) {
+    <div class="prompt-actions-footer">
+      <button class="btn btn-secondary copy-btn" (click)="copyToClipboard()">
+        @if (copied()) {
+          <i class="fa-solid fa-check"></i> Đã sao chép!
+        } @else {
+          <i class="fa-regular fa-copy"></i> Sao chép Prompt
+        }
+      </button>
+      <button class="btn btn-primary proceed-btn" (click)="onProceed()">
+        <i class="fa-solid fa-file-import"></i> {{ pasteActionLabel() }} <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  }
+</div>

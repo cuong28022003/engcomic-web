@@ -1,0 +1,302 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <div class="header-icon-box">
+            <i class="fa-solid fa-plus highlight-icon"></i>
+          </div>
+          <div>
+            <h3>Thêm Từ Vựng Vào Kho</h3>
+            <p class="modal-subtitle">
+              @if (targetDeckName()) {
+                Đang thêm vào bộ thẻ: <strong>{{ targetDeckName() }}</strong>
+              } @else {
+                Kho từ vựng tổng & tự động liên kết họ từ
+              }
+            </p>
+          </div>
+        </div>
+        <button class="close-btn" (click)="onClose()" [disabled]="isImporting() || isSavingManual()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="tab-switcher">
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'ai-import'"
+          (click)="activeTab.set('ai-import')"
+        >
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bằng AI JSON (Hàng Loạt)
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="activeTab() === 'manual'"
+          (click)="activeTab.set('manual')"
+        >
+          <i class="fa-solid fa-pen"></i> Thêm Thủ Công (1 Thẻ)
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- ================= TAB 1: AI JSON IMPORT ================= -->
+        @if (activeTab() === 'ai-import') {
+          <!-- Shared Progress Stepper Component -->
+          <div class="stepper-wrapper">
+            <app-progress-stepper
+              [steps]="steps"
+              [currentStep]="currentStepIndex()"
+              (stepChange)="onStepChange($event)"
+            ></app-progress-stepper>
+          </div>
+
+          <!-- Step 1: Prompt Generator -->
+          @if (importStep() === 'prompt') {
+            <div class="step-view">
+              <app-ai-prompt-box
+                [promptText]="generatedPrompt()"
+                [deckName]="targetDeckName()"
+                instruction="Sao chép System Prompt dưới đây và dán vào ChatGPT hoặc Claude để AI tạo dữ liệu từ vựng chuẩn hóa:"
+                pasteActionLabel="Đã Copy, Sang Dán JSON"
+                (proceedToPaste)="goToPaste()"
+              ></app-ai-prompt-box>
+            </div>
+          }
+
+          <!-- Step 2: Paste JSON -->
+          @if (importStep() === 'paste') {
+            <div class="step-view">
+              <div class="prompt-helper-box glass-panel">
+                <div class="helper-header-row">
+                  <div class="helper-text">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>Bạn có danh sách từ muốn tạo prompt?</span>
+                  </div>
+
+                  @if (collectorPendingWords().length > 0) {
+                    <button
+                      type="button"
+                      class="btn-collector-pill"
+                      (click)="fillFromWordCollector()"
+                      title="Nạp {{ collectorPendingWords().length }} từ đang chờ trong Word Collector"
+                    >
+                      <i class="fa-solid fa-inbox"></i>
+                      <span>Lấy từ Word Collector ({{ collectorPendingWords().length }})</span>
+                    </button>
+                  }
+                </div>
+
+                <div class="quick-input-row">
+                  <div class="quick-input-cell">
+                    <app-form-input
+                      [(value)]="wordListText"
+                      placeholder="VD: decision, reach a decision, mitigate..."
+                      icon="fa-solid fa-spell-check"
+                    ></app-form-input>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" (click)="generateAiPrompt()" [disabled]="!wordListText.trim()">
+                    <i class="fa-solid fa-robot"></i> Tạo AI Prompt
+                  </button>
+                </div>
+              </div>
+
+              <!-- Shared JsonTextarea Component -->
+              <app-json-textarea
+                [(value)]="jsonInputText"
+                label="Dán kết quả JSON từ AI vào đây:"
+                placeholder='[ { "word": "mitigate", "ipa": "/ˈmɪt.ɪ.ɡeɪt/", "meaning_vi": "làm giảm bớt", "examples": [...], "relations": [...] } ]'
+                [rows]="8"
+                [errorMessage]="parseError()"
+              ></app-json-textarea>
+
+              <!-- Target Deck Selection (if not locked) -->
+              @if (!targetDeckId() && availableDecks().length > 0) {
+                <div class="deck-select-group">
+                  <app-form-select
+                    label="Gán vào bộ thẻ (tùy chọn):"
+                    [options]="deckOptions()"
+                    [(value)]="selectedDeckId"
+                    icon="fa-solid fa-folder-tree"
+                  ></app-form-select>
+                </div>
+              }
+
+              <div class="step-actions-footer">
+                <button class="btn btn-secondary" (click)="onClose()">Hủy</button>
+                <button class="btn btn-primary" (click)="parseJson()" [disabled]="!jsonInputText.trim()">
+                  <i class="fa-solid fa-magnifying-glass"></i> Kiểm Tra Dữ Liệu <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Step 3: Preview Items -->
+          @if (importStep() === 'preview') {
+            <div class="step-view">
+              <div class="preview-header-summary">
+                <app-status-badge
+                  type="success"
+                  [label]="previewItems().length + ' từ vựng hợp lệ'"
+                  icon="fa-solid fa-check"
+                ></app-status-badge>
+                <span class="preview-hint">Kiểm tra thông tin trước khi lưu vào kho</span>
+              </div>
+
+              <div class="preview-table-wrap">
+                <table class="preview-table">
+                  <thead>
+                    <tr>
+                      <th>Từ Vựng</th>
+                      <th>Phiên Âm</th>
+                      <th>Từ Loại</th>
+                      <th>Nghĩa Tiếng Việt</th>
+                      <th>Ví Dụ</th>
+                      <th>Liên Quan</th>
+                      <th>Trạng Thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of previewItems(); track $index) {
+                      <tr [class.invalid-row]="!item.valid">
+                        <td class="col-word"><strong>{{ item.word }}</strong></td>
+                        <td class="col-ipa">{{ item.ipa || '-' }}</td>
+                        <td class="col-pos">
+                          <span class="pos-tag">{{ item.partOfSpeech || 'n/a' }}</span>
+                        </td>
+                        <td class="col-meaning">{{ item.meaningVi }}</td>
+                        <td class="col-num">{{ item.examplesCount }} câu</td>
+                        <td class="col-num">{{ item.relationsCount }} từ</td>
+                        <td>
+                          <app-status-badge
+                            [type]="item.valid ? 'success' : 'danger'"
+                            [label]="item.valid ? 'Hợp lệ' : 'Lỗi'"
+                            [icon]="item.valid ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"
+                          ></app-status-badge>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="step-actions-footer">
+                <button class="btn btn-secondary" (click)="importStep.set('paste')" [disabled]="isImporting()">
+                  <i class="fa-solid fa-arrow-left"></i> Chỉnh sửa JSON
+                </button>
+                <button class="btn btn-primary" (click)="submitBatchImport()" [disabled]="isImporting()">
+                  @if (isImporting()) {
+                    <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu vào kho...
+                  } @else {
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Lưu {{ previewItems().length }} Từ Vào Kho
+                  }
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Step 4: Result -->
+          @if (importStep() === 'result') {
+            <div class="step-view result-view">
+              <div class="result-celebration">
+                <i class="fa-solid fa-circle-check success-icon"></i>
+                <h3>Nhập Dữ Liệu Hoàn Tất!</h3>
+                <p>Toàn bộ từ vựng đã được lưu trữ và tự động liên kết quan hệ họ từ/cụm từ.</p>
+              </div>
+
+              <div class="result-stats-row">
+                <div class="result-stat-box green">
+                  <span class="num">{{ importResult()?.imported?.length || 0 }}</span>
+                  <span class="label">Từ thêm mới</span>
+                </div>
+                <div class="result-stat-box yellow">
+                  <span class="num">{{ importResult()?.skipped?.length || 0 }}</span>
+                  <span class="label">Trùng lặp (Bỏ qua)</span>
+                </div>
+                <div class="result-stat-box red">
+                  <span class="num">{{ importResult()?.errors?.length || 0 }}</span>
+                  <span class="label">Lỗi cú pháp</span>
+                </div>
+              </div>
+
+              <div class="step-actions-footer center">
+                <button class="btn btn-primary" (click)="onClose()">
+                  <i class="fa-solid fa-check"></i> Hoàn Tất & Đóng
+                </button>
+              </div>
+            </div>
+          }
+        }
+
+        <!-- ================= TAB 2: MANUAL CARD FORM ================= -->
+        @if (activeTab() === 'manual') {
+          <form (submit)="submitManualCard()" class="manual-form">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <app-form-input
+                  label="Từ hoặc cụm từ tiếng Anh"
+                  [required]="true"
+                  [(value)]="manualWord"
+                  placeholder="VD: mitigate, reach a decision"
+                  icon="fa-solid fa-spell-check"
+                ></app-form-input>
+              </div>
+              <div class="form-group flex-1">
+                <app-form-select
+                  label="Từ loại"
+                  [options]="posOptions"
+                  [(value)]="manualPos"
+                ></app-form-select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <app-form-input
+                label="Nghĩa tiếng Việt"
+                [required]="true"
+                [(value)]="manualMeaning"
+                placeholder="VD: làm giảm bớt, làm dịu đi"
+                icon="fa-solid fa-language"
+              ></app-form-input>
+            </div>
+
+            <div class="form-group">
+              <app-form-input
+                label="Phiên âm IPA (tùy chọn)"
+                [(value)]="manualIpa"
+                placeholder="VD: /ˈmɪt.ɪ.ɡeɪt/"
+                icon="fa-solid fa-volume-high"
+              ></app-form-input>
+            </div>
+
+            <!-- Target Deck Selection (if not locked) -->
+            @if (!targetDeckId() && availableDecks().length > 0) {
+              <div class="form-group">
+                <app-form-select
+                  label="Gán vào bộ thẻ (tùy chọn)"
+                  [options]="deckOptions()"
+                  [(value)]="selectedDeckId"
+                  icon="fa-solid fa-folder-tree"
+                ></app-form-select>
+              </div>
+            }
+
+            <div class="step-actions-footer">
+              <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isSavingManual()">Hủy</button>
+              <button type="submit" class="btn btn-primary" [disabled]="!manualWord.trim() || !manualMeaning.trim() || isSavingManual()">
+                @if (isSavingManual()) {
+                  <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+                } @else {
+                  <i class="fa-solid fa-plus"></i> Thêm Thẻ Từ Vựng
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -6,13 +6,15 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { UserStateService } from '@core/services/user-state.service';
 import { UserStatsApiService } from '@core/services/user-stats-api.service';
+import { TranslationService, LanguageCode } from '@core/services/translation.service';
+import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { CurrentUser, UserStats } from '@models/index';
 import { ComicGenres } from '../../constants/genres';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -21,11 +23,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private userState = inject(UserStateService);
   private userStatsApi = inject(UserStatsApiService);
   private router = inject(Router);
+  readonly i18n = inject(TranslationService);
 
   currentUser: CurrentUser | null = null;
   userStats: UserStats | null = null;
   searchKeyword = '';
   isProfileMenuOpen = false;
+  isLangMenuOpen = false;
   isCategoryModalOpen = false;
   genres = ComicGenres;
 
@@ -73,10 +77,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   toggleProfileMenu(): void {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
+    if (this.isProfileMenuOpen) {
+      this.isLangMenuOpen = false;
+    }
   }
 
   closeProfileMenu(): void {
     this.isProfileMenuOpen = false;
+  }
+
+  toggleLangMenu(): void {
+    this.isLangMenuOpen = !this.isLangMenuOpen;
+    if (this.isLangMenuOpen) {
+      this.isProfileMenuOpen = false;
+    }
+  }
+
+  closeLangMenu(): void {
+    this.isLangMenuOpen = false;
+  }
+
+  changeLanguage(code: LanguageCode): void {
+    this.i18n.setLanguage(code).subscribe();
+    this.closeLangMenu();
   }
 
   toggleCategoryModal(): void {

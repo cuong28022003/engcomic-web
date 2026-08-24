@@ -1,65 +1,39 @@
 export const ROUTE = {
+  // Wildcard & Root
+  ANY: '**',
+  MAIN: '',
+
   // Auth
   LOGIN: 'login',
   REGISTER: 'register',
   ACTIVE: 'active',
 
-  // Home
+  // Public Features
   HOME: '',
   SEARCH: 'search',
   LEADERBOARD: 'leaderboard',
 
-  // Comics
-  COMICS: 'comics',
-  COMIC_DETAIL: ':comicId',
-  COMIC_CREATE: 'create',
-  COMIC_EDIT: ':comicId/edit',
-
-  // Chapters
-  CHAPTERS: 'chapters',
-  CHAPTER_DETAIL: ':chapterId',
-  CHAPTER_CREATE: 'create',
-  CHAPTER_EDIT: ':chapterId/edit',
-
-  // Account
+  // User Account
   USER: 'user',
   PROFILE: 'profile',
   CHANGE_PASSWORD: 'change-password',
-  BOOKSHELF: 'bookshelf',
   RANK: 'rank',
-  COLLECTION: 'collection',
   TOPUP_HISTORY: 'topup-history',
 
-  // Deck
+  // Deck & Study
   DECK: 'deck',
-  DECK_CREATE: 'create',
-  DECK_DETAIL: ':deckId',
-  DECK_EDIT: ':deckId/edit',
-  CARD_CREATE: ':deckId/create-card',
-  CARD_EDIT: ':deckId/edit-card/:cardId',
-
-  // Study
   STUDY: 'study',
   RESULT: 'result',
 
-  // Gacha
-  GACHA: 'gacha',
-
-  // Premium
-  PREMIUM: 'upgrade-premium',
-  DIAMOND_TOPUP: 'diamond-topup',
-
-  // Game
-  FIGHTING_GAME: 'fighting-game',
-
-  // Vocab & Reader
+  // Vocab Vault
   VOCAB: 'vocab',
+
+  // TOEIC Reader
   READER: 'reader',
 
   // Admin
   ADMIN: 'admin',
   ADMIN_USERS: 'users',
-  ADMIN_COMICS: 'comics',
   ADMIN_REPORTS: 'reports',
   ADMIN_RANKS: 'ranks',
   ADMIN_TOPUPS: 'topups',
@@ -72,22 +46,11 @@ export const FULL_ROUTE = {
   register: '/register',
   search: '/search',
   leaderboard: '/leaderboard',
-  comics: '/comics',
-  comicDetail: (id: string) => `/comics/${id}`,
-  comicCreate: '/comics/create',
-  comicEdit: (id: string) => `/comics/${id}/edit`,
-  chapterDetail: (comicId: string, chapterId: string) =>
-    `/comics/${comicId}/chapters/${chapterId}`,
-  chapterCreate: (comicId: string) => `/comics/${comicId}/chapters/create`,
-  chapterEdit: (comicId: string, chapterId: string) =>
-    `/comics/${comicId}/chapters/${chapterId}/edit`,
   user: '/user',
   userById: (id: string) => `/user/${id}`,
   profile: '/user/profile',
   changePassword: '/user/change-password',
-  bookshelf: '/user/bookshelf',
   rank: '/user/rank',
-  collection: '/user/collection',
   topupHistory: '/user/topup-history',
   deck: '/deck',
   deckCreate: '/deck/create',
@@ -98,9 +61,21 @@ export const FULL_ROUTE = {
     `/deck/${deckId}/edit-card/${cardId}`,
   study: (deckId: string) => `/study/${deckId}`,
   result: (deckId: string) => `/result/${deckId}`,
-  gacha: '/gacha',
-  premium: '/upgrade-premium',
-  diamondTopup: '/diamond-topup',
-  fightingGame: '/fighting-game',
+  vocab: '/vocab',
+  vocabPractice: '/vocab/practice',
+  vocabLeech: '/vocab/leech',
+  vocabWord: (id: string) => `/vocab/word/${id}`,
+  vocabCollector: '/vocab/collector',
+  vocabImport: '/vocab/import',
+  reader: '/reader',
+  readerNew: '/reader/new',
+  readerMistakes: '/reader/mistakes',
+  readerSession: (testId: string) => `/reader/${testId}`,
+  readerReview: (testId: string, attemptId: string) =>
+    `/reader/${testId}/attempts/${attemptId}/review`,
   admin: '/admin',
+  adminUsers: '/admin/users',
+  adminReports: '/admin/reports',
+  adminRanks: '/admin/ranks',
+  adminTopups: '/admin/topups',
 };

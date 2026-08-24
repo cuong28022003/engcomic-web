@@ -1,21 +1,37 @@
 <div class="form-input-group" [class.has-error]="errorMessage()">
   @if (label()) {
-    <label class="form-label">{{ label() }}</label>
+    <label class="form-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star">*</span>
+      }
+    </label>
   }
   
-  <div class="input-container">
-    @if (icon()) {
+  <div class="input-container" [class.is-textarea]="type() === 'textarea'">
+    @if (icon() && type() !== 'textarea') {
       <i [class]="icon()" class="input-icon"></i>
     }
     
-    <input
-      [type]="currentType()"
-      [placeholder]="placeholder()"
-      [disabled]="disabled()"
-      [value]="value()"
-      (input)="onInputChange($event)"
-      class="form-control"
-    />
+    @if (type() === 'textarea') {
+      <textarea
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [rows]="rows()"
+        [value]="value()"
+        (input)="onInputChange($event)"
+        class="form-control textarea-control"
+      ></textarea>
+    } @else {
+      <input
+        [type]="currentType()"
+        [placeholder]="placeholder()"
+        [disabled]="disabled()"
+        [value]="value()"
+        (input)="onInputChange($event)"
+        class="form-control"
+      />
+    }
 
     @if (type() === 'password') {
       <button type="button" class="password-toggle-btn" (click)="togglePassword()">
@@ -23,6 +39,10 @@
       </button>
     }
   </div>
+
+  @if (helperText() && !errorMessage()) {
+    <span class="helper-text">{{ helperText() }}</span>
+  }
 
   @if (errorMessage()) {
     <div class="error-feedback">

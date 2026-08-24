@@ -144,6 +144,100 @@
 .diamond-badge .gem-icon { color: #38bdf8; }
 .diamond-badge .plus-icon { font-size: 0.7rem; opacity: 0.7; }
 
+.lang-dropdown-wrapper {
+  position: relative;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 51, 119, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .lang-flag {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .lang-code {
+    letter-spacing: 0.5px;
+  }
+
+  i {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+}
+
+.lang-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 160px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1050;
+  animation: fadeIn 0.15s ease;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+
+  .flag {
+    font-size: 1.1rem;
+  }
+
+  .name {
+    flex: 1;
+  }
+
+  .check-icon {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+  }
+
+  &:hover {
+    background: var(--bg-card-hover);
+    color: #fff;
+  }
+
+  &.active {
+    background: rgba(255, 51, 119, 0.12);
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+}
+
 .upload-btn {
   padding: 8px 16px;
   font-size: 0.88rem;

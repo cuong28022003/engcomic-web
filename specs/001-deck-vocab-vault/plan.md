@@ -119,4 +119,19 @@ src/app/features/vocab/
     ├── practice-session.component.ts
     ├── practice-session.component.html
     └── practice-session.component.scss
+
+---
+
+## 5. Deck Management & Vocab Vault Deep Integration
+
+### 5.1 Deck Feature Components (`src/app/features/deck/`)
+- `DeckListComponent` (`/deck`): Danh sách bộ thẻ, Tạo Deck Modal, Xóa Deck Modal.
+- `DeckDetailComponent` (`/deck/:deckId`): Chi tiết bộ thẻ, Thống kê Level 1-4, Live Search, Thêm/Sửa/Xóa Card Modal, AI Bridge.
+- `DeckApiService`: `getDecksByUserId`, `getDeckById`, `createDeck`, `updateDeck`, `deleteDeck`.
+
+### 5.2 Vocab Vault & Deck Integration UI
+- **Filter**: Dropdown chọn Deck trong Vocab Dashboard (`Tất cả`, `Chưa phân bộ thẻ`, `[Tên Deck]`).
+- **Bulk Action Bar**: Checkbox chọn nhiều thẻ từ, thanh nổi gán hàng loạt `POST /api/card/batch-assign-deck`.
+- **Card Badges**: Nhãn Deck badge trên từng thẻ từ với liên kết tới `/deck/:deckId`.
+- **Quick Assign Modal**: Modal đổi bộ thẻ trực tiếp cho thẻ lẻ.
 ```

@@ -1,61 +1,35 @@
-# Tasks: TOEIC Reader — Frontend (003, v2)
+# Task Checklist: TOEIC Reader Frontend (v4)
 
-> Simplified: PDF display-only, JSON-driven answer sheet.
+> **Feature ID**: 003  
+> **Trạng thái**: Hoàn thành & Đã kiểm thử
 
 ---
 
-## Phase 1: Foundation
+- [x] **Task 1: Tạo đề thi & Upload PDF**
+  - [x] Tạo `CreateTestComponent` với stepper upload PDF và answer keys.
+  - [x] Chuyển hướng về `/reader` kèm Toast notification sau khi tạo thành công.
 
-- [ ] Tạo `reader.module.ts` + `reader-routing.module.ts`
-- [ ] Tạo models: `TestSummary`, `TestDetail`, `UserAnswer`, `GradedResult`, `SessionResult`, `Mistake`, `AnswerKeyImportJson`
-- [ ] Tạo `AnswerKeyService` — parseJson(), validate()
-- [ ] Tạo `GradingService` — grade(), buildResult(), buildMistakes() (pure, unit-testable)
-- [ ] Tạo `MistakeQueueService` — BehaviorSubject + localStorage + generateAiPrompt()
-- [ ] Tạo `ReaderApiService` — mock data
-- [ ] Register lazy route `/reader` trong `app-routing.module.ts`
-- [ ] Verify `SafePipe` trong Shared hỗ trợ `resourceUrl` type (cho iframe PDF)
+- [x] **Task 2: Phòng thi Split-Screen PDF**
+  - [x] Tạo `ReadingSessionComponent` với layout 2 cột: PDF Viewer + Bubble Sheet.
+  - [x] Tích hợp Pacing Timer và chức năng đánh cờ câu hỏi (`flagged`).
+  - [x] Modal xác nhận khi bấm Nộp bài (Confirm Dialog).
+  - [x] Fullscreen Loading indicator khi đang nộp bài.
 
-## Phase 2: Create Test Wizard
+- [x] **Task 3: Lịch sử làm bài theo Session**
+  - [x] Tạo `AttemptHistoryModalComponent` xem các lượt thi theo `attemptId`.
+  - [x] Hiển thị nút "Bắt đầu làm bài" cho đề mới và "Làm lại" / "Lịch sử bài làm" cho đề đã làm.
 
-- [ ] `PdfUploadStepComponent` — dropzone, preview tên file, emit File
-- [ ] `AnswerKeyStepComponent` — textarea paste JSON, parse, bảng preview, emit questions[]
-- [ ] `CreateTestComponent` — stepper 2 bước, submit FormData lên backend
+- [x] **Task 4: Màn hình Xem lại bài làm (Attempt Review)**
+  - [x] Tạo `AttemptReviewComponent` giữ PDF bên phải để so sánh Part 7 và ảnh Part 6.
+  - [x] Phân biệt màu sắc: 🟢 Xanh lá (Đúng), 🔴 Đỏ cam (Sai), 🟡 Vàng (Đánh cờ).
+  - [x] Nút "Quay lại danh sách đề thi".
+  - [x] Helper `isAnswerCorrect()` kiểm tra boolean và chuỗi chữ hoa chống lỗi serialization.
 
-## Phase 3: Reading Session (Core)
+- [x] **Task 5: Hàng đợi lỗi sai (Mistake Queue) & AI Review**
+  - [x] Tự động đẩy câu sai vào Mistake Queue sau khi nộp bài.
+  - [x] Nút trích xuất System Prompt cho ChatGPT/Claude.
+  - [x] Modal import JSON lời giải AI kèm Loading indicator và Toast thông báo.
+  - [x] Đồng bộ lời giải AI trực tiếp vào từng câu hỏi của session làm bài mà không tạo bản ghi trùng lặp.
 
-- [ ] `PdfViewerComponent` — `<iframe [src]="pdfUrl | safe">` + controls zoom/page (optional)
-- [ ] `QuestionRowComponent` — dumb: hiển thị số câu + 4 radio + flag button, emit selected/flagged
-- [ ] `AnswerSheetComponent`:
-  - [ ] Init userAnswers map từ localStorage (restore khi F5)
-  - [ ] Auto-save vào localStorage khi chọn đáp án
-  - [ ] Progress indicator "X/Y đã trả lời"
-  - [ ] Jump grid (mini số câu để scroll nhanh)
-  - [ ] Submit → confirm dialog → emit answers + duration
-  - [ ] Post-submit: lock + hiển thị state correct/wrong
-- [ ] `ReadingSessionComponent` — load TestDetail, orchestrate PDF + AnswerSheet, gọi submit API, gọi GradingService, push mistakes
-
-## Phase 4: Result & Mistake Queue
-
-- [ ] `SessionResultComponent` — score card, part breakdown table, danh sách câu sai
-- [ ] `MistakeItemComponent` — dumb, expand row khi click
-- [ ] `AiPromptBuilderComponent` — generate prompt từ mistakes[], copy clipboard
-- [ ] `MistakeQueueComponent` — filter tabs, danh sách nhóm theo ngày, textarea AI explanation
-
-## Phase 5: Integration & Polish
-
-- [x] Thay `ReaderApiService` mock bằng backend thực
-- [x] Nav badge: inject `MistakeQueueService.getPendingCount()` vào nav component
-- [x] Mobile responsive: PDF panel + Answer panel → tabs
-- [x] Loading state (`<app-loading>`) và Error state (`<app-error-state>`)
-- [x] Unit test & verify build 0 errors
-
-## Phase 6: Pacing Timer, Part-Practice & Shared Components (v4 Extension)
-
-- [x] Xây dựng `TestTimerService` (Angular 21 Signals, Zoneless) quản lý thời gian 3 tầng và tính toán `pacingStatus` (ahead, on_track, behind).
-- [x] Xây dựng `PreTestConfigModalComponent` (`app-modal`) chọn phạm vi Part 5/6/7 và tùy chỉnh giờ mục tiêu với tính năng ghi nhớ mặc định (`localStorage`).
-- [x] Xây dựng `PacingStatusBarComponent` hiển thị 2 thanh Progress bar so sánh thời gian vs tiến độ câu hỏi theo Part.
-- [x] Cập nhật `AnswerSheetComponent` và `ReadingSessionComponent` lọc và hiển thị chính xác các câu hỏi thuộc `selectedParts`.
-- [x] Nâng cấp `PaginatorComponent` (`@shared/components/paginator`) chuẩn Signals với dropdown page size và ô nhảy trang trực tiếp trong Mistake Queue (`/reader/mistakes`).
-- [x] Tích hợp `WordLookupPopupComponent` tra từ điển Google Translate tức thì khi bôi đen chữ trong PDF.
-- [x] Cập nhật `SessionResultComponent` hiển thị phân tích thời gian theo từng Part và cảnh báo câu hỏi mất nhiều thời gian.
-- [x] Biên dịch `npx ng build --configuration=development` đạt 0 errors.
+- [x] **Task 6: Kiểm tra biên dịch & Chuẩn hóa**
+  - [x] Chạy `npx ng build --configuration=development` ➔ **0 errors**.

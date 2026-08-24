@@ -11,20 +11,27 @@ import { CommonModule } from '@angular/common';
 export class FormInputComponent {
   readonly label = input<string>('');
   readonly placeholder = input<string>('');
-  readonly type = input<'text' | 'password' | 'email' | 'number'>('text');
+  readonly type = input<'text' | 'password' | 'email' | 'number' | 'textarea'>('text');
+  readonly rows = input<number>(3);
   readonly icon = input<string>('');
   readonly errorMessage = input<string>('');
+  readonly helperText = input<string>('');
   readonly disabled = input<boolean>(false);
+  readonly required = input<boolean>(false);
 
   readonly value = model<string>('');
 
   readonly showPassword = signal<boolean>(false);
 
   readonly currentType = computed<'text' | 'password' | 'email' | 'number'>(() => {
-    if (this.type() === 'password') {
+    const t = this.type();
+    if (t === 'password') {
       return this.showPassword() ? 'text' : 'password';
     }
-    return this.type();
+    if (t === 'textarea') {
+      return 'text';
+    }
+    return t;
   });
 
   togglePassword(): void {
@@ -32,7 +39,7 @@ export class FormInputComponent {
   }
 
   onInputChange(event: Event): void {
-    const val = (event.target as HTMLInputElement).value;
+    const val = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
     this.value.set(val);
   }
 }

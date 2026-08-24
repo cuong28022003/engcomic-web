@@ -3,69 +3,69 @@
   <div class="page-header">
     <div>
       <h1><i class="fa-solid fa-inbox"></i> Word Collector</h1>
-      <p class="subtitle">Danh sách từ chờ học — {{ pendingCount }} từ đang chờ</p>
+      <p class="subtitle">Danh sách từ chờ học — {{ pendingCount }} từ đang chờ xử lý</p>
     </div>
-    <button class="btn-primary" (click)="generatePrompt()" [disabled]="pendingCount === 0 || generatingPrompt()">
+    <button class="btn-primary" (click)="openVocabImportModal()" [disabled]="pendingCount === 0">
       <i class="fa-solid fa-wand-magic-sparkles"></i>
-      {{ generatingPrompt() ? 'Đang tạo...' : 'Tạo AI Prompt' }}
+      Trích Xuất Prompt & Nhập Vào Kho ({{ pendingCount }})
     </button>
   </div>
 
-  <!-- Prompt Output -->
-  <div class="prompt-box glass-panel" *ngIf="showPrompt()">
-    <div class="prompt-header">
-      <h3><i class="fa-solid fa-robot highlight"></i> AI Prompt</h3>
-      <div class="prompt-actions">
-        <button class="btn-secondary" (click)="copyPrompt()">
-          <i class="fa-regular fa-copy"></i> Copy
-        </button>
-        <button class="btn-primary" (click)="goToImport()">
-          <i class="fa-solid fa-file-import"></i> Sang Import
-        </button>
-      </div>
-    </div>
-    <pre class="prompt-text">{{ promptText() }}</pre>
-  </div>
-
-  <!-- Add Manual -->
+  <!-- Add Manual Bar -->
   <div class="add-bar glass-panel">
-    <i class="fa-solid fa-plus add-icon"></i>
-    <input
-      type="text"
-      class="add-input"
-      placeholder="Thêm từ hoặc cụm từ thủ công..."
-      [(ngModel)]="newWord"
-      (keyup.enter)="addManual()"
-    />
-    <button class="btn-primary" (click)="addManual()" [disabled]="!newWord.trim() || addingManual">
-      Thêm
+    <div class="input-cell">
+      <app-form-input
+        [(value)]="newWord"
+        placeholder="Thêm từ hoặc cụm từ thủ công vào danh sách thu thập..."
+        icon="fa-solid fa-spell-check"
+      ></app-form-input>
+    </div>
+    <button class="btn-primary add-btn" (click)="addManual()" [disabled]="!newWord.trim() || addingManual">
+      <i class="fa-solid fa-plus"></i> Thêm
     </button>
   </div>
 
-  <!-- Loading -->
-  <div class="loading-state" *ngIf="loading()">
-    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
-    <p>Đang tải...</p>
-  </div>
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+      <p>Đang tải danh sách từ thu thập...</p>
+    </div>
+  }
 
-  <!-- Empty -->
-  <div class="empty-state" *ngIf="!loading() && items().length === 0">
-    <i class="fa-regular fa-inbox empty-icon"></i>
-    <h3>Collector trống</h3>
-    <p>Nhấn "+ Thêm" trên từ liên quan ở Word Detail để thu thập từ vựng.</p>
-  </div>
+  <!-- Empty State -->
+  @if (!loading() && items().length === 0) {
+    <div class="empty-state glass-panel">
+      <i class="fa-regular fa-inbox empty-icon"></i>
+      <h3>Collector đang trống</h3>
+      <p>Nhấn nút "+ Thêm" trên các từ liên quan ở trang Chi Tiết Từ Vựng hoặc thêm nhanh ở thanh trên để thu thập từ mới.</p>
+    </div>
+  }
 
   <!-- Item List -->
-  <div class="item-list" *ngIf="!loading() && items().length > 0">
-    <div class="pending-item" *ngFor="let item of items()">
-      <div class="item-content">
-        <span class="item-word">{{ item.content }}</span>
-        <span class="item-source" *ngIf="getSourceLabel(item)">{{ getSourceLabel(item) }}</span>
-      </div>
-      <button class="btn-icon remove-btn" (click)="removeItem(item)" title="Xóa">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+  @if (!loading() && items().length > 0) {
+    <div class="item-list">
+      @for (item of items(); track item.id) {
+        <div class="pending-item glass-panel">
+          <div class="item-content">
+            <span class="item-word">{{ item.content }}</span>
+            @if (getSourceLabel(item)) {
+              <span class="item-source">{{ getSourceLabel(item) }}</span>
+            }
+          </div>
+          <button class="btn-icon remove-btn" (click)="removeItem(item)" title="Xóa khỏi danh sách thu thập">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      }
     </div>
-  </div>
+  }
 
 </div>
+
+<!-- Modal Thêm Từ Vựng Vào Kho (Shared VocabImportModal) -->
+<app-vocab-import-modal
+  [isOpen]="isVocabModalOpen()"
+  (closeModal)="isVocabModalOpen.set(false)"
+  (vocabAdded)="onVocabAdded()"
+></app-vocab-import-modal>

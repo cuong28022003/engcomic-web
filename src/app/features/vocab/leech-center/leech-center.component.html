@@ -1,0 +1,116 @@
+<div class="leech-container">
+  <header class="leech-header glass-panel">
+    <div class="header-left">
+      <button class="back-btn" (click)="returnToVocab()">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Về kho từ</span>
+      </button>
+      <div class="title-wrap">
+        <h2><i class="fa-solid fa-life-ring"></i> Trung Tâm Cứu Hộ Từ Vựng (Leech Center)</h2>
+        <p>Danh sách các từ bạn làm sai nhiều lần (≥ 4 lần). Hãy thêm mẹo ghi nhớ để ghi nhớ sâu hơn!</p>
+      </div>
+    </div>
+    <span class="leech-count-badge">
+      <i class="fa-solid fa-triangle-exclamation"></i> {{ leechCards().length }} từ bị kẹt
+    </span>
+  </header>
+
+  <main class="leech-main">
+    @if (isLoading()) {
+      <div class="state-card glass-panel">
+        <i class="fa-solid fa-circle-notch fa-spin state-icon"></i>
+        <p>Đang tải danh sách từ kẹt...</p>
+      </div>
+    } @else if (leechCards().length === 0) {
+      <div class="state-card glass-panel empty-state">
+        <div class="celebration-icon">✨</div>
+        <h3>Tuyệt vời! Không có từ nào bị kẹt</h3>
+        <p>Bạn không có từ vựng nào gặp khó khăn lúc này. Tiếp tục phát huy nhé!</p>
+        <button class="btn btn-primary" (click)="returnToVocab()">
+          <i class="fa-solid fa-book-open"></i> Quay lại Kho Từ Vựng
+        </button>
+      </div>
+    } @else {
+      <div class="leech-grid">
+        @for (card of leechCards(); track card.id) {
+          <div class="leech-card glass-panel">
+            <div class="card-top">
+              <div class="word-group">
+                <h3 class="word-text">{{ card.word }}</h3>
+                @if (card.ipa) {
+                  <span class="ipa-text">{{ card.ipa }}</span>
+                }
+              </div>
+              <span class="wrong-badge">
+                <i class="fa-solid fa-xmark"></i> Sai {{ card.wrongCount || 4 }} lần
+              </span>
+            </div>
+
+            <p class="meaning-text">{{ card.meaning }}</p>
+
+            @if (card.memoryTip) {
+              <div class="tip-preview">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>{{ card.memoryTip }}</span>
+              </div>
+            }
+
+            <div class="card-footer">
+              <button class="btn btn-primary btn-sm rescue-btn" (click)="openTipModal(card)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Mẹo & Giải Cứu (Level 1)
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Modal Thêm Mẹo Ghi Nhớ -->
+@if (selectedCard()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-lightbulb header-icon"></i>
+          <h3>Giải Cứu Từ Vựng: "{{ selectedCard()?.word }}"</h3>
+        </div>
+        <button class="close-btn" (click)="closeModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-intro">
+          Từ vựng này đã bị sai liên tiếp nhiều lần. Hãy tạo một liên tưởng, câu chuyện vui hoặc mẹo ghi nhớ để não bộ ghi nhớ lâu hơn.
+        </p>
+
+        <div class="word-recap">
+          <strong>Nghĩa:</strong> {{ selectedCard()?.meaning }}
+        </div>
+
+        <div class="tip-input-group">
+          <label class="input-label">Mẹo ghi nhớ cá nhân của bạn:</label>
+          <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="memoryTipInput"
+            placeholder="Ví dụ: 'Mitigate' nghe như 'mít tơ ghét' -> Ghét ai thì làm giảm bớt cãi vã..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving()">Hủy</button>
+        <button class="btn btn-primary" (click)="saveTipAndClearLeech()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+          } @else {
+            <i class="fa-solid fa-check"></i> Lưu & Bắt Đầu Lại Từ Level 1
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

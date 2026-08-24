@@ -1,188 +1,163 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CardApiService } from '@services/card-api.service';
-import { Card } from '@models/index';
+import { ToastService } from '@services/toast.service';
+import { PracticeQueueItem, PracticePromptResponse, SubmitLevelAnswerResponse } from '@models/index';
+import { LevelIndicatorComponent } from './components/level-indicator/level-indicator.component';
+import { Level1RecognitionExerciseComponent } from './components/level1-recognition-exercise/level1-recognition-exercise.component';
+import { Level2ContextExerciseComponent } from './components/level2-context-exercise/level2-context-exercise.component';
+import { Level3ProductionExerciseComponent } from './components/level3-production-exercise/level3-production-exercise.component';
+import { Level4RealworldExerciseComponent } from './components/level4-realworld-exercise/level4-realworld-exercise.component';
+import { ExerciseImportModalComponent } from '@shared/components/exercise-import-modal/exercise-import-modal.component';
 
-type PracticeState = 'loading' | 'exercise' | 'feedback' | 'finished';
+type SessionState = 'loading' | 'active' | 'empty' | 'completed';
 
 @Component({
   selector: 'app-practice-session',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    LevelIndicatorComponent,
+    Level1RecognitionExerciseComponent,
+    Level2ContextExerciseComponent,
+    Level3ProductionExerciseComponent,
+    Level4RealworldExerciseComponent,
+    ExerciseImportModalComponent,
+  ],
   templateUrl: './practice-session.component.html',
   styleUrls: ['./practice-session.component.scss'],
 })
 export class PracticeSessionComponent implements OnInit {
-  state = signal<PracticeState>('loading');
-  cards = signal<Card[]>([]);
-  currentIndex = signal(0);
-  lastAnswerCorrect = signal<boolean | null>(null);
-  correctCount = signal(0);
-  inputAnswer = '';
-  showingCard = signal(false);   // Stage 0: first view flip
-  mcChoices = signal<string[]>([]);
-  selectedChoice = signal('');
-  fillBlankSentence = signal('');
-  fillBlankAnswer = signal('');
-  submitLoading = signal(false);
+  state = signal<SessionState>('loading');
+  queue = signal<PracticeQueueItem[]>([]);
+  currentIndex = signal<number>(0);
+  deckId = signal<string>('');
 
-  get currentCard(): Card | null {
-    return this.cards()[this.currentIndex()] ?? null;
-  }
+  // Stats
+  totalCount = signal<number>(0);
+  correctCount = signal<number>(0);
+  promotedCount = signal<number>(0);
 
-  get progress(): number {
-    const total = this.cards().length;
-    return total > 0 ? Math.round((this.currentIndex() / total) * 100) : 0;
-  }
+  // Modals state
+  isExerciseModalOpen = signal<boolean>(false);
+  promptData = signal<PracticePromptResponse | null>(null);
 
-  get stageName(): string {
-    const s = this.currentCard?.stage ?? 0;
-    const names = ['Lần đầu', 'Nhận biết', 'Gợi nhớ', 'Phát âm', 'Điền từ', 'Thành thạo'];
-    return names[s] ?? 'Lần đầu';
-  }
+  // Computed
+  currentCard = computed<PracticeQueueItem | null>(() => {
+    const list = this.queue();
+    const idx = this.currentIndex();
+    return list[idx] || null;
+  });
 
-  constructor(private cardApi: CardApiService, private router: Router) {}
+  progressPercent = computed<number>(() => {
+    const total = this.totalCount();
+    if (total === 0) return 0;
+    return Math.round((this.currentIndex() / total) * 100);
+  });
 
-  ngOnInit() {
-    this.loadDue();
-  }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private cardApi: CardApiService,
+    private toast: ToastService
+  ) {}
 
-  loadDue() {
-    this.state.set('loading');
-    this.cardApi.getDueCards(15).subscribe({
-      next: (cards) => {
-        if (cards.length === 0) {
-          this.state.set('finished');
-          return;
-        }
-        this.cards.set(cards);
-        this.currentIndex.set(0);
-        this.prepareExercise();
-      },
-      error: () => this.state.set('finished')
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.deckId.set(params['deckId'] || '');
+      this.loadQueue();
     });
   }
 
-  prepareExercise() {
-    const card = this.currentCard;
-    if (!card) { this.state.set('finished'); return; }
+  loadQueue(): void {
+    this.state.set('loading');
+    const dId = this.deckId();
 
-    this.inputAnswer = '';
-    this.selectedChoice.set('');
-    this.lastAnswerCorrect.set(null);
-    this.showingCard.set(false);
-
-    const stage = card.stage ?? 0;
-
-    if (stage === 1) {
-      // Build multiple choice options
-      const allCards = this.cards();
-      const currentMeaning = card.meaning || card.back || '';
-      const wrong = allCards
-        .filter(c => c.id !== card.id && (c.meaning || c.back))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map(c => c.meaning || c.back || '');
-      const choices: string[] = [currentMeaning, ...wrong].sort(() => Math.random() - 0.5);
-      this.mcChoices.set(choices);
-    }
-
-    if (stage === 4) {
-      // Pick a random example for fill-in-blank
-      const examples = card.examples ?? [];
-      const word = card.word || card.front || '';
-      if (examples.length > 0 && word) {
-        const ex = examples[Math.floor(Math.random() * examples.length)];
-        const blank = '_'.repeat(word.length);
-        const sentence = (ex.text || '').replace(new RegExp(word, 'gi'), blank);
-        this.fillBlankSentence.set(sentence);
-        this.fillBlankAnswer.set(word);
-      } else {
-        // Fallback: treat as recall
-        this.fillBlankSentence.set('');
-        this.fillBlankAnswer.set(word);
-      }
-    }
-
-    this.state.set('exercise');
-  }
-
-  // Stage 0 — flip card, auto-advance
-  flipCard() {
-    this.showingCard.set(true);
-  }
-
-  markSeen() {
-    this.submitResult(5); // auto 5/5 for new card
-  }
-
-  // Stage 1 — multiple choice
-  selectChoice(choice: string) {
-    if (this.selectedChoice()) return;
-    this.selectedChoice.set(choice);
-    const correct = choice === (this.currentCard?.meaning || this.currentCard?.back);
-    this.lastAnswerCorrect.set(correct);
-    this.state.set('feedback');
-    this.submitResult(correct ? 5 : 1);
-  }
-
-  // Stage 2 — recall (type the word)
-  submitRecall() {
-    const answer = this.inputAnswer.trim().toLowerCase();
-    const targetWord = (this.currentCard?.word || this.currentCard?.front || '').toLowerCase();
-    const correct = targetWord === answer;
-    this.lastAnswerCorrect.set(correct);
-    this.state.set('feedback');
-    this.submitResult(correct ? 5 : 1);
-  }
-
-  // Stage 3 — pronunciation (self-assessed)
-  markPronunciation(knew: boolean) {
-    this.submitResult(knew ? 5 : 1);
-  }
-
-  // Stage 4 — fill in blank
-  submitFillBlank() {
-    const answer = this.inputAnswer.trim().toLowerCase();
-    const correct = this.fillBlankAnswer().toLowerCase() === answer;
-    this.lastAnswerCorrect.set(correct);
-    this.state.set('feedback');
-    this.submitResult(correct ? 5 : 1);
-  }
-
-  submitResult(quality: number) {
-    const card = this.currentCard;
-    if (!card) return;
-    this.submitLoading.set(true);
-
-    this.cardApi.submitPracticeResult(card.id, { quality }).subscribe({
-      next: () => {
-        if (quality >= 3) this.correctCount.update(n => n + 1);
-        this.submitLoading.set(false);
-        if (this.state() !== 'feedback') {
-          this.advance();
+    this.cardApi.getPracticeQueue(dId || undefined).subscribe({
+      next: (res) => {
+        const items = res?.items || [];
+        if (items.length === 0) {
+          this.state.set('empty');
+          this.queue.set([]);
+          this.totalCount.set(0);
+        } else {
+          this.queue.set(items);
+          this.totalCount.set(items.length);
+          this.currentIndex.set(0);
+          this.correctCount.set(0);
+          this.promotedCount.set(0);
+          this.state.set('active');
         }
       },
       error: () => {
-        this.submitLoading.set(false);
-        this.advance();
+        this.state.set('empty');
+        this.queue.set([]);
+        this.toast.error('Lỗi khi tải danh sách luyện tập');
       }
     });
   }
 
-  advance() {
-    const next = this.currentIndex() + 1;
-    if (next >= this.cards().length) {
-      this.state.set('finished');
+  onAnswerSubmitted(event: { isCorrect: boolean; quality: number; confidenceScore?: number }): void {
+    const card = this.currentCard();
+    if (!card) return;
+
+    if (event.isCorrect) {
+      this.correctCount.update(c => c + 1);
+    }
+
+    this.cardApi.submitLevelAnswer(card.id, {
+      currentLevel: card.masteryLevel || 1,
+      quality: typeof event.quality === 'number' ? event.quality : (event.isCorrect ? 5 : 1),
+      isCorrect: !!event.isCorrect,
+      confidenceScore: event.confidenceScore ?? undefined
+    }).subscribe({
+      next: (res: SubmitLevelAnswerResponse) => {
+        if (res.levelPromoted || res.newLevel > res.oldLevel) {
+          this.promotedCount.update(p => p + 1);
+          this.toast.success(`🎉 ${card.word} đã thăng lên Level ${res.newLevel}!`);
+        } else if (res.newLevel < res.oldLevel) {
+          this.toast.info(`Từ ${card.word} đã hạ về Level ${res.newLevel} để củng cố.`);
+        } else if (res.isLeech) {
+          this.toast.warning(`⚠️ ${card.word} đã chuyển vào Leech Center.`);
+        }
+
+        this.nextCard();
+      },
+      error: () => {
+        this.nextCard();
+      }
+    });
+  }
+
+  nextCard(): void {
+    const nextIdx = this.currentIndex() + 1;
+    if (nextIdx >= this.queue().length) {
+      this.state.set('completed');
     } else {
-      this.currentIndex.set(next);
-      this.prepareExercise();
+      this.currentIndex.set(nextIdx);
     }
   }
 
-  goToDashboard() {
+  openExerciseModal(): void {
+    const dId = this.deckId() || (this.currentCard()?.deckId || '');
+    this.cardApi.getPracticePrompt(dId).subscribe({
+      next: (data) => {
+        this.promptData.set(data);
+        this.isExerciseModalOpen.set(true);
+      },
+      error: () => {
+        this.toast.error('Không thể trích xuất System Prompt cho bộ từ.');
+      }
+    });
+  }
+
+  onExerciseImportSuccess(): void {
+    this.toast.success(`Đã cập nhật bài tập AI thành công! Đang tải lại hàng đợi...`);
+    this.loadQueue();
+  }
+
+  returnToVocab(): void {
     this.router.navigate(['/vocab']);
   }
 }

@@ -1,0 +1,224 @@
+<div class="deck-list-page">
+  <!-- Top Hero Header -->
+  <div class="page-header glass-panel">
+    <div class="header-left">
+      <div class="header-icon-box">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div>
+        <h1>Quản Lý Bộ Thẻ Từ Vựng</h1>
+        <p class="subtitle">
+          Hệ thống ghi nhớ ngắt quãng (SRS) kết hợp ngân hàng bài tập 4 Level AI •
+          <span class="highlight-count">{{ decks().length }} bộ thẻ</span> ({{ totalCardsAcrossDecks() }} từ)
+        </p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openVocabModal()">
+        <i class="fa-solid fa-plus"></i> Thêm Từ Vựng Mới
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fa-solid fa-folder-plus"></i> Tạo Bộ Thẻ Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Stats Filter Bar -->
+  @if (decks().length > 0 && !loading()) {
+    <div class="filter-toolbar glass-panel">
+      <div class="search-cell">
+        <app-form-input
+          [(value)]="searchQuery"
+          placeholder="Tìm kiếm bộ thẻ theo tên hoặc mô tả..."
+          icon="fa-solid fa-magnifying-glass"
+        ></app-form-input>
+      </div>
+      <div class="decks-count-summary">
+        <span class="count-pill">
+          Hiển thị <strong>{{ filteredDecks().length }}</strong> / {{ decks().length }} bộ thẻ
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Decks Content -->
+  @if (loading()) {
+    <div class="loading-grid">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="skeleton-deck glass-panel"></div>
+      }
+    </div>
+  } @else if (decks().length === 0) {
+    <div class="empty-state glass-panel">
+      <div class="empty-icon-wrap">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <h3>Bạn chưa có bộ thẻ nào</h3>
+      <p>Tạo bộ thẻ đầu tiên để gom nhóm từ vựng theo chủ đề (TOEIC, Manga, Giao tiếp) và mở khóa bài tập 4 Level nhé!</p>
+      <div class="empty-actions">
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fa-solid fa-folder-plus"></i> Tạo Bộ Thẻ Ngay
+        </button>
+        <button class="btn btn-secondary" (click)="openVocabModal()">
+          <i class="fa-solid fa-plus"></i> Nhập Từ Vựng Vào Kho
+        </button>
+      </div>
+    </div>
+  } @else if (filteredDecks().length === 0) {
+    <div class="empty-state glass-panel">
+      <div class="empty-icon-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <h3>Không tìm thấy bộ thẻ phù hợp</h3>
+      <p>Thử tìm kiếm với từ khóa khác xem sao nhé!</p>
+      <button class="btn btn-secondary" (click)="searchQuery.set('')">Xóa tìm kiếm</button>
+    </div>
+  } @else {
+    <div class="decks-grid">
+      @for (deck of filteredDecks(); track deck.id) {
+        <div class="deck-card glass-panel" (click)="goToDeck(deck.id)">
+          <!-- Top Card Header -->
+          <div class="deck-card-top">
+            <div class="deck-icon-badge">
+              <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <div class="deck-title-area">
+              <h3 class="deck-title">{{ deck.name }}</h3>
+              <span class="card-count-badge">
+                <i class="fa-solid fa-spell-check"></i> {{ deck.totalCards || deck.stats?.totalCards || 0 }} thẻ từ
+              </span>
+            </div>
+            <button
+              class="btn-icon delete-btn"
+              (click)="confirmDeleteDeck(deck, $event)"
+              title="Xóa bộ thẻ"
+            >
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <!-- Description -->
+          <p class="deck-desc" [class.empty]="!deck.description">
+            {{ deck.description || 'Bộ thẻ từ vựng ôn tập ngắt quãng thông minh' }}
+          </p>
+
+          <!-- Card Footer Actions -->
+          <div class="deck-card-footer" (click)="$event.stopPropagation()">
+            <button
+              class="btn btn-primary btn-sm study-cta-btn"
+              (click)="startPractice(deck, $event)"
+              [disabled]="(deck.totalCards || deck.stats?.totalCards || 0) === 0"
+              title="Luyện tập bộ thẻ 4 Level"
+            >
+              <i class="fa-solid fa-bolt"></i> Luyện tập
+            </button>
+
+            <button
+              class="btn btn-secondary btn-sm"
+              (click)="openVocabModal(deck)"
+              title="Thêm từ vựng trực tiếp vào bộ thẻ này"
+            >
+              <i class="fa-solid fa-plus"></i> Thêm từ
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal Create New Deck -->
+@if (isCreateModalOpen()) {
+  <div class="modal-backdrop" (click)="closeCreateModal()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-folder-plus highlight"></i>
+          <h3>Tạo bộ thẻ từ vựng mới</h3>
+        </div>
+        <button class="close-btn" (click)="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form (submit)="createDeck()">
+        <div class="form-group">
+          <app-form-input
+            label="Tên bộ thẻ"
+            [required]="true"
+            placeholder="VD: TOEIC 800+ Vocabulary, Manga Idioms..."
+            [(value)]="newDeckName"
+            [disabled]="creating()"
+            icon="fa-solid fa-folder"
+          ></app-form-input>
+        </div>
+
+        <div class="form-group">
+          <app-form-input
+            label="Mô tả bộ thẻ"
+            type="textarea"
+            [rows]="3"
+            placeholder="Mô tả mục tiêu, lộ trình học của bộ thẻ này..."
+            [(value)]="newDeckDesc"
+            [disabled]="creating()"
+          ></app-form-input>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeCreateModal()" [disabled]="creating()">Hủy</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!newDeckName.trim() || creating()">
+            @if (creating()) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tạo...
+            } @else {
+              <i class="fa-solid fa-plus"></i> Tạo bộ thẻ
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Delete Deck Confirmation -->
+@if (deckToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal-card glass-panel delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-triangle-exclamation danger-icon"></i>
+          <h3>Xác nhận xóa bộ thẻ</h3>
+        </div>
+        <button class="close-btn" (click)="cancelDelete()" [disabled]="isDeleting()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p>
+          Bạn có chắc chắn muốn xóa bộ thẻ <strong>"{{ deckToDelete()?.name }}"</strong> không?
+        </p>
+        <p class="warning-text">
+          <i class="fa-solid fa-circle-info"></i> Các thẻ từ vựng trong bộ thẻ sẽ được chuyển về trạng thái Chưa phân bộ thẻ.
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">Hủy</button>
+        <button type="button" class="btn btn-danger" (click)="executeDelete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...
+          } @else {
+            <i class="fa-solid fa-trash"></i> Xóa bộ thẻ
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Shared Modal Thêm Từ Vựng (VocabImportModal) -->
+<app-vocab-import-modal
+  [isOpen]="isVocabModalOpen()"
+  [targetDeckId]="selectedTargetDeck()?.id"
+  [targetDeckName]="selectedTargetDeck()?.name"
+  [availableDecks]="decks()"
+  (closeModal)="isVocabModalOpen.set(false)"
+  (vocabAdded)="onVocabAdded()"
+></app-vocab-import-modal>

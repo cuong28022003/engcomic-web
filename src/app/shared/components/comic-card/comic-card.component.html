@@ -1,10 +1,10 @@
 <div class="comic-card-wrapper">
-  <a [routerLink]="['/comics', comic.id]" class="comic-card">
+  <a [routerLink]="['/comics', comic().id]" class="comic-card">
     <!-- Thumbnail Cover -->
     <div class="cover-wrapper">
       <img
-        [src]="comic.imageUrl || comic.coverImage || comic.backgroundUrl || 'assets/image/banner-home.png'"
-        [alt]="comic.title || comic.name || 'Truyện tranh'"
+        [src]="comic().imageUrl || comic().coverImage || comic().backgroundUrl || 'assets/image/banner-home.png'"
+        [alt]="comic().title || comic().name || 'Truyện tranh'"
         class="cover-image"
         loading="lazy"
         (error)="onImageError($event)"
@@ -12,12 +12,12 @@
 
       <!-- Overlay Badges -->
       <div class="card-badges">
-        @if (comic.isPremium) {
+        @if (comic().isPremium) {
           <span class="badge badge-vip"><i class="fa-solid fa-crown"></i> VIP</span>
         }
-        @if (comic.rating) {
+        @if (comic().rating) {
           <span class="badge rating-badge">
-            <i class="fa-solid fa-star star-icon"></i> {{ comic.rating | number:'1.1-1' }}
+            <i class="fa-solid fa-star star-icon"></i> {{ comic().rating | number:'1.1-1' }}
           </span>
         }
       </div>
@@ -30,29 +30,29 @@
 
     <!-- Meta info -->
     <div class="comic-info">
-      <h3 class="comic-title" [title]="comic.title || comic.name || ''">{{ comic.title || comic.name }}</h3>
+      <h3 class="comic-title" [title]="comic().title || comic().name || ''">{{ comic().title || comic().name }}</h3>
 
       <div class="meta-row">
         <span class="views">
-          <i class="fa-regular fa-eye"></i> {{ (comic.views || 0) | number }}
+          <i class="fa-regular fa-eye"></i> {{ (comic().views || 0) | number }}
         </span>
-        @if (comic.totalChapters) {
+        @if (comic().totalChapters) {
           <span class="chapters">
-            <i class="fa-regular fa-bookmark"></i> {{ comic.totalChapters }} chương
+            <i class="fa-regular fa-bookmark"></i> {{ comic().totalChapters }} chương
           </span>
         }
       </div>
 
       <!-- Genres -->
-      @if (comic.genres && comic.genres.length > 0) {
+      @if (comic().genres && (comic().genres?.length ?? 0) > 0) {
         <div class="genre-tags">
-          @for (genre of comic.genres.slice(0, 2); track genre) {
+          @for (genre of (comic().genres || []).slice(0, 2); track genre) {
             <span class="genre-tag">{{ genre }}</span>
           }
         </div>
-      } @else if (comic.genre) {
+      } @else if (comic().genre) {
         <div class="genre-tags">
-          <span class="genre-tag">{{ comic.genre }}</span>
+          <span class="genre-tag">{{ comic().genre }}</span>
         </div>
       }
     </div>

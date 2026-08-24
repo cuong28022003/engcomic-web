@@ -4,17 +4,25 @@
   <div class="page-header">
     <div class="header-left">
       <h1><i class="fa-solid fa-book-open-reader"></i> Vocab Vault</h1>
-      <p class="subtitle">Kho từ vựng thông minh của bạn</p>
+      <p class="subtitle">Kho từ vựng thông minh & Quản lý bộ thẻ Flashcard</p>
     </div>
     <div class="header-actions">
+      <button class="btn-primary" (click)="openVocabModal()">
+        <i class="fa-solid fa-plus"></i> Thêm Từ Vựng
+      </button>
+      <button class="btn-secondary" (click)="openExerciseModal()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bài Tập AI
+      </button>
+      <button class="btn-secondary" (click)="goToDecks()">
+        <i class="fa-solid fa-layer-group"></i> Quản Lý Bộ Thẻ ({{ decks().length }})
+      </button>
       <button class="btn-secondary" (click)="goToCollector()">
         <i class="fa-solid fa-inbox"></i> Collector
-        <span class="action-badge" *ngIf="pendingCount() > 0">{{ pendingCount() }}</span>
+        @if (pendingCount() > 0) {
+          <span class="action-badge">{{ pendingCount() }}</span>
+        }
       </button>
-      <button class="btn-secondary" (click)="goToImport()">
-        <i class="fa-solid fa-file-import"></i> Import
-      </button>
-      <button class="btn-primary" (click)="startPractice()" [disabled]="stats().dueToday === 0">
+      <button class="btn-secondary" (click)="startPractice()" [disabled]="stats().dueToday === 0">
         <i class="fa-solid fa-bolt"></i>
         Luyện tập {{ stats().dueToday > 0 ? '(' + stats().dueToday + ')' : '' }}
       </button>
@@ -48,7 +56,7 @@
       <span class="stat-num">{{ stats().matureCount }}</span>
       <span class="stat-label">Thành thạo</span>
     </div>
-    <div class="stat-pill stat-leech" [class.has-leech]="stats().leechCount > 0">
+    <div class="stat-pill stat-leech" [class.has-leech]="stats().leechCount > 0" (click)="goToLeech()" style="cursor: pointer;" title="Xem Trung tâm Cứu hộ Leech">
       <i class="fa-solid fa-triangle-exclamation"></i>
       <span class="stat-num">{{ stats().leechCount }}</span>
       <span class="stat-label">Khó nhớ</span>
@@ -67,6 +75,16 @@
         (ngModelChange)="onSearchInput()"
       />
     </div>
+
+    <!-- Deck Filter Dropdown -->
+    <select class="filter-select deck-select" [(ngModel)]="filterDeckId" (change)="onFilterChange()">
+      <option value="">📁 Tất cả bộ thẻ</option>
+      <option value="unassigned">📂 Chưa phân bộ thẻ</option>
+      @for (d of decks(); track d.id) {
+        <option [value]="d.id">🗂️ {{ d.name }}</option>
+      }
+    </select>
+
     <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
       <option value="">Tất cả trạng thái</option>
       <option value="new">Mới</option>
@@ -74,6 +92,7 @@
       <option value="mature">Thành thạo</option>
       <option value="leech">Khó nhớ</option>
     </select>
+
     <input
       type="text"
       class="filter-input"
@@ -87,74 +106,240 @@
   </div>
 
   <!-- ── Loading ── -->
-  <div class="loading-state" *ngIf="loading()">
-    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
-    <p>Đang tải từ vựng...</p>
-  </div>
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+      <p>Đang tải từ vựng...</p>
+    </div>
+  }
 
   <!-- ── Empty State ── -->
-  <div class="empty-state" *ngIf="!loading() && cards().length === 0">
-    <i class="fa-regular fa-folder-open empty-icon"></i>
-    <h3>Chưa có từ vựng nào</h3>
-    <p>Import từ AI hoặc thêm thủ công để bắt đầu học.</p>
-    <button class="btn-primary" (click)="goToImport()">
-      <i class="fa-solid fa-file-import"></i> Import ngay
-    </button>
-  </div>
+  @if (!loading() && cards().length === 0) {
+    <div class="empty-state">
+      <i class="fa-regular fa-folder-open empty-icon"></i>
+      <h3>Chưa có từ vựng nào</h3>
+      <p>Import từ AI hoặc thêm thủ công để bắt đầu học.</p>
+      <button class="btn-primary" (click)="goToImport()">
+        <i class="fa-solid fa-file-import"></i> Import ngay
+      </button>
+    </div>
+  }
 
   <!-- ── Card List ── -->
-  <div class="card-list" *ngIf="!loading() && cards().length > 0">
-    <div
-      class="vocab-card glass-panel"
-      *ngFor="let card of cards()"
-      (click)="goToDetail(card)"
-    >
-      <div class="card-main">
-        <div class="card-word-row">
-          <span class="card-word">{{ card.word || card.front }}</span>
-          <span class="card-ipa" *ngIf="card.ipa">{{ card.ipa }}</span>
-          <span
-            class="badge badge-genre clickable-topic-badge"
-            *ngIf="card.topic"
-            (click)="$event.stopPropagation(); filterByTopic(card.topic)"
-            title="Lọc các từ thuộc chủ đề '{{ card.topic }}'"
-          >
-            <i class="fa-solid fa-tag"></i> {{ card.topic }}
-          </span>
-        </div>
-        <div class="card-meaning">{{ card.meaning || card.back }}</div>
-        <div class="card-definition" *ngIf="card.definitionEn">{{ card.definitionEn }}</div>
-      </div>
-
-      <div class="card-meta">
-        <div class="stage-dots">
-          <span
-            class="dot"
-            *ngFor="let filled of getStageDots(card.stage)"
-            [class.filled]="filled"
-          ></span>
-          <span class="stage-label">{{ getStageLabel(card.stage) }}</span>
-        </div>
-        <span class="status-badge" [class]="getStatusClass(card.status)">
-          {{ getStatusLabel(card.status) }}
-        </span>
-        <span class="next-review" [class.overdue]="isOverdue(card.nextReview)">
-          <i class="fa-regular fa-clock"></i>
-          {{ formatNextReview(card.nextReview) }}
-        </span>
-      </div>
+  @if (!loading() && cards().length > 0) {
+    <div class="list-controls-bar">
+      <label class="select-all-label">
+        <input
+          type="checkbox"
+          class="custom-checkbox"
+          [checked]="isAllSelected()"
+          (change)="toggleSelectAll()"
+        />
+        <span>Chọn tất cả trang này ({{ cards().length }} từ)</span>
+      </label>
+      <span class="selection-indicator" *ngIf="selectedCount() > 0">
+        Đã chọn <strong>{{ selectedCount() }}</strong> thẻ từ
+      </span>
     </div>
-  </div>
+
+    <div class="card-list">
+      @for (card of cards(); track card.id) {
+        <div
+          class="vocab-card glass-panel"
+          [class.selected-row]="isCardSelected(card.id)"
+          (click)="goToDetail(card)"
+        >
+          <!-- Checkbox selector -->
+          <div class="card-checkbox-wrap" (click)="toggleSelectCard(card.id, $event)">
+            <input
+              type="checkbox"
+              class="custom-checkbox"
+              [checked]="isCardSelected(card.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleSelectCard(card.id, $event)"
+            />
+          </div>
+
+          <div class="card-main">
+            <div class="card-word-row">
+              <span class="card-word">{{ card.word || card.front }}</span>
+              @if (card.ipa) {
+                <span class="card-ipa">{{ card.ipa }}</span>
+              }
+
+              <!-- Deck Badge -->
+              @if (card.deckId) {
+                <span
+                  class="badge badge-deck"
+                  (click)="goToDeckDetail(card.deckId, $event)"
+                  title="Thuộc bộ thẻ '{{ getDeckName(card.deckId) }}'. Bấm để xem chi tiết bộ thẻ"
+                >
+                  <i class="fa-solid fa-layer-group"></i> {{ getDeckName(card.deckId) }}
+                </span>
+              } @else {
+                <span
+                  class="badge badge-unassigned"
+                  (click)="openAssignDeckModal(card, $event)"
+                  title="Chưa gán vào bộ thẻ. Bấm để thêm vào bộ thẻ"
+                >
+                  <i class="fa-solid fa-folder-plus"></i> + Gán Deck
+                </span>
+              }
+
+              @if (card.topic) {
+                <span
+                  class="badge badge-genre clickable-topic-badge"
+                  (click)="$event.stopPropagation(); filterByTopic(card.topic)"
+                  title="Lọc các từ thuộc chủ đề '{{ card.topic }}'"
+                >
+                  <i class="fa-solid fa-tag"></i> {{ card.topic }}
+                </span>
+              }
+            </div>
+            <div class="card-meaning">{{ card.meaning || card.back }}</div>
+            @if (card.definitionEn) {
+              <div class="card-definition">{{ card.definitionEn }}</div>
+            }
+          </div>
+
+          <div class="card-meta">
+            <button
+              class="btn-icon change-deck-btn"
+              (click)="openAssignDeckModal(card, $event)"
+              title="Đổi bộ thẻ"
+            >
+              <i class="fa-solid fa-folder-tree"></i>
+            </button>
+
+            <div class="stage-dots">
+              @for (filled of getStageDots(card.stage); track $index) {
+                <span class="dot" [class.filled]="filled"></span>
+              }
+              <span class="stage-label">{{ getStageLabel(card.stage) }}</span>
+            </div>
+            <span class="status-badge" [class]="getStatusClass(card.status)">
+              {{ getStatusLabel(card.status) }}
+            </span>
+            <span class="next-review" [class.overdue]="isOverdue(card.nextReview)">
+              <i class="fa-regular fa-clock"></i>
+              {{ formatNextReview(card.nextReview) }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
 
   <!-- ── Pagination ── -->
-  <div class="pagination" *ngIf="totalPages() > 1">
-    <button class="btn-icon" (click)="prevPage()" [disabled]="currentPage() === 0">
-      <i class="fa-solid fa-chevron-left"></i>
-    </button>
-    <span class="page-info">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
-    <button class="btn-icon" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
-      <i class="fa-solid fa-chevron-right"></i>
-    </button>
-  </div>
+  @if (totalPages() > 1) {
+    <div class="pagination">
+      <button class="btn-icon" (click)="prevPage()" [disabled]="currentPage() === 0">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <span class="page-info">{{ currentPage() + 1 }} / {{ totalPages() }}</span>
+      <button class="btn-icon" (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  }
+
+  <!-- ── Bulk Action Floating Bar ── -->
+  @if (selectedCount() > 0) {
+    <div class="bulk-action-bar glass-panel animate-slide-up">
+      <div class="bulk-info">
+        <i class="fa-solid fa-circle-check highlight-icon"></i>
+        <span>Đã chọn <strong>{{ selectedCount() }}</strong> thẻ từ vựng</span>
+      </div>
+
+      <div class="bulk-controls">
+        <select class="bulk-deck-select" [(ngModel)]="targetDeckIdForBulk" [disabled]="isAssigningBulk()">
+          <option value="">-- Chọn bộ thẻ mục tiêu --</option>
+          <option value="unassigned">📂 Hủy gán (Chưa phân bộ thẻ)</option>
+          @for (d of decks(); track d.id) {
+            <option [value]="d.id">🗂️ {{ d.name }}</option>
+          }
+        </select>
+
+        <button
+          class="btn-primary btn-sm"
+          (click)="executeBulkAssignDeck()"
+          [disabled]="!targetDeckIdForBulk || isAssigningBulk()"
+        >
+          @if (isAssigningBulk()) {
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang gán...
+          } @else {
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Gán Vào Bộ Thẻ
+          }
+        </button>
+
+        <button class="btn-secondary btn-sm" (click)="clearSelection()" [disabled]="isAssigningBulk()">
+          <i class="fa-solid fa-xmark"></i> Bỏ chọn
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Single Card Assign Deck Modal ── -->
+  @if (cardToAssignDeck()) {
+    <div class="modal-backdrop" (click)="closeAssignDeckModal()">
+      <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="header-title-group">
+            <i class="fa-solid fa-folder-tree highlight"></i>
+            <h3>Gán bộ thẻ cho từ vựng</h3>
+          </div>
+          <button class="close-btn" (click)="closeAssignDeckModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="target-word-preview">
+            Từ vựng: <strong>{{ cardToAssignDeck()?.word }}</strong> <em>({{ cardToAssignDeck()?.meaning }})</em>
+          </p>
+
+          <div class="form-group">
+            <label>Chọn bộ thẻ mục tiêu:</label>
+            <select class="form-control" [(ngModel)]="singleTargetDeckId" [disabled]="isAssigningSingle()">
+              <option value="">📂 Chưa phân bộ thẻ (Không thuộc Deck nào)</option>
+              @for (d of decks(); track d.id) {
+                <option [value]="d.id">🗂️ {{ d.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAssignDeckModal()" [disabled]="isAssigningSingle()">Hủy</button>
+          <button type="button" class="btn-primary" (click)="executeSingleAssignDeck()" [disabled]="isAssigningSingle()">
+            @if (isAssigningSingle()) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+            } @else {
+              <i class="fa-solid fa-check"></i> Lưu thay đổi
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================= SHARED DEDICATED MODALS ================= -->
+
+  <!-- 1. Modal Thêm Từ Vựng Mới (VocabImportModal) -->
+  <app-vocab-import-modal
+    [isOpen]="isVocabModalOpen()"
+    [targetDeckId]="filterDeckId && filterDeckId !== 'unassigned' ? filterDeckId : undefined"
+    [availableDecks]="decks()"
+    (closeModal)="isVocabModalOpen.set(false)"
+    (vocabAdded)="onVocabAdded()"
+  ></app-vocab-import-modal>
+
+  <!-- 2. Modal Thêm Bài Tập 4-Level AI (ExerciseImportModal) -->
+  <app-exercise-import-modal
+    [isOpen]="isExerciseModalOpen()"
+    [deckId]="filterDeckId && filterDeckId !== 'unassigned' ? filterDeckId : undefined"
+    [promptData]="promptData()"
+    (closeModal)="isExerciseModalOpen.set(false)"
+    (importSuccess)="onExerciseImportSuccess()"
+    (startPractice)="startPractice()"
+  ></app-exercise-import-modal>
 
 </div>

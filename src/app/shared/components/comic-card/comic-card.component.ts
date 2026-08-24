@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Comic } from '@models/index';
@@ -11,7 +11,7 @@ import { Comic } from '@models/index';
   styleUrls: ['./comic-card.component.scss']
 })
 export class ComicCardComponent {
-  @Input({ required: true }) comic!: Comic;
+  comic = input.required<Comic>();
 
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;

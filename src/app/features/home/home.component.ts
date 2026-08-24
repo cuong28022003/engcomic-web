@@ -27,11 +27,14 @@ import { ComicGenres } from '@shared/constants/genres';
             Khám phá hàng ngàn bộ truyện tranh lôi cuốn với hệ thống dịch thông minh 1-chạm, lưu từ vựng vào bộ thẻ nhớ Spaced Repetition và thách đấu cùng bạn bè.
           </p>
           <div class="hero-actions">
-            <a routerLink="/comics" class="btn-primary">
-              <i class="fa-solid fa-compass"></i> Khám phá ngay
+            <a routerLink="/reader" class="btn-primary">
+              <i class="fa-solid fa-file-lines"></i> Luyện đề TOEIC
+            </a>
+            <a routerLink="/vocab" class="btn-secondary">
+              <i class="fa-solid fa-brain"></i> Kho từ vựng
             </a>
             <a routerLink="/deck" class="btn-secondary">
-              <i class="fa-solid fa-layer-group"></i> Bộ thẻ từ vựng
+              <i class="fa-solid fa-layer-group"></i> Thẻ Flashcards
             </a>
           </div>
         </div>
@@ -45,10 +48,10 @@ import { ComicGenres } from '@shared/constants/genres';
             </div>
           </div>
           <div class="floating-card game-card">
-            <i class="fa-solid fa-dice-d20 icon"></i>
+            <i class="fa-solid fa-brain icon"></i>
             <div>
-              <p class="num">Gacha & Game</p>
-              <p class="lbl">Học mà chơi cực vui</p>
+              <p class="num">AI Review</p>
+              <p class="lbl">Phân tích lỗi sai thông minh</p>
             </div>
           </div>
           <img src="assets/image/banner-home.png" alt="EngComic Hero" class="hero-img" (error)="onHeroImgError($event)" />
@@ -74,9 +77,9 @@ import { ComicGenres } from '@shared/constants/genres';
             <div class="section-header">
               <div class="title-wrap">
                 <i class="fa-solid fa-fire title-icon hot-icon"></i>
-                <h2>Truyện Nổi Bật</h2>
+                <h2>Tài Liệu Nổi Bật</h2>
               </div>
-              <a routerLink="/comics" [queryParams]="{ sort: 'views' }" class="view-more">Xem thêm →</a>
+              <a routerLink="/reader" class="view-more">Xem tất cả đề thi →</a>
             </div>
 
             @if (loadingHot) {
@@ -97,9 +100,9 @@ import { ComicGenres } from '@shared/constants/genres';
             <div class="section-header">
               <div class="title-wrap">
                 <i class="fa-solid fa-clock-rotate-left title-icon recent-icon"></i>
-                <h2>Mới Cập Nhật</h2>
+                <h2>Kho Đề & Truyện Mới</h2>
               </div>
-              <a routerLink="/comics" class="view-more">Xem tất cả →</a>
+              <a routerLink="/reader" class="view-more">Khám phá ngay →</a>
             </div>
 
             @if (loadingRecent) {
@@ -116,7 +119,7 @@ import { ComicGenres } from '@shared/constants/genres';
           </section>
         </div>
 
-        <!-- Right Sidebar: Leaderboard & Quick Game CTA -->
+        <!-- Right Sidebar: Leaderboard & Quick Action CTA -->
         <aside class="sidebar-column">
           <!-- Top Readers Widget -->
           <div class="sidebar-widget glass-panel">
@@ -146,10 +149,10 @@ import { ComicGenres } from '@shared/constants/genres';
 
           <!-- Feature Promo Card -->
           <div class="sidebar-widget promo-widget">
-            <div class="promo-badge"><i class="fa-solid fa-gamepad"></i> Minigame</div>
-            <h4>Đấu Tướng Từ Vựng</h4>
-            <p>Dùng bộ bài và từ vựng của bạn để thi triển kỹ năng, hạ gục quái vật và leo tháp xếp hạng!</p>
-            <a routerLink="/fighting-game" class="btn-primary btn-sm">Chơi ngay</a>
+            <div class="promo-badge"><i class="fa-solid fa-file-lines"></i> Luyện Thi</div>
+            <h4>Luyện Đề TOEIC Online</h4>
+            <p>Phòng thi chia đôi màn hình PDF chuẩn quốc tế, tự động chấm điểm và phân tích câu sai bằng AI.</p>
+            <a routerLink="/reader" class="btn-primary btn-sm">Làm đề ngay</a>
           </div>
         </aside>
       </div>

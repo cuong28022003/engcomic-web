@@ -1,0 +1,72 @@
+<div class="exercise-card glass-panel">
+  <div class="exercise-header">
+    <span class="badge badge-success"><i class="fa-solid fa-star"></i> Level 4: Tình Huống Thực Tế & Tự Tin</span>
+  </div>
+
+  <div class="word-banner">
+    <span class="word-badge">{{ word() }}</span>
+    <span class="meaning-hint">{{ meaning() }}</span>
+  </div>
+
+  <!-- Situation Scenario -->
+  <div class="situation-box">
+    <div class="situation-title">
+      <i class="fa-solid fa-briefcase"></i>
+      <span>Tình Huống Giao Tiếp:</span>
+    </div>
+    <p class="situation-content">
+      {{ exercise()?.situation || 'Bạn đang thảo luận cùng đối tác quốc tế và cần áp dụng từ này để diễn đạt giải pháp một cách tự nhiên và chuyên nghiệp.' }}
+    </p>
+  </div>
+
+  <!-- Writing Area (Optional Practice) -->
+  <div class="response-section">
+    <label class="section-label">Câu trả lời / Cách diễn đạt của bạn (tự do):</label>
+    <textarea
+      class="form-control"
+      rows="3"
+      [(ngModel)]="userResponse"
+      placeholder="Gõ cách bạn sẽ sử dụng từ này trong tình huống trên..."
+      [disabled]="isSubmitted()"
+    ></textarea>
+  </div>
+
+  @if (exercise()?.sampleResponse) {
+    <div class="sample-box">
+      <span class="sample-label"><i class="fa-solid fa-check-double"></i> Mẫu diễn đạt chuẩn:</span>
+      <p class="sample-text">{{ exercise()?.sampleResponse }}</p>
+      @if (exercise()?.keyTakeaways) {
+        <p class="takeaway-text"><i class="fa-solid fa-bookmark"></i> {{ exercise()?.keyTakeaways }}</p>
+      }
+    </div>
+  }
+
+  <!-- Confidence Rating -->
+  <div class="confidence-container">
+    <span class="confidence-title">Bạn tự tin bao nhiêu điểm khi dùng từ này trong thực tế?</span>
+    <div class="stars-row">
+      @for (star of [1, 2, 3, 4, 5]; track star) {
+        <button
+          type="button"
+          class="star-btn"
+          [class.active]="star <= selectedConfidence()"
+          (click)="setConfidence(star)"
+          [disabled]="isSubmitted()"
+        >
+          <i class="fa-solid fa-star"></i>
+          <span class="star-num">{{ star }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="action-footer">
+    <button
+      class="btn btn-primary"
+      (click)="submitRating()"
+      [disabled]="selectedConfidence() === 0 || isSubmitted()"
+    >
+      <i class="fa-solid fa-paper-plane"></i> Hoàn thành Level 4
+    </button>
+  </div>
+</div>

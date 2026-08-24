@@ -1,0 +1,213 @@
+.exercise-card {
+  padding: 36px 32px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto;
+  gap: 20px;
+}
+
+.word-spotlight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 8px 0;
+
+  .target-word {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+
+  .ipa-text {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono, monospace);
+  }
+
+  .audio-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--primary-color);
+      color: #fff;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.question-prompt {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.option-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-main);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-card-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 51, 119, 0.2);
+  }
+
+  .option-letter {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .option-text {
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  .status-icon {
+    font-size: 1.3rem;
+    margin-left: auto;
+  }
+
+  /* Correct feedback */
+  &.correct {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #fff;
+    .option-letter { background: #10b981; color: #fff; }
+    .correct-icon { color: #10b981; }
+  }
+
+  /* Wrong feedback */
+  &.wrong {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #fff;
+    .option-letter { background: #ef4444; color: #fff; }
+    .wrong-icon { color: #ef4444; }
+  }
+}
+
+// ── Feedback Banner ──────────────────────────────────────────────────
+.feedback-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  margin-top: 12px;
+  animation: slideUp 0.25s ease-out;
+
+  .feedback-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+
+    .feedback-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 2px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .correct-text {
+      color: #10b981;
+      font-weight: 700;
+    }
+  }
+
+  &.feedback-correct {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    .feedback-icon, strong { color: #10b981; }
+  }
+
+  &.feedback-wrong {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    .feedback-icon, strong { color: #ef4444; }
+  }
+
+  .btn-continue {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: var(--radius-full);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(255, 51, 119, 0.3);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(255, 51, 119, 0.45);
+    }
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

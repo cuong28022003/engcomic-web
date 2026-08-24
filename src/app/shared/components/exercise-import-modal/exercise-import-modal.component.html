@@ -1,0 +1,183 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <div class="header-icon-box">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h3>Thêm Ngân Hàng Bài Tập 4-Level AI</h3>
+            <p class="modal-subtitle">
+              Bộ thẻ: <strong>{{ promptData()?.deckName || deckName() || 'Bộ từ vựng' }}</strong> •
+              <span class="pending-badge">
+                <i class="fa-regular fa-clock"></i> {{ promptData()?.wordCount || 0 }} từ đang chờ tạo bài tập
+              </span>
+            </p>
+          </div>
+        </div>
+        <button class="close-btn" (click)="onClose()" [disabled]="isImporting()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Shared Progress Stepper Component -->
+      <div class="stepper-wrapper">
+        <app-progress-stepper
+          [steps]="steps"
+          [currentStep]="currentStepIndex()"
+          (stepChange)="onStepChange($event)"
+        ></app-progress-stepper>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- ================= STEP 1: PROMPT ================= -->
+        @if (step() === 'prompt') {
+          <div class="step-view">
+            @if ((promptData()?.wordCount || 0) === 0) {
+              <div class="all-done-banner">
+                <i class="fa-solid fa-circle-check"></i>
+                <div>
+                  <strong>Tất cả từ vựng đều đã có bài tập!</strong>
+                  <p>Bạn không có từ vựng nào ở trạng thái chờ (Pending). Bạn có thể luyện tập ngay hoặc dán thêm bài tập JSON nếu muốn cập nhật.</p>
+                </div>
+              </div>
+            } @else {
+              <app-ai-prompt-box
+                [promptText]="promptData()?.systemPrompt || ''"
+                [deckName]="promptData()?.deckName || deckName()"
+                [wordCount]="promptData()?.wordCount"
+                instruction="Sao chép System Prompt dưới đây và dán vào ChatGPT (GPT-4o) hoặc Claude để AI tạo bài tập 4 Level chuẩn hóa:"
+                pasteActionLabel="Đã Copy, Sang Dán JSON"
+                (proceedToPaste)="goToPaste()"
+              ></app-ai-prompt-box>
+            }
+          </div>
+        }
+
+        <!-- ================= STEP 2: PASTE JSON ================= -->
+        @if (step() === 'paste') {
+          <div class="step-view">
+            <p class="step-desc">
+              Dán phản hồi JSON mảng do AI tạo ra vào khung bên dưới. Hệ thống sẽ tự động ghép nối bài tập 4 Level vào từng từ vựng.
+            </p>
+
+            <app-json-textarea
+              [(value)]="jsonInput"
+              label="Dán gói bài tập JSON 4 Level từ AI vào đây:"
+              [rows]="10"
+              [errorMessage]="parseError()"
+              placeholder='[
+  {
+    "word": "mitigate",
+    "level1_recognition": { "question": "...", "options": [...] },
+    "level2_context": { "sentence": "...", "options": [...] },
+    "level3_production": { "prompt": "...", "correct_sentence": "..." },
+    "level4_realworld": { "scenario": "..." }
+  }
+]'
+            ></app-json-textarea>
+
+            <div class="step-actions-footer">
+              <button class="btn btn-secondary" (click)="goToPrompt()">
+                <i class="fa-solid fa-arrow-left"></i> Xem lại Prompt
+              </button>
+              <button class="btn btn-primary" (click)="parseJson()" [disabled]="!jsonInput.trim()">
+                <i class="fa-solid fa-magnifying-glass"></i> Kiểm Tra & Xem Trước 4 Level <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ================= STEP 3: PREVIEW 4 LEVELS ================= -->
+        @if (step() === 'preview') {
+          <div class="step-view">
+            <div class="preview-header-summary">
+              <app-status-badge
+                type="success"
+                [label]="validCount() + ' bộ bài tập 4-Level hợp lệ'"
+                icon="fa-solid fa-check"
+              ></app-status-badge>
+              <span class="preview-hint">Hệ thống sẽ tự động bỏ qua các từ đã có bài tập trước đó</span>
+            </div>
+
+            <div class="preview-cards-grid">
+              @for (item of previewEntries(); track $index) {
+                <div class="exercise-preview-card glass-panel" [class.invalid]="!item.valid">
+                  <div class="card-top-row">
+                    <strong class="entry-word">{{ item.word }}</strong>
+                    <div class="level-indicators">
+                      <span class="level-dot" [class.on]="item.hasL1" title="Level 1: Nhận biết">L1</span>
+                      <span class="level-dot" [class.on]="item.hasL2" title="Level 2: Ngữ cảnh">L2</span>
+                      <span class="level-dot" [class.on]="item.hasL3" title="Level 3: Tái hiện">L3</span>
+                      <span class="level-dot" [class.on]="item.hasL4" title="Level 4: Thực tế">L4</span>
+                    </div>
+                  </div>
+
+                  <div class="exercise-snippet-preview">
+                    @if (item.l2Sentence) {
+                      <div class="snippet-row"><span class="lbl">L2:</span> <span class="val">{{ item.l2Sentence }}</span></div>
+                    }
+                    @if (item.l3Sentence) {
+                      <div class="snippet-row"><span class="lbl">L3:</span> <span class="val">{{ item.l3Sentence }}</span></div>
+                    }
+                  </div>
+
+                  @if (!item.valid) {
+                    <div class="item-error-badge">{{ item.error }}</div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="step-actions-footer">
+              <button class="btn btn-secondary" (click)="step.set('paste')" [disabled]="isImporting()">
+                <i class="fa-solid fa-arrow-left"></i> Chỉnh sửa JSON
+              </button>
+              <button class="btn btn-primary" (click)="submitImport()" [disabled]="isImporting() || validCount() === 0">
+                @if (isImporting()) {
+                  <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu gói bài tập...
+                } @else {
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Lưu {{ validCount() }} Bộ Bài Tập Vào Bộ Thẻ
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ================= STEP 4: RESULT ================= -->
+        @if (step() === 'result') {
+          <div class="step-view result-view">
+            <div class="result-celebration">
+              <i class="fa-solid fa-circle-check success-icon"></i>
+              <h3>Lưu Ngân Hàng Bài Tập Thành Công!</h3>
+              <p>{{ importResult()?.message || 'Các bài tập 4 Level đã được tích hợp sẵn sàng cho phòng luyện tập.' }}</p>
+            </div>
+
+            <div class="result-stats-row">
+              <div class="result-stat-box green">
+                <span class="num">{{ importResult()?.successCount || 0 }}</span>
+                <span class="label">Bài tập mới thêm</span>
+              </div>
+              <div class="result-stat-box yellow">
+                <span class="num">{{ (importResult()?.totalProcessed || 0) - (importResult()?.successCount || 0) }}</span>
+                <span class="label">Đã có sẵn (Bỏ qua)</span>
+              </div>
+            </div>
+
+            <div class="step-actions-footer center">
+              <button class="btn btn-secondary" (click)="onClose()">
+                <i class="fa-solid fa-check"></i> Đóng
+              </button>
+              <button class="btn btn-primary" (click)="onStartPracticeClick()">
+                <i class="fa-solid fa-play"></i> Bắt Đầu Luyện Tập 4 Level Ngay <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

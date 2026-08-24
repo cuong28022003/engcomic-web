@@ -1,0 +1,80 @@
+<div class="exercise-card glass-panel">
+  <div class="exercise-header">
+    <span class="badge badge-primary"><i class="fa-solid fa-shapes"></i> Level 3: Tái Hiện Chủ Động</span>
+  </div>
+
+  <p class="question-prompt">{{ exercise()?.prompt || 'Sắp xếp các mảnh từ sau thành câu tiếng Anh hoàn chỉnh:' }}</p>
+
+  @if (exercise()?.vietnameseMeaning) {
+    <div class="meaning-hint">
+      <i class="fa-solid fa-language"></i>
+      <span>{{ exercise()?.vietnameseMeaning }}</span>
+    </div>
+  }
+
+  <!-- Sentence Assembly Area -->
+  <div class="assembly-zone" [class.correct-zone]="isAnswerCorrect() === true" [class.wrong-zone]="isAnswerCorrect() === false">
+    @if (selectedTiles().length === 0) {
+      <span class="placeholder-text">Chạm vào các từ bên dưới để ghép câu...</span>
+    } @else {
+      <div class="selected-tiles-wrap">
+        @for (tile of selectedTiles(); track tile.id) {
+          <button class="word-tile selected" (click)="deselectTile(tile)">
+            {{ tile.text }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Available Tiles Pool -->
+  <div class="tiles-pool">
+    @for (tile of availableTiles(); track tile.id) {
+      <button
+        class="word-tile"
+        [class.used]="tile.isUsed"
+        (click)="selectTile(tile)"
+        [disabled]="tile.isUsed || isChecking()"
+      >
+        {{ tile.text }}
+      </button>
+    }
+  </div>
+
+  <!-- Action Controls -->
+  @if (isAnswerCorrect() === null) {
+    <div class="action-row">
+      <button class="btn-secondary" (click)="resetSentence()" [disabled]="selectedTiles().length === 0 || isChecking()">
+        <i class="fa-solid fa-rotate-left"></i> Làm lại
+      </button>
+      <button class="btn-primary" (click)="checkAnswer()" [disabled]="selectedTiles().length === 0 || isChecking()">
+        <i class="fa-solid fa-check"></i> Kiểm tra đáp án
+      </button>
+    </div>
+  }
+
+  <!-- Feedback Banner & Manual Continue Button -->
+  @if (isAnswerCorrect() !== null) {
+    <div class="feedback-banner" [class.feedback-correct]="isAnswerCorrect() === true" [class.feedback-wrong]="isAnswerCorrect() === false">
+      <div class="feedback-info">
+        @if (isAnswerCorrect() === true) {
+          <i class="fa-solid fa-circle-check feedback-icon"></i>
+          <div>
+            <strong>Chính xác!</strong>
+            <p>Câu ghép chuẩn ngữ pháp và tự nhiên.</p>
+          </div>
+        } @else {
+          <i class="fa-solid fa-circle-xmark feedback-icon"></i>
+          <div>
+            <strong>Chưa chính xác!</strong>
+            <p>Câu đúng: <span class="correct-text">{{ exercise()?.correctSentence }}</span></p>
+          </div>
+        }
+      </div>
+
+      <button class="btn-continue" (click)="proceedNext()">
+        Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  }
+</div>

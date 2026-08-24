@@ -1,0 +1,516 @@
+<div class="deck-detail-container">
+  <!-- Top Navigation & Action Bar -->
+  <header class="detail-header glass-panel">
+    <div class="breadcrumb-trail">
+      <a routerLink="/deck" class="nav-back-link" title="Quay lại danh sách bộ thẻ">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Bộ Thẻ</span>
+      </a>
+      <span class="separator">/</span>
+      <span class="current-deck-name">{{ deck()?.name || 'Chi Tiết Bộ Thẻ' }}</span>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary btn-sm" (click)="openEditDeckModal()" title="Chỉnh sửa tên và mô tả bộ thẻ">
+        <i class="fa-solid fa-pen"></i> Sửa Bộ Thẻ
+      </button>
+    </div>
+  </header>
+
+  <main class="detail-main">
+    <!-- Deck Hero Profile -->
+    <div class="deck-hero glass-panel">
+      @if (loading()) {
+        <div class="skeleton-hero"></div>
+      } @else if (notFound()) {
+        <div class="not-found-card">
+          <i class="fa-solid fa-folder-open not-found-icon"></i>
+          <h2>Không tìm thấy bộ thẻ</h2>
+          <p>Bộ thẻ này có thể đã bị xóa hoặc không thuộc quyền sở hữu của bạn.</p>
+          <a routerLink="/deck" class="btn btn-primary">Về Danh Sách Bộ Thẻ</a>
+        </div>
+      } @else {
+        <div class="hero-content">
+          <!-- Deck Title & Description Header -->
+          <div class="hero-top-row">
+            <div class="deck-hero-icon">
+              <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <div class="deck-hero-meta">
+              <div class="deck-title-row">
+                <h1 class="deck-title">{{ deck()?.name }}</h1>
+                <span class="deck-privacy-badge">
+                  <i class="fa-solid fa-lock"></i> Cá nhân (SRS)
+                </span>
+              </div>
+              <p class="deck-desc">
+                {{ deck()?.description || 'Bộ thẻ từ vựng ôn tập ngắt quãng thông minh kết hợp ngân hàng bài tập 4 Level AI.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- 4-Card Metrics Display Grid -->
+          <div class="stats-counter-grid">
+            <div class="metric-card" [class.active]="filterTab() === 'all'" (click)="setFilterTab('all')">
+              <div class="metric-icon-wrap total">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+              <div class="metric-data">
+                <span class="num">{{ cards().length }}</span>
+                <span class="label">Tổng số thẻ</span>
+              </div>
+            </div>
+
+            <div class="metric-card" [class.active]="filterTab() === 'ready'" (click)="setFilterTab('ready')">
+              <div class="metric-icon-wrap ready">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+              <div class="metric-data">
+                <span class="num">{{ readyCards().length }}</span>
+                <span class="label">Sẵn sàng học</span>
+              </div>
+            </div>
+
+            <div class="metric-card" [class.active]="filterTab() === 'pending'" (click)="setFilterTab('pending')">
+              <div class="metric-icon-wrap pending">
+                <i class="fa-regular fa-clock"></i>
+              </div>
+              <div class="metric-data">
+                <span class="num">{{ pendingCards().length }}</span>
+                <span class="label">Chờ tạo bài tập</span>
+              </div>
+            </div>
+
+            <div class="metric-card" [class.active]="filterTab() === 'l4'" (click)="setFilterTab('l4')">
+              <div class="metric-icon-wrap mature">
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <div class="metric-data">
+                <span class="num">{{ levelStats().l4 }}</span>
+                <span class="label">Thành thạo (L4)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Level Distribution Visual Meter -->
+          @if (cards().length > 0) {
+            <div class="level-distribution-bar-wrap">
+              <div class="bar-label-row">
+                <span class="bar-title"><i class="fa-solid fa-chart-simple"></i> Phân bổ cấp độ thành thạo (4 Level)</span>
+                <span class="bar-meta">{{ levelStats().l4 }} / {{ cards().length }} từ đã đạt Level 4</span>
+              </div>
+              <div class="segmented-bar">
+                <div
+                  class="segment l1"
+                  [style.width.%]="cards().length ? (levelStats().l1 / cards().length) * 100 : 0"
+                  title="Level 1: Nhận biết ({{ levelStats().l1 }} từ)"
+                ></div>
+                <div
+                  class="segment l2"
+                  [style.width.%]="cards().length ? (levelStats().l2 / cards().length) * 100 : 0"
+                  title="Level 2: Ngữ cảnh ({{ levelStats().l2 }} từ)"
+                ></div>
+                <div
+                  class="segment l3"
+                  [style.width.%]="cards().length ? (levelStats().l3 / cards().length) * 100 : 0"
+                  title="Level 3: Tái hiện ({{ levelStats().l3 }} từ)"
+                ></div>
+                <div
+                  class="segment l4"
+                  [style.width.%]="cards().length ? (levelStats().l4 / cards().length) * 100 : 0"
+                  title="Level 4: Thực tế ({{ levelStats().l4 }} từ)"
+                ></div>
+              </div>
+            </div>
+          }
+
+          <!-- Hero CTA Actions -->
+          <div class="hero-cta-buttons">
+            <button
+              class="btn btn-primary btn-lg practice-primary-btn"
+              (click)="startPractice()"
+              [disabled]="readyCards().length === 0"
+              [title]="readyCards().length === 0 ? 'Cần import bài tập JSON trước khi luyện tập' : 'Bắt đầu phiên luyện tập'"
+            >
+              <i class="fa-solid fa-play"></i> Luyện Tập 4 Level ({{ readyCards().length }} từ)
+            </button>
+            <button class="btn btn-secondary btn-lg" (click)="openExerciseModal()" [disabled]="cards().length === 0">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bài Tập AI
+              @if (pendingCards().length > 0) {
+                <span class="pending-count-chip">{{ pendingCards().length }} chờ</span>
+              }
+            </button>
+            <button class="btn btn-secondary btn-lg" (click)="openVocabModal()">
+              <i class="fa-solid fa-plus"></i> Thêm Thẻ Từ Mới
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pending Cards Notice Banner -->
+    @if (pendingCards().length > 0 && !loading()) {
+      <div class="pending-notice-banner glass-panel">
+        <div class="notice-info">
+          <div class="notice-icon-box">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <strong>Có {{ pendingCards().length }} từ vựng đang chờ nạp bài tập AI 4-Level!</strong>
+            <p>1-Click sao chép System Prompt để AI tạo ngân hàng bài tập (Nhận biết, Ngữ cảnh, Tái hiện, Thực tế) từ JSON.</p>
+          </div>
+        </div>
+        <div class="notice-actions">
+          <button class="btn btn-primary" (click)="openExerciseModal()">
+            <i class="fa-solid fa-robot"></i> Tạo Bài Tập Cho {{ pendingCards().length }} Từ
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Cards Management Section -->
+    <section class="cards-section">
+      <!-- Search & Filters Header -->
+      <div class="section-toolbar glass-panel">
+        <div class="search-wrap">
+          <app-form-input
+            [(value)]="searchQuery"
+            placeholder="Tìm theo từ tiếng Anh, nghĩa tiếng Việt hoặc phiên âm..."
+            icon="fa-solid fa-magnifying-glass"
+          ></app-form-input>
+        </div>
+
+        <div class="filter-tabs-row">
+          <button
+            class="tab-chip"
+            [class.active]="filterTab() === 'all'"
+            (click)="setFilterTab('all')"
+          >
+            Tất cả ({{ cards().length }})
+          </button>
+          <button
+            class="tab-chip ready"
+            [class.active]="filterTab() === 'ready'"
+            (click)="setFilterTab('ready')"
+          >
+            <i class="fa-solid fa-check"></i> Sẵn sàng ({{ readyCards().length }})
+          </button>
+          @if (pendingCards().length > 0) {
+            <button
+              class="tab-chip pending"
+              [class.active]="filterTab() === 'pending'"
+              (click)="setFilterTab('pending')"
+            >
+              <i class="fa-regular fa-clock"></i> Chờ AI ({{ pendingCards().length }})
+            </button>
+          }
+          <button
+            class="tab-chip"
+            [class.active]="filterTab() === 'l1'"
+            (click)="setFilterTab('l1')"
+          >
+            L1 ({{ levelStats().l1 }})
+          </button>
+          <button
+            class="tab-chip"
+            [class.active]="filterTab() === 'l2'"
+            (click)="setFilterTab('l2')"
+          >
+            L2 ({{ levelStats().l2 }})
+          </button>
+          <button
+            class="tab-chip"
+            [class.active]="filterTab() === 'l3'"
+            (click)="setFilterTab('l3')"
+          >
+            L3 ({{ levelStats().l3 }})
+          </button>
+          <button
+            class="tab-chip"
+            [class.active]="filterTab() === 'l4'"
+            (click)="setFilterTab('l4')"
+          >
+            L4 ⭐ ({{ levelStats().l4 }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Cards Grid -->
+      @if (loading()) {
+        <div class="cards-loading-grid">
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <div class="skeleton-card glass-panel"></div>
+          }
+        </div>
+      } @else if (cards().length === 0) {
+        <div class="empty-cards-card glass-panel">
+          <div class="empty-icon-wrap">
+            <i class="fa-solid fa-spell-check"></i>
+          </div>
+          <h3>Bộ thẻ này đang trống</h3>
+          <p>Bắt đầu thêm thẻ từ đầu tiên bằng AI JSON hoặc nhập thủ công để bắt đầu luyện tập nhé!</p>
+          <div class="empty-actions">
+            <button class="btn btn-primary" (click)="openVocabModal()">
+              <i class="fa-solid fa-plus"></i> Thêm Từ Vựng Vào Bộ Thẻ
+            </button>
+          </div>
+        </div>
+      } @else if (filteredCards().length === 0) {
+        <div class="empty-cards-card glass-panel">
+          <div class="empty-icon-wrap">
+            <i class="fa-solid fa-filter-circle-xmark"></i>
+          </div>
+          <h3>Không tìm thấy thẻ từ phù hợp</h3>
+          <p>Thử đổi tab bộ lọc hoặc tìm kiếm với từ khóa khác nhé!</p>
+          <div class="empty-actions">
+            <button class="btn btn-secondary" (click)="searchQuery.set(''); setFilterTab('all')">
+              Xóa Bộ Lọc
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="cards-grid">
+          @for (card of filteredCards(); track card.id) {
+            <div class="word-flashcard glass-panel" (click)="goToWordDetail(card)">
+              <!-- Card Top Row: Word, IPA, POS Tag, Audio -->
+              <div class="card-header-row">
+                <div class="word-group">
+                  <h3 class="word-title">{{ card.word }}</h3>
+                  @if (card.ipa) {
+                    <span class="ipa-pill">{{ card.ipa }}</span>
+                  }
+                </div>
+
+                <div class="card-top-right" (click)="$event.stopPropagation()">
+                  @if (card.partOfSpeech) {
+                    <span class="pos-badge">{{ card.partOfSpeech }}</span>
+                  }
+                  @if (card.audio) {
+                    <button class="audio-circle-btn" (click)="playAudio(card.audio, $event)" title="Nghe phát âm">
+                      <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Meaning Vietnamese -->
+              <p class="meaning-vi-text">{{ card.meaning }}</p>
+
+              <!-- English definition / note preview if available -->
+              @if (card.definitionEn) {
+                <p class="definition-en-text">{{ card.definitionEn }}</p>
+              }
+
+              <!-- Card Bottom Meta: Status Badge & Card Actions -->
+              <div class="card-footer-meta" (click)="$event.stopPropagation()">
+                <div class="badges-group">
+                  <app-status-badge
+                    type="level"
+                    [label]="'Level ' + (card.masteryLevel || 1)"
+                    icon="fa-solid fa-layer-group"
+                  ></app-status-badge>
+
+                  @if (card.exercisePackage) {
+                    <app-status-badge
+                      type="success"
+                      label="AI Ready"
+                      icon="fa-solid fa-wand-magic-sparkles"
+                    ></app-status-badge>
+                  } @else {
+                    <app-status-badge
+                      type="warning"
+                      label="Pending"
+                      icon="fa-regular fa-clock"
+                    ></app-status-badge>
+                  }
+                </div>
+
+                <div class="card-action-btns">
+                  <button
+                    class="btn-icon edit-btn"
+                    (click)="openEditCardModal(card, $event)"
+                    title="Chỉnh sửa thẻ"
+                  >
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button
+                    class="btn-icon delete-btn"
+                    (click)="confirmDeleteCard(card, $event)"
+                    title="Xóa thẻ"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </main>
+</div>
+
+<!-- Modal Edit Deck -->
+@if (isEditDeckModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditDeckModalOpen.set(false)">
+    <div class="modal-card glass-panel edit-deck-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-pen-to-square header-icon"></i>
+          <h3>Chỉnh sửa bộ thẻ</h3>
+        </div>
+        <button class="close-btn" (click)="isEditDeckModalOpen.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form (submit)="saveDeck()">
+        <div class="form-group">
+          <app-form-input
+            label="Tên bộ thẻ"
+            [required]="true"
+            [(value)]="editDeckName"
+            [disabled]="isSavingDeck()"
+            placeholder="VD: TOEIC 800+ Vocabulary"
+          ></app-form-input>
+        </div>
+        <div class="form-group">
+          <app-form-input
+            label="Mô tả bộ thẻ"
+            type="textarea"
+            [rows]="3"
+            [(value)]="editDeckDesc"
+            [disabled]="isSavingDeck()"
+            placeholder="Mô tả mục tiêu của bộ thẻ..."
+          ></app-form-input>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="isEditDeckModalOpen.set(false)" [disabled]="isSavingDeck()">Hủy</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!editDeckName.trim() || isSavingDeck()">
+            @if (isSavingDeck()) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+            } @else {
+              <i class="fa-solid fa-check"></i> Lưu thay đổi
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Edit Card -->
+@if (isEditCardModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditCardModalOpen.set(false)">
+    <div class="modal-card glass-panel edit-card-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-pen-to-square header-icon"></i>
+          <h3>Chỉnh sửa thẻ từ</h3>
+        </div>
+        <button class="close-btn" (click)="isEditCardModalOpen.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form (submit)="saveEditCard()">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <app-form-input
+              label="Từ tiếng Anh"
+              [required]="true"
+              [(value)]="editCardWord"
+              [disabled]="isSavingCard()"
+              icon="fa-solid fa-spell-check"
+            ></app-form-input>
+          </div>
+          <div class="form-group flex-1">
+            <app-form-select
+              label="Từ loại"
+              [options]="posOptions"
+              [(value)]="editCardPos"
+              [disabled]="isSavingCard()"
+            ></app-form-select>
+          </div>
+        </div>
+        <div class="form-group">
+          <app-form-input
+            label="Nghĩa tiếng Việt"
+            [required]="true"
+            [(value)]="editCardMeaning"
+            [disabled]="isSavingCard()"
+            icon="fa-solid fa-language"
+          ></app-form-input>
+        </div>
+        <div class="form-group">
+          <app-form-input
+            label="Phiên âm IPA"
+            [(value)]="editCardIpa"
+            [disabled]="isSavingCard()"
+            icon="fa-solid fa-volume-high"
+          ></app-form-input>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="isEditCardModalOpen.set(false)" [disabled]="isSavingCard()">Hủy</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!editCardWord.trim() || !editCardMeaning.trim() || isSavingCard()">
+            @if (isSavingCard()) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+            } @else {
+              <i class="fa-solid fa-check"></i> Cập nhật
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Delete Card Confirmation -->
+@if (cardToDelete()) {
+  <div class="modal-backdrop" (click)="cancelDeleteCard()">
+    <div class="modal-card glass-panel delete-card-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-triangle-exclamation danger-icon"></i>
+          <h3>Xác nhận xóa thẻ từ</h3>
+        </div>
+        <button class="close-btn" (click)="cancelDeleteCard()" [disabled]="isDeletingCard()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p>
+          Bạn có chắc chắn muốn xóa thẻ từ <strong>"{{ cardToDelete()?.word }}"</strong> ({{ cardToDelete()?.meaning }}) khỏi bộ thẻ này không?
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelDeleteCard()" [disabled]="isDeletingCard()">Hủy</button>
+        <button type="button" class="btn btn-danger" (click)="executeDeleteCard()" [disabled]="isDeletingCard()">
+          @if (isDeletingCard()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...
+          } @else {
+            <i class="fa-solid fa-trash"></i> Xóa Thẻ
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ================= SHARED DEDICATED MODALS ================= -->
+
+<!-- 1. Modal Thêm Từ Vựng Mới (VocabImportModal) -->
+<app-vocab-import-modal
+  [isOpen]="isVocabModalOpen()"
+  [targetDeckId]="deckId()"
+  [targetDeckName]="deck()?.name"
+  (closeModal)="isVocabModalOpen.set(false)"
+  (vocabAdded)="onVocabAdded()"
+></app-vocab-import-modal>
+
+<!-- 2. Modal Thêm Bài Tập 4-Level AI (ExerciseImportModal) -->
+<app-exercise-import-modal
+  [isOpen]="isExerciseModalOpen()"
+  [deckId]="deckId()"
+  [deckName]="deck()?.name"
+  [promptData]="promptData()"
+  (closeModal)="isExerciseModalOpen.set(false)"
+  (importSuccess)="onExerciseImportSuccess()"
+  (startPractice)="startPractice()"
+></app-exercise-import-modal>

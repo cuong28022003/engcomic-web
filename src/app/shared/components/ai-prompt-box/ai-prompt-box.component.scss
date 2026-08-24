@@ -1,0 +1,135 @@
+.ai-prompt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.prompt-instruction {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+
+  strong { color: var(--primary-color); }
+}
+
+.meta-badge-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .meta-badge {
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+
+    &.deck-badge {
+      color: #06b6d4;
+      border-color: rgba(6, 182, 212, 0.35);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    &.count-badge {
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.08);
+    }
+  }
+}
+
+.code-terminal {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: rgba(10, 12, 20, 0.95);
+  box-shadow: var(--shadow-md);
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+
+        &.red { background: #ff5f56; }
+        &.yellow { background: #ffbd2e; }
+        &.green { background: #27c93f; }
+      }
+    }
+
+    .terminal-title {
+      font-size: 0.78rem;
+      font-family: var(--font-mono, monospace);
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .terminal-copy-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      &.copied {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+    }
+  }
+
+  .terminal-body {
+    padding: 16px;
+    max-height: 260px;
+    overflow-y: auto;
+
+    pre {
+      margin: 0;
+      font-family: var(--font-mono, monospace);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  }
+}
+
+.prompt-actions-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}

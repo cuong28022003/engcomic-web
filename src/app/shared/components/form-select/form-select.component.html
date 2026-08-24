@@ -1,0 +1,42 @@
+<div class="form-select-group" [class.has-error]="errorMessage()">
+  @if (label()) {
+    <label class="form-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star">*</span>
+      }
+    </label>
+  }
+
+  <div class="select-container">
+    @if (icon()) {
+      <i [class]="icon()" class="select-icon"></i>
+    }
+
+    <select
+      [disabled]="disabled()"
+      [value]="value()"
+      (change)="onSelectChange($event)"
+      class="form-control"
+    >
+      @if (placeholder()) {
+        <option value="" disabled>{{ placeholder() }}</option>
+      }
+      @for (opt of options(); track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <i class="fa-solid fa-chevron-down chevron-icon"></i>
+  </div>
+
+  @if (helperText() && !errorMessage()) {
+    <span class="helper-text">{{ helperText() }}</span>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-feedback">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+</div>

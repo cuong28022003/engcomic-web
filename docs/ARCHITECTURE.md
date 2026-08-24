@@ -37,57 +37,61 @@ EngComic Angular áp dụng kiến trúc **Feature-based Standalone Components**
 
 ---
 
-## 2. Các lớp kiến trúc
+## 2. Các lớp kiến trúc (Chuẩn Hóa Theo Enterprise Web-Client)
 
 ### 2.1 Core Layer (`src/app/core/`)
 
-**Nguyên tắc**: Chỉ khởi tạo một lần (`providedIn: 'root'`). Không bao giờ import vào `SharedModule`.
+**Nguyên tắc**: Chỉ khởi tạo một lần duy nhất tại App Root (`providedIn: 'root'`). Không bao giờ import vào `Shared` hoặc `Features`.
 
-| File | Mục đích |
+| Phân Mục / File | Mục đích & Trách nhiệm |
 |---|---|
-| `auth.service.ts` | JWT decode, login/logout/refresh, `currentUser$` stream |
-| `storage.service.ts` | Type-safe `localStorage` / `sessionStorage` wrapper |
-| `toast.service.ts` | Global notification: `success()`, `error()`, `warning()`, `info()` |
-| `user-state.service.ts` | Reactive state: XP, Diamonds, Streak, Character team |
-| `api-base.service.ts` | Base HTTP: `get<T>()`, `post<T>()`, `postForm<T>()`, `put<T>()`, `delete<T>()` |
-| `auth.interceptor.ts` | Tự động attach `Authorization: Bearer <token>`, xử lý 401 & token refresh |
-| `auth.guard.ts` | `authGuard`: yêu cầu đăng nhập; `adminGuard`: yêu cầu role ADMIN |
+| `components/` | Shell layout, Navbar, Sidebar, Global Loading Spinner, Global Dialog Containers |
+| `interceptors/` | `auth.interceptor.ts`: Token injection, 401 token refresh queue, error parsing |
+| `services/auth.service.ts` | JWT/Token lifecycle, login/logout/refresh, reactive user streams |
+| `services/storage.service.ts` | Type-safe `localStorage` wrapper có namespace, TTL |
+| `services/toast.service.ts` | Global notification: `success()`, `error()`, `warning()`, `info()` |
+| `services/loading.service.ts` | Quản trị bộ đếm request toàn cục (`activeRequestsCounter`) |
+| `services/navigation.service.ts`| Lịch sử điều hướng thông minh & quay lại an toàn |
+| `services/user-state.service.ts`| Reactive state: XP, Diamonds, Streak, Character team |
+| `services/api-base.service.ts` | Base HTTP: `get<T>()`, `post<T>()`, `postForm<T>()`, `put<T>()`, `delete<T>()` |
+| `guards/` | `authGuard`: yêu cầu đăng nhập; `adminGuard`: yêu cầu role ADMIN |
 
 ### 2.2 Shared Layer (`src/app/shared/`)
 
-**Nguyên tắc**: Các component/model/constant dùng chung giữa nhiều feature. Không chứa business logic.
+**Nguyên tắc**: Các UI Atoms, Molecules, Directives, Pipes, Utilities dùng chung giữa các features. **Tuyệt đối không chứa business logic**.
 
 ```
 shared/
-├── components/
-│   ├── header/          # Navbar, tìm kiếm, streak, diamonds
-│   ├── footer/          # Footer links
-│   ├── comic-card/      # Card truyện tranh có thể tái sử dụng
-│   └── toast-container/ # Hiển thị toast notifications
-├── constants/
-│   ├── route.ts         # Enum-like ROUTE object + FULL_ROUTE
-│   └── genres.ts        # Array thể loại + độ tuổi
-└── models/
-    └── index.ts         # Tất cả TypeScript interfaces (Single Source of Truth)
+├── components/          # Reusable UI suite (100% 3-file standalone)
+│   ├── loading/         # Spinner, skeleton loader
+│   ├── error-state/     # Error card with retry button
+│   ├── empty-state/     # Empty illustration with action
+│   ├── status-badge/    # Badges (VIP, Admin, Status, Rarity)
+│   ├── modal/           # Dark Glassmorphism Modal popup
+│   ├── confirm-dialog/  # Action confirmation modal
+│   ├── form-input/      # Floating input with icons & error msg
+│   ├── file-uploader/   # Drag & drop file/pdf uploader
+│   ├── progress-stepper/# Step indicator
+│   ├── paginator/       # Enterprise pagination control
+│   └── search-box/      # Debounced search box
+├── directives/          # DOM interaction helpers (resize, scroll, swipe, tooltip)
+├── pipes/               # Display formatters (safe-html, time-ago, file-size)
+├── constants/           # Route constants, regex, storage keys
+└── models/              # Shared interfaces, ViewModels (Single Source of Truth)
 ```
 
 ### 2.3 Feature Layer (`src/app/features/`)
 
-**Nguyên tắc**: Mỗi feature là một thư mục độc lập, lazy-loaded. Các feature không import lẫn nhau trực tiếp.
+**Nguyên tắc**: Mỗi feature là một domain nghiệp vụ độc lập, 100% lazy-loaded, tuân thủ mô hình **Smart - Dumb Components**.
 
 ```
-features/
-├── auth/           { LoginComponent, RegisterComponent, ActiveComponent }
-├── home/           { HomeComponent, SearchComponent, LeaderboardComponent }
-├── comics/         { ComicListComponent, ComicDetailComponent, CreateEditComicComponent }
-├── chapters/       { ChapterDetailComponent, ChapterListComponent, CreateEditChapterComponent }
-├── deck/           { DeckListComponent, DeckDetailComponent, DeckFormComponent, CardFormComponent }
-├── study/          { StudyComponent, ResultComponent }
-├── gacha/          { GachaComponent }
-├── premium/        { PremiumComponent, DiamondTopupComponent }
-├── fighting-game/  { FightingGameComponent }
-├── account/        { AccountComponent (shell), ProfileComponent, BookshelfComponent, ... }
-└── admin/          { AdminComponent (shell), UserManagementComponent, ... }
+features/[feature-name]/
+├── pages/               # Smart Containers (State management, API integration, Routing)
+├── components/          # Dumb / Presentational Components (Pure inputs/outputs)
+├── services/            # Feature-specific Facades & Business logic
+├── models/              # Feature-specific Interfaces / DTOs
+├── const/               # Feature-specific Constants & Table Columns
+└── [feature].routes.ts  # Lazy route definitions
 ```
 
 ---

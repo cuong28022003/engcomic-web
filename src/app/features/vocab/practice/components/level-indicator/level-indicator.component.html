@@ -1,0 +1,24 @@
+<div class="level-stepper-container">
+  <div class="stepper-track">
+    @for (item of levels; track item.level) {
+      <div
+        class="step-item"
+        [class.completed]="item.level < currentLevel()"
+        [class.active]="item.level === currentLevel()"
+      >
+        <div class="node-circle" [title]="item.desc">
+          <i class="fa-solid" [class]="item.icon"></i>
+          @if (item.level === currentLevel()) {
+            <span class="pulse-ring"></span>
+          }
+        </div>
+        <span class="step-label">Level {{ item.level }}</span>
+        <span class="step-sublabel">{{ item.label }}</span>
+      </div>
+
+      @if (item.level < 4) {
+        <div class="step-line" [class.filled]="item.level < currentLevel()"></div>
+      }
+    }
+  </div>
+</div>

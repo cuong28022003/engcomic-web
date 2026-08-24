@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,313 +6,59 @@ import { DeckApiService } from '@core/services/deck-api.service';
 import { AuthService } from '@core/services/auth.service';
 import { ToastService } from '@core/services/toast.service';
 import { Deck } from '@models/index';
-
+import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
+import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 @Component({
   selector: 'app-deck-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  template: `
-    <div class="deck-list-page">
-      <div class="page-header">
-        <div>
-          <h1><i class="fa-solid fa-layer-group highlight"></i> Quản Lý Bộ Thẻ Flashcard (SRS)</h1>
-          <p class="subtitle">Ôn tập từ vựng ngắt quãng thông minh giúp ghi nhớ lâu gấp 5 lần</p>
-        </div>
-
-        <button class="btn-primary" (click)="openCreateModal()">
-          <i class="fa-solid fa-plus"></i> Tạo bộ thẻ mới
-        </button>
-      </div>
-
-      @if (loading) {
-        <div class="loading-grid">
-          <div class="skeleton-deck" *ngFor="let i of [1,2,3,4]"></div>
-        </div>
-      } @else if (decks.length === 0) {
-        <div class="empty-state glass-panel">
-          <i class="fa-solid fa-folder-open empty-icon"></i>
-          <h3>Bạn chưa có bộ thẻ nào</h3>
-          <p>Tạo bộ thẻ đầu tiên hoặc đọc truyện tranh và lưu từ vựng để bắt đầu học nhé!</p>
-          <button class="btn-primary" (click)="openCreateModal()">+ Tạo bộ thẻ mới</button>
-        </div>
-      } @else {
-        <div class="decks-grid">
-          @for (deck of decks; track deck.id) {
-            <div class="deck-card glass-panel">
-              <div class="deck-header">
-                <div class="deck-icon">
-                  <i class="fa-solid fa-book-bookmark"></i>
-                </div>
-                <div class="deck-title-wrap">
-                  <h3 class="deck-name">{{ deck.name }}</h3>
-                  <span class="card-count">{{ deck.totalCards || 0 }} thẻ từ vựng</span>
-                </div>
-              </div>
-
-              @if (deck.description) {
-                <p class="deck-desc">{{ deck.description }}</p>
-              }
-
-              <div class="deck-actions">
-                <a [routerLink]="['/study', deck.id]" class="btn-primary btn-sm study-btn">
-                  <i class="fa-solid fa-play"></i> Bắt đầu học
-                </a>
-                <a [routerLink]="['/deck', deck.id]" class="btn-secondary btn-sm">
-                  <i class="fa-solid fa-gear"></i> Chi tiết
-                </a>
-                <button class="btn-icon delete-btn" (click)="deleteDeck(deck.id)" title="Xóa bộ thẻ">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Create Deck Modal -->
-      @if (isCreateModalOpen) {
-        <div class="modal-backdrop" (click)="isCreateModalOpen = false">
-          <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-              <h3><i class="fa-solid fa-folder-plus highlight"></i> Tạo bộ thẻ từ vựng mới</h3>
-              <button class="close-btn" (click)="isCreateModalOpen = false"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <form (ngSubmit)="createDeck()" class="modal-form">
-              <div class="form-group">
-                <label>Tên bộ thẻ *</label>
-                <input
-                  type="text"
-                  [(ngModel)]="newDeckName"
-                  name="newDeckName"
-                  placeholder="Ví dụ: Từ vựng One Piece Ch.1, Slang..."
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Mô tả ngắn</label>
-                <textarea
-                  rows="3"
-                  [(ngModel)]="newDeckDesc"
-                  name="newDeckDesc"
-                  placeholder="Mục đích ôn luyện..."
-                ></textarea>
-              </div>
-
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="isCreateModalOpen = false">Hủy</button>
-                <button type="submit" class="btn-primary" [disabled]="!newDeckName.trim() || creating">
-                  @if (creating) {
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tạo...
-                  } @else {
-                    Hoàn tất
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      }
-    </div>
-  `,
-  styles: [`
-    .deck-list-page {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .page-header h1 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .highlight { color: var(--primary-color); }
-    .subtitle { color: var(--text-muted); font-size: 0.92rem; margin-top: 4px; }
-
-    .decks-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-    }
-
-    .deck-card {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      border-radius: var(--radius-md);
-      transition: all 0.25s;
-    }
-
-    .deck-card:hover {
-      border-color: var(--border-glow);
-      transform: translateY(-4px);
-    }
-
-    .deck-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .deck-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 12px;
-      background: var(--secondary-gradient);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      color: #fff;
-    }
-
-    .deck-name {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .card-count {
-      font-size: 0.8rem;
-      color: #38bdf8;
-      font-weight: 600;
-    }
-
-    .deck-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .deck-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: auto;
-      padding-top: 8px;
-    }
-
-    .study-btn { flex: 1; }
-    .delete-btn:hover { color: var(--danger-color); border-color: var(--danger-color); }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-overlay);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      padding: 20px;
-    }
-
-    .modal-card {
-      width: 100%;
-      max-width: 480px;
-      padding: 28px;
-      border-radius: var(--radius-lg);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .close-btn { background: transparent; border: none; font-size: 1.2rem; color: var(--text-muted); cursor: pointer; }
-
-    .modal-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-    .form-group input, .form-group textarea {
-      padding: 10px 14px;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      color: #fff;
-      outline: none;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    /* Skeleton */
-    .loading-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-    }
-
-    .skeleton-deck {
-      height: 180px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(90deg, #161926 25%, #222638 50%, #161926 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-
-    .empty-state {
-      padding: 60px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .empty-icon { font-size: 3rem; color: var(--text-dim); }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-  `]
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    VocabImportModalComponent,
+    FormInputComponent,
+  ],
+  templateUrl: './deck-list.component.html',
+  styleUrls: ['./deck-list.component.scss'],
 })
 export class DeckListComponent implements OnInit {
-  private deckApi = inject(DeckApiService);
-  private auth = inject(AuthService);
-  private toast = inject(ToastService);
-  private router = inject(Router);
-
-  decks: Deck[] = [];
-  loading = true;
-  isCreateModalOpen = false;
-  creating = false;
+  decks = signal<Deck[]>([]);
+  loading = signal<boolean>(true);
+  searchQuery = signal<string>('');
+  isCreateModalOpen = signal<boolean>(false);
+  creating = signal<boolean>(false);
 
   newDeckName = '';
   newDeckDesc = '';
+
+  // Delete modal confirmation
+  deckToDelete = signal<Deck | null>(null);
+  isDeleting = signal<boolean>(false);
+
+  // Shared Vocab Modal
+  isVocabModalOpen = signal<boolean>(false);
+  selectedTargetDeck = signal<Deck | null>(null);
+
+  filteredDecks = computed<Deck[]>(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const list = this.decks();
+    if (!q) return list;
+    return list.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      (d.description && d.description.toLowerCase().includes(q))
+    );
+  });
+
+  totalCardsAcrossDecks = computed<number>(() => {
+    return this.decks().reduce((acc, d) => acc + (d.totalCards || d.stats?.totalCards || 0), 0);
+  });
+
+  constructor(
+    private deckApi: DeckApiService,
+    private auth: AuthService,
+    private toast: ToastService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.fetchDecks();
@@ -326,15 +72,15 @@ export class DeckListComponent implements OnInit {
       return;
     }
 
-    this.loading = true;
+    this.loading.set(true);
     this.deckApi.getDecksByUserId(user.userId).subscribe({
       next: (res) => {
-        this.decks = res.content || [];
-        this.loading = false;
+        this.decks.set(res?.content ?? []);
+        this.loading.set(false);
       },
       error: () => {
-        this.decks = [];
-        this.loading = false;
+        this.decks.set([]);
+        this.loading.set(false);
       },
     });
   }
@@ -342,14 +88,19 @@ export class DeckListComponent implements OnInit {
   openCreateModal(): void {
     this.newDeckName = '';
     this.newDeckDesc = '';
-    this.isCreateModalOpen = true;
+    this.isCreateModalOpen.set(true);
+  }
+
+  closeCreateModal(): void {
+    if (this.creating()) return;
+    this.isCreateModalOpen.set(false);
   }
 
   createDeck(): void {
     const user = this.auth.currentUser;
     if (!user || !this.newDeckName.trim()) return;
 
-    this.creating = true;
+    this.creating.set(true);
     this.deckApi
       .createDeck({
         name: this.newDeckName.trim(),
@@ -358,27 +109,61 @@ export class DeckListComponent implements OnInit {
       })
       .subscribe({
         next: (newDeck) => {
-          this.creating = false;
-          this.decks.unshift(newDeck);
-          this.isCreateModalOpen = false;
-          this.toast.success(`Đã tạo bộ thẻ "${newDeck.name}"!`);
+          this.creating.set(false);
+          this.decks.update(list => [newDeck, ...list]);
+          this.isCreateModalOpen.set(false);
+          this.toast.success(`Đã tạo bộ thẻ "${newDeck.name}" thành công!`);
         },
-        error: () => {
-          this.creating = false;
-          this.toast.error('Lỗi khi tạo bộ thẻ mới');
+        error: (err) => {
+          this.creating.set(false);
+          this.toast.error(err.error?.detail || err.error?.message || 'Lỗi khi tạo bộ thẻ mới');
         },
       });
   }
 
-  deleteDeck(deckId: string): void {
-    if (!confirm('Bạn có chắc muốn xóa bộ thẻ này cùng tất cả thẻ từ vựng bên trong?')) return;
+  openVocabModal(deck?: Deck): void {
+    this.selectedTargetDeck.set(deck || null);
+    this.isVocabModalOpen.set(true);
+  }
 
-    this.deckApi.deleteDeck(deckId).subscribe({
+  onVocabAdded(): void {
+    this.fetchDecks();
+  }
+
+  confirmDeleteDeck(deck: Deck, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.deckToDelete.set(deck);
+  }
+
+  cancelDelete(): void {
+    this.deckToDelete.set(null);
+  }
+
+  executeDelete(): void {
+    const deck = this.deckToDelete();
+    if (!deck) return;
+
+    this.isDeleting.set(true);
+    this.deckApi.deleteDeck(deck.id).subscribe({
       next: () => {
-        this.decks = this.decks.filter((d) => d.id !== deckId);
-        this.toast.success('Đã xóa bộ thẻ');
+        this.isDeleting.set(false);
+        this.decks.update(list => list.filter(d => d.id !== deck.id));
+        this.deckToDelete.set(null);
+        this.toast.success(`Đã xóa bộ thẻ "${deck.name}"`);
       },
-      error: () => this.toast.error('Không thể xóa bộ thẻ'),
+      error: () => {
+        this.isDeleting.set(false);
+        this.toast.error('Không thể xóa bộ thẻ');
+      },
     });
+  }
+
+  startPractice(deck: Deck, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/vocab/practice'], { queryParams: { deckId: deck.id } });
+  }
+
+  goToDeck(deckId: string): void {
+    this.router.navigate(['/deck', deckId]);
   }
 }

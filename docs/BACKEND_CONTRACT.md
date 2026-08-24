@@ -296,6 +296,63 @@ Response trả về:
 }
 ```
 
+### `GET /api/toeic/attempts/test/{testId}`
+- Lấy danh sách lịch sử các lần thi của người dùng theo `testId`.
+- Response:
+```json
+[
+  {
+    "id": "68b4e7...",
+    "testId": "68a1f2...",
+    "rawScore": 85,
+    "scaledScore": 425,
+    "totalQuestions": 100,
+    "durationSeconds": 3600,
+    "completedAt": "2026-08-21T09:15:00Z"
+  }
+]
+```
+
+### `GET /api/toeic/attempts/{attemptId}/review`
+- Lấy chi tiết bài thi đã làm để xem lại song song với PDF đề thi.
+- Response:
+```json
+{
+  "id": "68b4e7...",
+  "testId": "68a1f2...",
+  "testTitle": "ETS 2024 Test 01",
+  "pdfUrl": "/uploads/toeic/ets2024_01.pdf",
+  "rawScore": 85,
+  "scaledScore": 425,
+  "totalQuestions": 100,
+  "durationSeconds": 3600,
+  "answers": [
+    {
+      "questionNumber": 101,
+      "part": 5,
+      "userAnswer": "C",
+      "correctAnswer": "C",
+      "isCorrect": true,
+      "flagged": false,
+      "timeSpentSeconds": 24,
+      "aiExplanation": "Giải thích chi tiết từ AI..."
+    }
+  ]
+}
+```
+
+### `GET /api/toeic/mistakes`
+- Lấy danh sách toàn bộ câu hỏi làm sai trong Hàng đợi lỗi sai.
+- Default query params: `size=1000`, sắp xếp `questionNumber ASC`.
+
+### `GET /api/toeic/mistakes/prompt`
+- Trích xuất System Prompt chuẩn hóa cho ChatGPT/Claude để giải thích các câu làm sai.
+
+### `POST /api/toeic/mistakes/import-ai-review`
+- Import JSON lời giải từ AI, tự động cập nhật vào `mistake_queue` và đồng bộ vào `test_attempts`.
+
+---
+
 ### `GET /api/translator/translate` (Public)
 - Query params: `text=hello`, `from=en`, `to=vi`
 - Response:

@@ -5,7 +5,10 @@ import {
   Card, CardReviewRequest, PageResponse, PageParams,
   BatchImportRequest, BatchImportResult,
   DashboardResponse, CardDetailResponse,
-  PracticeResultRequest
+  PracticeResultRequest,
+  PracticePromptResponse, ImportPracticeJsonResponse,
+  PracticeQueueItem, SubmitLevelAnswerRequest,
+  SubmitLevelAnswerResponse
 } from '@models/index';
 
 @Injectable({ providedIn: 'root' })
@@ -45,8 +48,16 @@ export class CardApiService extends ApiBaseService {
     return this.post<BatchImportResult>(`${this.BASE}/batch-import`, req);
   }
 
+  /** POST /api/card/batch-assign-deck — gán hàng loạt cards vào deck */
+  batchAssignDeck(cardIds: string[], deckId?: string): Observable<{ totalAssigned: number; message: string }> {
+    return this.post<{ totalAssigned: number; message: string }>(`${this.BASE}/batch-assign-deck`, {
+      cardIds,
+      deckId: deckId || null,
+    });
+  }
+
   /** GET /api/card/dashboard — stats + danh sách cards có filter */
-  getDashboard(params?: PageParams): Observable<DashboardResponse> {
+  getDashboard(params?: Record<string, string | number | boolean | undefined>): Observable<DashboardResponse> {
     return this.get<DashboardResponse>(`${this.BASE}/dashboard`, params);
   }
 
@@ -63,5 +74,41 @@ export class CardApiService extends ApiBaseService {
   /** POST /api/card/:id/practice-result — nộp kết quả SM-2 */
   submitPracticeResult(cardId: string, req: PracticeResultRequest): Observable<Card> {
     return this.post<Card>(`${this.BASE}/${cardId}/practice-result`, req);
+  }
+
+  // ─── Feature 002: Word Journey Practice APIs ──────────────────────────
+
+  /** GET /api/card/practice-prompt or /api/card/deck/:deckId/practice-prompt */
+  getPracticePrompt(deckId?: string): Observable<PracticePromptResponse> {
+    const url = deckId ? `${this.BASE}/deck/${deckId}/practice-prompt` : `${this.BASE}/practice-prompt`;
+    return this.get<PracticePromptResponse>(url);
+  }
+
+  /** POST /api/card/import-practice-json or /api/card/deck/:deckId/import-practice-json */
+  importPracticeJson(jsonContent: string, deckId?: string): Observable<ImportPracticeJsonResponse> {
+    const url = deckId ? `${this.BASE}/deck/${deckId}/import-practice-json` : `${this.BASE}/import-practice-json`;
+    return this.post<ImportPracticeJsonResponse>(url, { jsonContent });
+  }
+
+  /** GET /api/card/practice/queue — lấy queue bài tập theo Level */
+  getPracticeQueue(deckId?: string, limit = 20): Observable<{ items: PracticeQueueItem[]; totalDue: number }> {
+    const params: any = { limit };
+    if (deckId) params.deckId = deckId;
+    return this.get<{ items: PracticeQueueItem[]; totalDue: number }>(`${this.BASE}/practice/queue`, params);
+  }
+
+  /** POST /api/card/:id/submit-level — nộp câu trả lời cho level hiện tại */
+  submitLevelAnswer(cardId: string, payload: SubmitLevelAnswerRequest): Observable<SubmitLevelAnswerResponse> {
+    return this.post<SubmitLevelAnswerResponse>(`${this.BASE}/${cardId}/submit-level`, payload);
+  }
+
+  /** GET /api/card/leech — danh sách từ bị kẹt */
+  getLeechCards(): Observable<Card[]> {
+    return this.get<Card[]>(`${this.BASE}/leech`);
+  }
+
+  /** POST /api/card/:id/clear-leech — gỡ trạng thái Leech */
+  clearLeechStatus(cardId: string, memoryTip?: string): Observable<{ card: Card; message: string }> {
+    return this.post<{ card: Card; message: string }>(`${this.BASE}/${cardId}/clear-leech`, { memoryTip });
   }
 }

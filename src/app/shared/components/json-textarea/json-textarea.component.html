@@ -1,0 +1,46 @@
+<div class="json-textarea-group" [class.has-error]="errorMessage()">
+  <div class="json-header-bar">
+    <label class="form-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star">*</span>
+      }
+    </label>
+
+    <div class="json-quick-actions">
+      @if (lineCount() > 0) {
+        <span class="line-badge">{{ lineCount() }} dòng</span>
+      }
+      <button type="button" class="action-btn" (click)="pasteFromClipboard()" [disabled]="disabled()" title="Dán nhanh từ Clipboard và tự động lọc Markdown">
+        <i class="fa-regular fa-clipboard"></i> Dán từ Clipboard
+      </button>
+      @if (value()) {
+        <button type="button" class="action-btn" (click)="formatJson()" [disabled]="disabled()" title="Định dạng lại cấu trúc JSON">
+          <i class="fa-solid fa-code"></i> Format
+        </button>
+        <button type="button" class="action-btn clear-btn" (click)="clearContent()" [disabled]="disabled()" title="Xóa nội dung">
+          <i class="fa-solid fa-trash-can"></i> Xóa
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="textarea-wrapper">
+    <textarea
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [rows]="rows()"
+      [value]="value()"
+      (input)="onInputChange($event)"
+      class="form-control json-editor"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-feedback">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+</div>

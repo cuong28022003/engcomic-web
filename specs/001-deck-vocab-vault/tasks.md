@@ -41,3 +41,14 @@
 ## Phase 6: Navigation & Polish
 - [x] **T014**: Thêm link **🧠 Vocab** vào thanh điều hướng Header (`header.component.ts`).
 - [x] **T015**: Đổi toàn bộ thuật ngữ `front`/`back` ➔ `word`/`meaning`, sửa lỗi import Example/Relation và xác thực `ng build` thành công 100%.
+
+---
+
+## Phase 7: Deck Management & Vocab Vault Deep Integration
+- [x] **T016**: Hoàn thiện `DeckListComponent` (Tách 3 tệp `.ts`, `.html`, `.scss`, Modal tạo Deck, Modal xác nhận xóa, điều hướng).
+- [x] **T017**: Hoàn thiện `DeckDetailComponent` (Hero banner, Thống kê Level 1-4, Live Search, Thêm/Sửa/Xóa Card Modal, AI Bridge integration).
+- [x] **T018**: Nâng cấp `VocabDashboardComponent` với tích hợp Deck:
+  - Dropdown lọc theo Deck (`Tất cả`, `Chưa phân bộ thẻ`, `[Từng Deck]`).
+  - Checkbox chọn nhiều thẻ từ & Thanh công cụ nổi gán bộ thẻ hàng loạt (Bulk Action Bar).
+  - Nhãn Deck Badge và Modal đổi bộ thẻ trực tiếp cho thẻ lẻ.
+  - Nút điều hướng nhanh Header sang `/deck`.

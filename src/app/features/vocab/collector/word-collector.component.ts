@@ -1,26 +1,32 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PendingItemApiService } from '@services/pending-item-api.service';
 import { PendingCountService } from '@services/pending-count.service';
 import { PendingItem } from '@models/index';
+import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
+import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 
 @Component({
   selector: 'app-word-collector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VocabImportModalComponent, FormInputComponent],
   templateUrl: './word-collector.component.html',
   styleUrls: ['./word-collector.component.scss'],
 })
 export class WordCollectorComponent implements OnInit {
   items = signal<PendingItem[]>([]);
   loading = signal(true);
-  generatingPrompt = signal(false);
-  promptText = signal('');
-  showPrompt = signal(false);
   newWord = '';
   addingManual = false;
+
+  // Shared Vocab Modal
+  isVocabModalOpen = signal<boolean>(false);
+
+  pendingWordsText = computed(() => {
+    return this.items().map(i => i.content).join(', ');
+  });
 
   constructor(
     private pendingApi: PendingItemApiService,
@@ -69,24 +75,12 @@ export class WordCollectorComponent implements OnInit {
     });
   }
 
-  generatePrompt() {
-    this.generatingPrompt.set(true);
-    this.pendingApi.generatePrompt().subscribe({
-      next: (res) => {
-        this.promptText.set(res.prompt);
-        this.showPrompt.set(true);
-        this.generatingPrompt.set(false);
-      },
-      error: () => this.generatingPrompt.set(false)
-    });
+  openVocabImportModal(): void {
+    this.isVocabModalOpen.set(true);
   }
 
-  copyPrompt() {
-    navigator.clipboard.writeText(this.promptText());
-  }
-
-  goToImport() {
-    this.router.navigate(['/vocab/import']);
+  onVocabAdded(): void {
+    this.loadItems();
   }
 
   getSourceLabel(item: PendingItem): string {

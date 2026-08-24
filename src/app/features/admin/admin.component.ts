@@ -21,9 +21,6 @@ import { ToastService } from '@core/services/toast.service';
           <a routerLink="/admin/users" routerLinkActive="active" class="admin-tab">
             <i class="fa-solid fa-users"></i> Quản lý Thành viên
           </a>
-          <a routerLink="/admin/comics" routerLinkActive="active" class="admin-tab">
-            <i class="fa-solid fa-book-journal-whills"></i> Quản lý Truyện
-          </a>
           <a routerLink="/admin/reports" routerLinkActive="active" class="admin-tab">
             <i class="fa-solid fa-flag"></i> Báo cáo vi phạm
           </a>

@@ -1,0 +1,42 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <i class="fa-solid fa-file-import header-icon"></i>
+          <h3>Import Gói Bài Tập JSON Từ AI</h3>
+        </div>
+        <button class="close-btn" (click)="onClose()" [disabled]="isLoading()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-intro">
+          Dán phản hồi JSON mảng do ChatGPT / Claude tạo ra vào khung bên dưới. Hệ thống sẽ tự động ghép nối bài tập 4 Level vào từng từ vựng trong Deck.
+        </p>
+
+        <div class="textarea-wrapper">
+          <textarea
+            class="json-textarea"
+            rows="10"
+            [(ngModel)]="jsonText"
+            placeholder='[ { "word": "mitigate", "level1_recognition": { ... }, "level2_context": { ... } } ]'
+            [disabled]="isLoading()"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="onClose()" [disabled]="isLoading()">Hủy</button>
+        <button class="btn btn-primary" (click)="submitImport()" [disabled]="isLoading() || !jsonText.trim()">
+          @if (isLoading()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý import...
+          } @else {
+            <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Gói Bài Tập
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
