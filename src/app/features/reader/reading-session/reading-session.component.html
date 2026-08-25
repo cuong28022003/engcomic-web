@@ -67,6 +67,35 @@
     ></app-attempt-history-modal>
   }
 
+  <!-- Time's Up Notification Modal -->
+  @if (showTimeUpModal()) {
+    <app-modal
+      [isOpen]="showTimeUpModal()"
+      [title]="'Hết Giờ Làm Bài Thi'"
+      size="sm"
+      (closed)="closeTimeUpModal()"
+    >
+      <div class="timeup-modal-content">
+        <div class="timeup-icon">
+          <i class="fa-solid fa-hourglass-end"></i>
+        </div>
+        <h3 class="timeup-title">Thời gian mục tiêu đã kết thúc!</h3>
+        <p class="timeup-desc">
+          Bạn đã hoàn thành thời gian quy định của bài thi. Bạn có thể nộp bài ngay để chấm điểm và phân tích câu sai, hoặc tiếp tục làm thêm các câu còn lại.
+        </p>
+      </div>
+
+      <div footer class="timeup-modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeTimeUpModal()">
+          <i class="fa-solid fa-pen-nib"></i> Làm tiếp
+        </button>
+        <button type="button" class="btn btn-primary" (click)="submitFromTimeUpModal()">
+          <i class="fa-solid fa-paper-plane"></i> Nộp bài ngay
+        </button>
+      </div>
+    </app-modal>
+  }
+
   <!-- Loading / Submitting / Error states via Shared Components -->
   @if (submitting()) {
     <app-loading [message]="'Đang nộp bài và chấm điểm... Vui lòng đợi trong giây lát!'"></app-loading>

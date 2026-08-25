@@ -1,0 +1,84 @@
+<app-modal
+  [isOpen]="isOpen()"
+  title="Tra Cứu Nhanh Ngữ Pháp TOEIC"
+  size="md"
+  (closed)="onClose()"
+>
+  <div class="search-modal-container">
+    <!-- Search Input Box -->
+    <div class="search-bar-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Gõ từ khóa, thì, công thức (ví dụ: 'since', 'hoàn thành', 'bị động')..."
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        autofocus
+      />
+      @if (query()) {
+        <button type="button" class="clear-btn" (click)="query.set('')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Quick Hints / Popular categories -->
+    <div class="quick-hints">
+      <span class="hint-label">Gợi ý nhanh:</span>
+      <button type="button" class="hint-pill" (click)="query.set('tenses')">#Thì</button>
+      <button type="button" class="hint-pill" (click)="query.set('passive')">#BịĐộng</button>
+      <button type="button" class="hint-pill" (click)="query.set('conditional')">#ĐiềuKiện</button>
+      <button type="button" class="hint-pill" (click)="query.set('since')">#Since/For</button>
+    </div>
+
+    <!-- Search Results / Point List -->
+    <div class="results-container">
+      @if (loading()) {
+        <app-loading message="Đang nạp dữ liệu ngữ pháp..."></app-loading>
+      } @else if (filteredPoints().length === 0) {
+        <app-empty-state
+          icon="fa-solid fa-book-open"
+          title="Không tìm thấy điểm ngữ pháp phù hợp"
+          message="Hãy thử tìm với từ khóa khác như 'past', 'present', 'modal', 'preposition'..."
+        ></app-empty-state>
+      } @else {
+        <div class="points-list">
+          @for (point of filteredPoints(); track point.id || point.topic) {
+            <div class="point-item" (click)="onSelect(point)">
+              <div class="point-header">
+                <span class="point-topic">{{ point.topic }}</span>
+                <span class="cat-badge" [style.color]="getCategoryBadge(point.category).color" [style.border-color]="getCategoryBadge(point.category).color">
+                  <i [class]="getCategoryBadge(point.category).icon"></i>
+                  {{ getCategoryBadge(point.category).label }}
+                </span>
+              </div>
+
+              @if (point.shortRule) {
+                <p class="point-rule">{{ point.shortRule }}</p>
+              }
+
+              @if (point.structure) {
+                <div class="point-structure">
+                  <code>{{ point.structure }}</code>
+                </div>
+              }
+
+              @if (point.signalWords && point.signalWords.length > 0) {
+                <div class="point-signals">
+                  <span class="sig-label">Dấu hiệu:</span>
+                  @for (sig of point.signalWords.slice(0, 4); track sig) {
+                    <span class="sig-tag">{{ sig }}</span>
+                  }
+                  @if (point.signalWords.length > 4) {
+                    <span class="sig-more">+{{ point.signalWords.length - 4 }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</app-modal>

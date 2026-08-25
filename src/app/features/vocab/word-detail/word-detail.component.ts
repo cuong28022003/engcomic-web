@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { CardApiService } from '@services/card-api.service';
 import { PendingItemApiService } from '@services/pending-item-api.service';
 import { PendingCountService } from '@services/pending-count.service';
-import { DictionaryApiService, WordPronunciationData } from '@services/dictionary-api.service';
+import { PronunciationService } from '@core/services/pronunciation.service';
 import { Card, WordRelation, CardDetailResponse } from '@models/index';
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
 import { computed } from '@angular/core';
@@ -33,7 +33,6 @@ export class WordDetailComponent implements OnInit, OnDestroy {
   ]);
 
   // Pronunciation & Accents
-  pronunciationData = signal<WordPronunciationData | null>(null);
   playingAccent = signal<'us' | 'uk' | null>(null);
 
   private routeSub?: Subscription;
@@ -44,7 +43,7 @@ export class WordDetailComponent implements OnInit, OnDestroy {
     private cardApi: CardApiService,
     private pendingApi: PendingItemApiService,
     public pendingCountService: PendingCountService,
-    private dictionaryApi: DictionaryApiService
+    private pronunciationService: PronunciationService
   ) {}
 
   ngOnInit() {
@@ -64,53 +63,36 @@ export class WordDetailComponent implements OnInit, OnDestroy {
 
   loadCard(id: string) {
     this.loading.set(true);
-    this.pronunciationData.set(null);
-
     this.cardApi.getCardDetail(id).subscribe({
       next: (res: CardDetailResponse) => {
         const c = res?.card;
         this.card.set(c);
         this.reverseRelations.set(res?.reverseRelations ?? []);
         this.loading.set(false);
-
-        const word = c?.word || c?.front;
-        if (word) {
-          this.loadPronunciation(word);
-        }
       },
       error: () => this.loading.set(false)
     });
   }
 
-  loadPronunciation(word: string) {
-    this.dictionaryApi.getPronunciation(word).subscribe({
-      next: (data: WordPronunciationData | null) => {
-        this.pronunciationData.set(data);
-      }
-    });
-  }
-
-  playAccent(accent: 'us' | 'uk') {
+  async playAccent(accent: 'us' | 'uk') {
     const c = this.card();
     const word = c?.word || c?.front;
     if (!word) return;
 
     this.playingAccent.set(accent);
-    const audioUrl = accent === 'us'
-      ? (this.pronunciationData()?.us.audioUrl || c?.audio)
-      : (this.pronunciationData()?.uk.audioUrl || c?.audio);
-
-    this.dictionaryApi.speak(word, accent, audioUrl).finally(() => {
+    try {
+      await this.pronunciationService.speak(word, accent);
+    } finally {
       this.playingAccent.set(null);
-    });
+    }
   }
 
   get usIpa(): string {
-    return this.pronunciationData()?.us.ipa || this.card()?.ipa || '';
+    return this.card()?.ipa || '';
   }
 
   get ukIpa(): string {
-    return this.pronunciationData()?.uk.ipa || this.card()?.ipa || '';
+    return this.card()?.ipa || '';
   }
 
   get familyRelations(): WordRelation[] {

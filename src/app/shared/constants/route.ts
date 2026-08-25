@@ -28,6 +28,9 @@ export const ROUTE = {
   // Vocab Vault
   VOCAB: 'vocab',
 
+  // Grammar Vault
+  GRAMMAR: 'grammar',
+
   // TOEIC Reader
   READER: 'reader',
 

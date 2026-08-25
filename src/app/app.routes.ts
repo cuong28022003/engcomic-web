@@ -72,6 +72,16 @@ export const routes: Routes = [
           import('./features/vocab/vocab.routes').then((m) => m.VOCAB_ROUTES),
       },
 
+      // Grammar Vault Module
+      {
+        path: ROUTE.GRAMMAR,
+        data: { route: ROUTE.GRAMMAR, title: 'Thư Viện Ngữ Pháp TOEIC' },
+        loadComponent: () =>
+          import('./features/grammar/grammar-dashboard/grammar-dashboard.component').then(
+            (m) => m.GrammarDashboardComponent
+          ),
+      },
+
       // Flashcards Deck Module
       {
         path: ROUTE.DECK,

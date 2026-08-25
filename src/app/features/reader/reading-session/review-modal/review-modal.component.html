@@ -88,6 +88,27 @@
         }
       </div>
 
+      <!-- Related Grammar Reference Block -->
+      @if (r.errorType === 'grammar' || r.relatedGrammarTopic) {
+        <div class="grammar-review-card">
+          <div class="grammar-review-left">
+            <i class="fa-solid fa-graduation-cap grammar-icon"></i>
+            <div class="grammar-review-text">
+              <span class="grammar-label">Ôn Lại Quy Tắc Ngữ Pháp Liên Quan:</span>
+              <span class="grammar-topic-name">{{ r.relatedGrammarTopic || r.errorSubtype || 'Xem điểm ngữ pháp' }}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn-open-grammar"
+            (click)="openGrammarPoint(r.relatedGrammarTopic || r.errorSubtype || '')"
+          >
+            <span>Mở thẻ ngữ pháp</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      }
+
       <!-- Key Vocabulary (Word Collector Integration) -->
       @if (r.keyVocab && r.keyVocab.length > 0) {
         <div class="vocab-collector-card">
@@ -147,4 +168,12 @@
       </div>
     }
   </div>
+
+  @if (showGrammarModal()) {
+    <app-grammar-card-modal
+      [isOpen]="showGrammarModal()"
+      [grammarPoint]="selectedGrammarPoint()"
+      (close)="closeGrammarModal()"
+    ></app-grammar-card-modal>
+  }
 </app-modal>

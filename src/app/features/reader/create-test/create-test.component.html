@@ -45,6 +45,7 @@
   <!-- Step 2 -->
   <app-ai-parse-prompt-step
     *ngIf="currentStep === 2"
+    [testName]="testName"
     (prevStep)="onStep2Back()"
     (nextStep)="onStep2Next()"
   ></app-ai-parse-prompt-step>

@@ -7,27 +7,51 @@
 // ── Page Header ──────────────────────────────────────────────────────
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
-  gap: 16px;
+  margin-bottom: 24px;
+  gap: 20px;
   flex-wrap: wrap;
+  padding: 22px 28px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
 
-  h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #fff;
+  .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 4px;
+    gap: 16px;
 
-    i { color: var(--primary-color); }
-  }
+    .header-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #fff;
 
-  .subtitle {
-    color: var(--text-muted);
-    font-size: 0.92rem;
+      &.vocab-icon {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        box-shadow: 0 0 18px rgba(99, 102, 241, 0.4);
+      }
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: #94a3b8;
+      margin: 4px 0 0;
+    }
   }
 }
 

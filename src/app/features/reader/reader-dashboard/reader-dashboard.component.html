@@ -1,22 +1,29 @@
 <div class="dashboard-container">
   <!-- Top Hero Header -->
-  <div class="hero-header">
-    <div>
-      <h1 class="hero-title">TOEIC Reader & Error Tracker</h1>
-      <p class="hero-subtitle">Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, tự động gom lỗi sai để phân tích cùng AI.</p>
+  <div class="page-header glass-panel">
+    <div class="header-left">
+      <div class="header-icon-box reader-icon">
+        <i class="fa-solid fa-file-lines"></i>
+      </div>
+      <div>
+        <h1 class="hero-title">TOEIC Reader & Error Tracker</h1>
+        <p class="hero-subtitle">Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, tự động gom lỗi sai để phân tích cùng AI.</p>
+      </div>
     </div>
 
-    <div class="hero-actions">
-      <a routerLink="/reader/mistakes" class="btn-mistakes">
-        🚨 Hàng đợi lỗi
+    <div class="header-actions">
+      <a routerLink="/reader/mistakes" class="btn btn-secondary btn-mistakes">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Hàng đợi lỗi</span>
         @if ((mistakeQueueService.pendingCount$ | async); as count) {
           @if (count > 0) {
             <span class="badge-count">{{ count }}</span>
           }
         }
       </a>
-      <a routerLink="/reader/new" class="btn-create">
-        ➕ Tạo đề thi mới
+      <a routerLink="/reader/new" class="btn btn-primary btn-create">
+        <i class="fa-solid fa-plus"></i>
+        <span>Tạo đề thi mới</span>
       </a>
     </div>
   </div>
@@ -117,7 +124,17 @@
                     @default { Chưa làm }
                   }
                 </span>
-                <span class="test-date">{{ test.createdAt | timeAgo }}</span>
+                <div class="card-top-right">
+                  <span class="test-date">{{ test.createdAt | timeAgo }}</span>
+                  <div class="card-menu-actions">
+                    <button type="button" class="btn-card-action edit" (click)="openEditModal(test, $event)" title="Chỉnh sửa đề thi">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button type="button" class="btn-card-action delete" (click)="openDeleteModal(test, $event)" title="Xóa đề thi">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <h3 class="test-title" [title]="test.testName">{{ test.testName }}</h3>
@@ -183,5 +200,208 @@
       (close)="closeTestHistory()"
       (closed)="closeTestHistory()"
     ></app-attempt-history-modal>
+  }
+
+  <!-- Edit Test Modal -->
+  @if (isEditModalOpen()) {
+    <app-modal
+      [isOpen]="isEditModalOpen()"
+      [title]="'Chỉnh Sửa Đề Thi TOEIC'"
+      size="lg"
+      (closed)="closeEditModal()"
+    >
+      <div class="edit-modal-wrapper">
+        <!-- Edit Modal Tabs -->
+        <div class="edit-tabs-nav">
+          <button
+            type="button"
+            class="edit-tab-btn"
+            [class.active]="editActiveTab() === 'info'"
+            (click)="setEditTab('info')"
+          >
+            <i class="fa-solid fa-file-pdf"></i> Thông Tin & Tệp PDF
+          </button>
+          <button
+            type="button"
+            class="edit-tab-btn"
+            [class.active]="editActiveTab() === 'answers'"
+            (click)="setEditTab('answers')"
+          >
+            <i class="fa-solid fa-list-check"></i> Bảng Đáp Án ({{ editQuestions().length }})
+          </button>
+          <button
+            type="button"
+            class="edit-tab-btn"
+            [class.active]="editActiveTab() === 'json'"
+            (click)="setEditTab('json')"
+          >
+            <i class="fa-solid fa-code"></i> Nhập/Dán JSON Mới
+          </button>
+        </div>
+
+        @if (isLoadingDetail()) {
+          <div class="edit-loading-box">
+            <div class="spinner"></div>
+            <div>Đang tải dữ liệu chi tiết đề thi...</div>
+          </div>
+        } @else {
+          <!-- Tab 1: Info & PDF -->
+          @if (editActiveTab() === 'info') {
+            <div class="edit-tab-pane">
+              <app-form-input
+                label="Tên đề thi"
+                placeholder="Ví dụ: ETS TOEIC 2024 Test 1"
+                [required]="true"
+                [value]="editTestName()"
+                (valueChange)="editTestName.set($event)"
+              ></app-form-input>
+
+              <div class="edit-pdf-section">
+                <label class="section-lbl">Tệp Đề Thi PDF</label>
+                
+                @if (editPdfUrl() && !editNewPdfFile()) {
+                  <div class="current-pdf-card">
+                    <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div class="pdf-info">
+                      <div class="pdf-name">Tệp PDF hiện tại của đề thi</div>
+                      <a [href]="editPdfUrl()" target="_blank" class="pdf-link">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem tệp hiện tại
+                      </a>
+                    </div>
+                  </div>
+                }
+
+                @if (editNewPdfFile(); as newFile) {
+                  <div class="new-pdf-selected-card">
+                    <div class="pdf-icon success"><i class="fa-solid fa-check-circle"></i></div>
+                    <div class="pdf-info">
+                      <div class="pdf-name">Tệp mới: <strong>{{ newFile.name }}</strong></div>
+                      <div class="pdf-size">Dung lượng: {{ (newFile.size / 1024 / 1024).toFixed(2) }} MB</div>
+                    </div>
+                    <button type="button" class="btn-cancel-file" (click)="removeNewPdfFile()" title="Hủy chọn tệp mới">
+                      <i class="fa-solid fa-xmark"></i> Hủy
+                    </button>
+                  </div>
+                }
+
+                <div class="upload-new-pdf-zone">
+                  <label class="btn-select-pdf">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>{{ editNewPdfFile() ? 'Chọn tệp PDF khác' : 'Tải lên tệp PDF thay thế' }}</span>
+                    <input type="file" accept="application/pdf" (change)="onEditFileSelected($event)" hidden />
+                  </label>
+                  <span class="upload-hint">Chỉ chọn nếu bạn muốn thay thế tệp PDF đề thi hiện tại.</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Tab 2: Answers Sheet Grid -->
+          @if (editActiveTab() === 'answers') {
+            <div class="edit-tab-pane">
+              <div class="answers-grid-header">
+                <span class="answers-hint">Bấm trực tiếp vào các nút A / B / C / D để sửa đáp án chuẩn của từng câu hỏi:</span>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="setEditTab('json')">
+                  <i class="fa-solid fa-code"></i> Dán JSON thay thế
+                </button>
+              </div>
+
+              @if (editQuestions().length === 0) {
+                <div class="no-questions-notice">
+                  Chưa có danh sách câu hỏi. Bạn có thể chuyển sang tab <strong>Nhập/Dán JSON Mới</strong> để tạo.
+                </div>
+              } @else {
+                <div class="edit-questions-grid">
+                  @for (q of editQuestions(); track q.number) {
+                    <div class="q-edit-cell" [class.has-ans]="!!q.correctAnswer">
+                      <div class="q-num-part">
+                        <span class="q-num">#{{ q.number }}</span>
+                        <span class="q-part">P{{ q.part }}</span>
+                      </div>
+                      <div class="q-options">
+                        @for (opt of ['A', 'B', 'C', 'D']; track opt) {
+                          <button
+                            type="button"
+                            class="opt-btn"
+                            [class.selected]="q.correctAnswer === opt"
+                            (click)="updateQuestionAnswer(q.number, opt)"
+                          >
+                            {{ opt }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Tab 3: JSON Import -->
+          @if (editActiveTab() === 'json') {
+            <div class="edit-tab-pane">
+              <p class="json-guide">Dán chuỗi JSON đáp án (từ AI trích xuất hoặc bản sao lưu) để cập nhật nhanh toàn bộ câu hỏi:</p>
+              <textarea
+                class="edit-json-textarea"
+                rows="10"
+                placeholder='{ "test_name": "...", "questions": [{ "number": 101, "part": 5, "correct_answer": "A" }, ...] }'
+                [value]="editJsonInput()"
+                (input)="editJsonInput.set($any($event.target).value)"
+              ></textarea>
+              <div class="json-actions">
+                <button type="button" class="btn btn-primary" (click)="applyEditJson()" [disabled]="!editJsonInput().trim()">
+                  <i class="fa-solid fa-check-double"></i> Áp dụng JSON vào bảng đáp án
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div footer class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isSaving()">
+          Hủy
+        </button>
+        <button type="button" class="btn btn-primary" (click)="saveEditTest()" [disabled]="isSaving() || !editTestName().trim()">
+          @if (isSaving()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+          } @else {
+            <i class="fa-solid fa-check"></i> Lưu tất cả thay đổi
+          }
+        </button>
+      </div>
+    </app-modal>
+  }
+
+  <!-- Delete Test Confirmation Modal -->
+  @if (isDeleteModalOpen()) {
+    <app-modal
+      [isOpen]="isDeleteModalOpen()"
+      [title]="'Xác Nhận Xóa Đề Thi'"
+      (closed)="closeDeleteModal()"
+    >
+      <div class="delete-warning-content">
+        <div class="warning-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <p class="warning-text">
+          Bạn có chắc chắn muốn xóa đề thi <strong>{{ deletingTest()?.testName }}</strong>?
+        </p>
+        <p class="warning-sub">
+          Hành động này sẽ xóa toàn bộ lịch sử làm bài, kết quả và các câu hỏi lỗi sai liên quan. Không thể khôi phục sau khi xóa.
+        </p>
+      </div>
+
+      <div footer class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()" [disabled]="isDeleting()">
+          Hủy
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...
+          } @else {
+            <i class="fa-solid fa-trash"></i> Xóa vĩnh viễn
+          }
+        </button>
+      </div>
+    </app-modal>
   }
 </div>

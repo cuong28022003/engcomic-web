@@ -13,6 +13,7 @@ export interface ToeicReviewItem {
   part: number;
   errorType: ErrorType | string;
   errorSubtype?: string;
+  relatedGrammarTopic?: string;
   passageExcerpt?: string;
   questionText?: string;
   options?: Record<string, string>;
@@ -28,6 +29,7 @@ export interface ImportReviewItemsPayload {
     part?: number;
     error_type?: string;
     error_subtype?: string;
+    related_grammar_topic?: string;
     passage_excerpt?: string;
     question_text?: string;
     options?: Record<string, string>;

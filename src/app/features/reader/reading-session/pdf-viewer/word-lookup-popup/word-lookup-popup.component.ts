@@ -1,7 +1,7 @@
-import { Component, OnChanges, SimpleChanges, computed, inject, input, output, signal } from '@angular/core';
+import { Component, effect, computed, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { DictionaryApiService, WordPronunciationData } from '@core/services/dictionary-api.service';
+import { PronunciationService } from '@core/services/pronunciation.service';
 import { TranslatorApiService, TranslateResponse } from '@core/services/translator-api.service';
 import { PendingItemApiService } from '@core/services/pending-item-api.service';
 import { ToastService } from '@core/services/toast.service';
@@ -13,9 +13,9 @@ import { ToastService } from '@core/services/toast.service';
   templateUrl: './word-lookup-popup.component.html',
   styleUrls: ['./word-lookup-popup.component.scss']
 })
-export class WordLookupPopupComponent implements OnChanges {
+export class WordLookupPopupComponent {
   private http = inject(HttpClient);
-  private dictionaryApi = inject(DictionaryApiService);
+  private pronunciationService = inject(PronunciationService);
   private translatorApi = inject(TranslatorApiService);
   private pendingItemApi = inject(PendingItemApiService);
   private toast = inject(ToastService);
@@ -30,19 +30,19 @@ export class WordLookupPopupComponent implements OnChanges {
   readonly isSaved = signal<boolean>(false);
   readonly isSpeaking = signal<boolean>(false);
 
-  readonly pronunciationData = signal<WordPronunciationData | null>(null);
   readonly translationData = signal<TranslateResponse | null>(null);
 
   readonly displayIpa = computed<string>(() => {
-    const pron = this.pronunciationData();
-    const trans = this.translationData();
-    return pron?.us?.ipa || pron?.uk?.ipa || trans?.ipa || '';
+    return this.translationData()?.ipa || '';
   });
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['text'] && this.text()) {
-      this.lookupWord();
-    }
+  constructor() {
+    effect(() => {
+      const t = this.text();
+      if (t && t.trim()) {
+        this.lookupWord();
+      }
+    });
   }
 
   lookupWord(): void {
@@ -51,23 +51,18 @@ export class WordLookupPopupComponent implements OnChanges {
 
     this.loading.set(true);
     this.isSaved.set(false);
-    this.pronunciationData.set(null);
     this.translationData.set(null);
 
-    // 1. Get pronunciation & audio if single word
-    if (!clean.includes(' ')) {
-      this.dictionaryApi.getPronunciation(clean).subscribe({
-        next: (data) => {
-          this.pronunciationData.set(data);
-        },
-        error: () => {}
-      });
-    }
-
-    // 2. Get translation meaning via Backend Google Translate
+    // Get translation meaning via Backend Google Translate
     this.translatorApi.translateText({ text: clean }).subscribe({
       next: (data) => {
-        if (data && data.meaning && !data.meaning.startsWith('Không thể gọi API Python')) {
+        if (
+          data && 
+          data.meaning && 
+          data.meaning.trim() && 
+          data.meaning.trim().toLowerCase() !== clean.toLowerCase() && 
+          !data.meaning.startsWith('Không thể gọi API Python')
+        ) {
           this.translationData.set(data);
           this.loading.set(false);
         } else {
@@ -84,10 +79,10 @@ export class WordLookupPopupComponent implements OnChanges {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|vi`;
     this.http.get<any>(url).subscribe({
       next: (res) => {
-        const text = res?.responseData?.translatedText || clean;
+        const text = res?.responseData?.translatedText;
         this.translationData.set({
           word: clean,
-          meaning: text
+          meaning: text && text.trim() ? text.trim() : clean
         });
         this.loading.set(false);
       },
@@ -106,13 +101,8 @@ export class WordLookupPopupComponent implements OnChanges {
     if (!textVal || this.isSpeaking()) return;
 
     this.isSpeaking.set(true);
-
-    const audioUrl = accent === 'us'
-      ? this.pronunciationData()?.us?.audioUrl
-      : this.pronunciationData()?.uk?.audioUrl;
-
     try {
-      await this.dictionaryApi.speak(textVal, accent, audioUrl);
+      await this.pronunciationService.speak(textVal, accent);
     } finally {
       this.isSpeaking.set(false);
     }

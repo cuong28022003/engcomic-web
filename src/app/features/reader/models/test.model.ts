@@ -23,7 +23,7 @@ export interface TestDetail {
   status: string;
   rawScore?: number;
   scaledScore?: number;
-  questions: Array<{ number: number; part: number }>;
+  questions: Array<{ number: number; part: number; correctAnswer?: string }>;
   createdAt: string;
 }
 

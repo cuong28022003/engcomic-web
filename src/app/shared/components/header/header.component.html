@@ -19,6 +19,9 @@
       <a routerLink="/reader" routerLinkActive="active" class="nav-item reader-link">
         <i class="fa-solid fa-file-lines"></i> {{ 'nav.toeic' | translate }}
       </a>
+      <a routerLink="/grammar" routerLinkActive="active" class="nav-item grammar-link">
+        <i class="fa-solid fa-graduation-cap"></i> Ngữ pháp
+      </a>
       <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">
         <i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng
       </a>
@@ -161,4 +164,22 @@
       </div>
     </div>
   </div>
+}
+
+<!-- Global Quick Grammar Search Modal (Accessible via Ctrl+G from anywhere) -->
+@if (showGrammarSearchModal()) {
+  <app-grammar-search-modal
+    [isOpen]="showGrammarSearchModal()"
+    (close)="closeGrammarSearch()"
+    (selectPoint)="onGrammarPointSelected($event)"
+  ></app-grammar-search-modal>
+}
+
+<!-- Global Grammar Card Detail Modal -->
+@if (showGrammarCardModal()) {
+  <app-grammar-card-modal
+    [isOpen]="showGrammarCardModal()"
+    [grammarPoint]="selectedGrammarPoint()"
+    (close)="closeGrammarCard()"
+  ></app-grammar-card-modal>
 }

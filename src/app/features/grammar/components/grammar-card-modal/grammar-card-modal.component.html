@@ -1,0 +1,136 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="grammarPoint()?.topic || 'Chi Tiết Điểm Ngữ Pháp'"
+  size="xl"
+  (closed)="onClose()"
+>
+  @if (grammarPoint()) {
+    <div class="grammar-detail-container">
+      <!-- Top Category & Identity Bar -->
+      <div class="detail-header-bar">
+        <span class="category-pill" [style.border-color]="categoryInfo().color" [style.color]="categoryInfo().color">
+          <i [class]="categoryInfo().icon"></i> {{ categoryInfo().label }}
+        </span>
+        <span class="topic-meta">ID: #{{ grammarPoint()?.id?.slice(-6) || 'new' }}</span>
+      </div>
+
+      <!-- 2-Column Split Layout for Maximum Readability -->
+      <div class="grammar-detail-split-layout">
+        <!-- ── Left Column: Core Rule, Formula Cases & Signals ── -->
+        <div class="split-col col-left">
+          <!-- Block 1: Short Rule & Usage Context -->
+          @if (grammarPoint()?.shortRule) {
+            <div class="detail-card rule-card">
+              <div class="card-title">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Bản Chất & Khi Nào Sử Dụng?</span>
+              </div>
+              <p class="rule-body">{{ grammarPoint()?.shortRule }}</p>
+            </div>
+          }
+
+          <!-- Block 2: Structured Formula Breakdown by Case -->
+          @if (parsedStructures().length > 0) {
+            <div class="detail-card formula-card">
+              <div class="card-title">
+                <i class="fa-solid fa-shapes"></i>
+                <span>Công Thức & Cấu Trúc Chi Tiết</span>
+              </div>
+
+              <div class="formula-cases-stack">
+                @for (st of parsedStructures(); track $index) {
+                  <div class="formula-case-row" [ngClass]="st.badgeClass">
+                    <div class="case-header">
+                      <i [class]="st.icon"></i>
+                      <span>{{ st.label }}</span>
+                    </div>
+                    <div class="case-formula-code">
+                      <code>{{ st.formula }}</code>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else if (grammarPoint()?.structure) {
+            <div class="detail-card formula-card">
+              <div class="card-title">
+                <i class="fa-solid fa-shapes"></i>
+                <span>Công Thức / Cấu Trúc</span>
+              </div>
+              <div class="single-formula-box">
+                <code>{{ grammarPoint()?.structure }}</code>
+              </div>
+            </div>
+          }
+
+          <!-- Block 3: Signal Words & Triggers -->
+          @if (grammarPoint()?.signalWords && grammarPoint()!.signalWords!.length > 0) {
+            <div class="detail-card signals-card">
+              <div class="card-title">
+                <i class="fa-solid fa-key"></i>
+                <span>Dấu Hiệu Nhận Biết & Trạng Từ Thường Đi Kèm</span>
+              </div>
+              <div class="signals-grid">
+                @for (word of grammarPoint()!.signalWords; track word) {
+                  <span class="signal-chip">{{ word }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── Right Column: Contextual Examples & Common Mistakes ── -->
+        <div class="split-col col-right">
+          <!-- Block 4: Examples with Context Breakdown -->
+          @if (grammarPoint()?.examples && grammarPoint()!.examples!.length > 0) {
+            <div class="detail-card examples-card">
+              <div class="card-title">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Ví Dụ Minh Họa Theo Từng Trường Hợp</span>
+              </div>
+
+              <div class="examples-stack">
+                @for (ex of grammarPoint()!.examples; track $index) {
+                  <div class="example-item-box">
+                    <div class="ex-sentence">
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span>{{ ex.text }}</span>
+                    </div>
+                    @if (ex.note) {
+                      <div class="ex-analysis-note">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>{{ ex.note }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Block 5: Common Mistakes & Pitfalls -->
+          @if (grammarPoint()?.commonMistake) {
+            <div class="detail-card mistake-card">
+              <div class="card-title">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Lỗi Sai Kinh Điển & Mẹo Tránh Bẫy</span>
+              </div>
+              <p class="mistake-body">{{ grammarPoint()?.commonMistake }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <div footer class="grammar-card-footer">
+    <div class="footer-actions">
+      <button type="button" class="btn btn-outline-danger" (click)="onDelete()">
+        <i class="fa-solid fa-trash"></i> Xóa điểm ngữ pháp
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onEdit()">
+        <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa
+      </button>
+    </div>
+  </div>
+</app-modal>

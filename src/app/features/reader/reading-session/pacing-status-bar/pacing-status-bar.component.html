@@ -1,13 +1,17 @@
 <div class="pacing-status-card glass-panel">
-  <!-- Top Timer Counters -->
+  <!-- Unified Single Timer & Pacing Header -->
   <div class="pacing-header">
-    <div class="timer-block part-timer">
+    <!-- Single Primary Timer Block -->
+    <div class="timer-block unified-timer">
       <div class="timer-label">
-        <span class="part-badge">Part {{ timerService.currentPart() }}</span>
-        <span class="sub-label">Còn lại</span>
+        <i class="fa-solid fa-clock timer-icon"></i>
+        <span class="timer-title">{{ timerService.config()?.mode === 'untimed' ? 'Thời gian đã làm' : 'Thời gian còn lại' }}</span>
+        @if (timerService.config()?.mode !== 'untimed' && timerService.totalRemaining() <= 300) {
+          <span class="danger-badge"><i class="fa-solid fa-fire"></i> Sắp hết giờ</span>
+        }
       </div>
-      <div class="timer-value" [class.danger]="timerService.currentPartRemaining() <= 180 && timerService.config()?.mode !== 'untimed'">
-        {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(currentPartElapsed()) : timerService.formatSeconds(timerService.currentPartRemaining()) }}
+      <div class="timer-value" [class.danger]="timerService.config()?.mode !== 'untimed' && timerService.totalRemaining() <= 300">
+        {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(timerService.totalElapsed()) : timerService.formatSeconds(timerService.totalRemaining()) }}
       </div>
     </div>
 
@@ -32,41 +36,27 @@
       }
     </div>
 
-    <div class="timer-block total-timer">
-      <div class="timer-label">
-        <span class="total-badge">Tổng thời gian</span>
-        <span class="sub-label">{{ timerService.config()?.mode === 'untimed' ? 'Đã làm' : 'Còn lại' }}</span>
-      </div>
-      <div class="timer-value total-val">
-        {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(timerService.totalElapsed()) : timerService.formatSeconds(timerService.totalRemaining()) }}
-      </div>
+    <!-- Quick Stats Block: Current Part & Total Done -->
+    <div class="stats-quick-block">
+      <span class="part-indicator">Part {{ timerService.currentPart() }}</span>
+      <span class="done-counter">
+        <strong>{{ totalQuestionsDone() }}</strong>/{{ totalQuestionsCount() }} câu
+      </span>
     </div>
   </div>
 
-  <!-- Dual Comparison Progress Bar (Time vs Questions) -->
-  @if (timerService.config()?.mode !== 'untimed') {
-    <div class="pacing-progress-area">
-      <!-- Time Progress -->
-      <div class="progress-track-wrapper">
-        <div class="track-header">
-          <span class="track-title"><i class="fa-solid fa-hourglass-half"></i> Thời gian Part {{ timerService.currentPart() }}</span>
-          <span class="track-percent">{{ timerService.currentPartTimeProgress() }}%</span>
-        </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill time-fill" [style.width.%]="timerService.currentPartTimeProgress()"></div>
-        </div>
+  <!-- Overall Progress Bar -->
+  <div class="pacing-progress-area">
+    <div class="progress-track-wrapper">
+      <div class="track-header">
+        <span class="track-title">
+          <i class="fa-solid fa-list-check"></i> Tiến độ hoàn thành bài thi
+        </span>
+        <span class="track-percent">{{ totalQuestionsPercent() }}%</span>
       </div>
-
-      <!-- Question Done Progress -->
-      <div class="progress-track-wrapper">
-        <div class="track-header">
-          <span class="track-title"><i class="fa-solid fa-list-check"></i> Tiến độ câu hỏi</span>
-          <span class="track-percent">{{ partQuestionsDone() }} / {{ partTotalQuestions() }} ({{ partQuestionsPercent() }}%)</span>
-        </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill question-fill" [style.width.%]="partQuestionsPercent()"></div>
-        </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill question-fill" [style.width.%]="totalQuestionsPercent()"></div>
       </div>
     </div>
-  }
+  </div>
 </div>

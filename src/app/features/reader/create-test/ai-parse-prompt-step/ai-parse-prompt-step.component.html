@@ -36,7 +36,7 @@
         <span *ngIf="copied">✓ Đã sao chép vào bộ nhớ!</span>
       </button>
     </div>
-    <textarea class="prompt-textarea" readonly [value]="promptText" rows="12"></textarea>
+    <textarea class="prompt-textarea" readonly [value]="promptText()" rows="12"></textarea>
   </div>
 
   <div class="step-actions">

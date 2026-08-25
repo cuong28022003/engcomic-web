@@ -1,10 +1,15 @@
 <div class="vocab-dashboard">
 
   <!-- ── Page Header ── -->
-  <div class="page-header">
+  <div class="page-header glass-panel">
     <div class="header-left">
-      <h1><i class="fa-solid fa-book-open-reader"></i> Vocab Vault</h1>
-      <p class="subtitle">Kho từ vựng thông minh & Quản lý bộ thẻ Flashcard</p>
+      <div class="header-icon-box vocab-icon">
+        <i class="fa-solid fa-book-open-reader"></i>
+      </div>
+      <div>
+        <h1>Vocab Vault</h1>
+        <p class="subtitle">Kho từ vựng thông minh & Quản lý bộ thẻ Flashcard</p>
+      </div>
     </div>
     <div class="header-actions">
       <button class="btn-primary" (click)="openVocabModal()">
@@ -173,11 +178,9 @@
                 <span class="card-pos-pill">{{ card.partOfSpeech }}</span>
               }
 
-              @if (card.audio) {
-                <button class="card-audio-btn" (click)="playAudio(card.audio, $event)" title="Phát âm">
-                  <i class="fa-solid fa-volume-high"></i>
-                </button>
-              }
+              <button class="card-audio-btn" (click)="playAudio(card, $event)" title="Phát âm tiếng Anh">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
 
               <!-- Deck Badge -->
               @if (card.deckId) {

@@ -212,34 +212,38 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
       type: unanswered > 0 ? 'warning' : 'info'
     }).subscribe((confirmed) => {
       if (confirmed) {
-        this.timerService.stop();
-        this.stopTimer();
-        // Clear localStorage cache for this test
-        localStorage.removeItem(this.storageKey);
-
-        const answers: UserAnswerItem[] = this.questions.map(q => {
-          const u = this.userAnswersMap.get(q.number);
-          return {
-            questionNumber: q.number,
-            answer: u?.answer,
-            flagged: u?.flagged,
-            timeSpentSeconds: this.timerService.getQuestionTiming(q.number)
-          };
-        });
-
-        this.submitAnswers.emit({
-          duration: this.timerService.totalElapsed(),
-          timeMode: this.timerService.config()?.mode,
-          selectedParts: this.timerService.config()?.selectedParts,
-          part5TargetSeconds: this.timerService.getPartTarget(5),
-          part6TargetSeconds: this.timerService.getPartTarget(6),
-          part7TargetSeconds: this.timerService.getPartTarget(7),
-          part5ElapsedSeconds: this.timerService.getPartElapsed(5),
-          part6ElapsedSeconds: this.timerService.getPartElapsed(6),
-          part7ElapsedSeconds: this.timerService.getPartElapsed(7),
-          answers
-        });
+        this.submitDirectly();
       }
+    });
+  }
+
+  submitDirectly() {
+    this.timerService.stop();
+    this.stopTimer();
+    // Clear localStorage cache for this test
+    localStorage.removeItem(this.storageKey);
+
+    const answers: UserAnswerItem[] = this.questions.map(q => {
+      const u = this.userAnswersMap.get(q.number);
+      return {
+        questionNumber: q.number,
+        answer: u?.answer,
+        flagged: u?.flagged,
+        timeSpentSeconds: this.timerService.getQuestionTiming(q.number)
+      };
+    });
+
+    this.submitAnswers.emit({
+      duration: this.timerService.totalElapsed(),
+      timeMode: this.timerService.config()?.mode,
+      selectedParts: this.timerService.config()?.selectedParts,
+      part5TargetSeconds: this.timerService.getPartTarget(5),
+      part6TargetSeconds: this.timerService.getPartTarget(6),
+      part7TargetSeconds: this.timerService.getPartTarget(7),
+      part5ElapsedSeconds: this.timerService.getPartElapsed(5),
+      part6ElapsedSeconds: this.timerService.getPartElapsed(6),
+      part7ElapsedSeconds: this.timerService.getPartElapsed(7),
+      answers
     });
   }
 }

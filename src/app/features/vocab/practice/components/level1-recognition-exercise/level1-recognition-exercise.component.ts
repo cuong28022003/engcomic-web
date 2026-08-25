@@ -1,5 +1,6 @@
-import { Component, input, output, signal, computed, effect, HostListener } from '@angular/core';
+import { Component, input, output, signal, computed, effect, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PronunciationService } from '@core/services/pronunciation.service';
 import { Level1Recognition, ExerciseOption } from '@models/index';
 
 @Component({
@@ -10,6 +11,8 @@ import { Level1Recognition, ExerciseOption } from '@models/index';
   styleUrls: ['./level1-recognition-exercise.component.scss'],
 })
 export class Level1RecognitionExerciseComponent {
+  private pronunciationService = inject(PronunciationService);
+
   word = input.required<string>();
   ipa = input<string | undefined>('');
   audio = input<string | undefined>('');
@@ -76,10 +79,9 @@ export class Level1RecognitionExerciseComponent {
   }
 
   playAudio(): void {
-    const url = this.audio();
-    if (url) {
-      const a = new Audio(url);
-      a.play().catch(() => {});
+    const textVal = this.word();
+    if (textVal) {
+      this.pronunciationService.speak(textVal, 'us');
     }
   }
 

@@ -9,6 +9,7 @@ import { DeckApiService } from '@services/deck-api.service';
 import { AuthService } from '@services/auth.service';
 import { ToastService } from '@services/toast.service';
 import { PendingCountService } from '@services/pending-count.service';
+import { PronunciationService } from '@core/services/pronunciation.service';
 import { Card, Deck, DashboardStats, PracticePromptResponse } from '@models/index';
 import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
 import { ExerciseImportModalComponent } from '@shared/components/exercise-import-modal/exercise-import-modal.component';
@@ -98,7 +99,8 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     private toast: ToastService,
     private router: Router,
     private route: ActivatedRoute,
-    public pendingCountService: PendingCountService
+    public pendingCountService: PendingCountService,
+    private pronunciationService: PronunciationService
   ) {}
 
   get pendingCount() {
@@ -382,13 +384,12 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/vocab/leech']);
   }
 
-  playAudio(audioUrl?: string, event?: Event): void {
+  playAudio(card: Card, event?: Event): void {
     if (event) event.stopPropagation();
-    if (!audioUrl) return;
-    try {
-      const a = new Audio(audioUrl);
-      a.play().catch(() => {});
-    } catch {}
+    const word = card.word || card.front;
+    if (word) {
+      this.pronunciationService.speak(word, 'us');
+    }
   }
 
   toggleFavorite(card: Card, event: Event): void {

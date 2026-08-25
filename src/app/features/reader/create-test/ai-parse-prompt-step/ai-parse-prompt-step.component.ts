@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, input, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AnswerKeyService } from '../../services/answer-key.service';
 
@@ -10,18 +10,18 @@ import { AnswerKeyService } from '../../services/answer-key.service';
   styleUrls: ['./ai-parse-prompt-step.component.scss']
 })
 export class AiParsePromptStepComponent {
+  private answerKeyService = inject(AnswerKeyService);
+
+  testName = input<string>('');
+
   @Output() prevStep = new EventEmitter<void>();
   @Output() nextStep = new EventEmitter<void>();
 
-  promptText = '';
+  promptText = computed(() => this.answerKeyService.getAiParsePrompt(this.testName()));
   copied = false;
 
-  constructor(private answerKeyService: AnswerKeyService) {
-    this.promptText = this.answerKeyService.getAiParsePrompt();
-  }
-
   async copyPrompt() {
-    const success = await this.answerKeyService.copyAiParsePrompt();
+    const success = await this.answerKeyService.copyAiParsePrompt(this.testName());
     if (success) {
       this.copied = true;
       setTimeout(() => {

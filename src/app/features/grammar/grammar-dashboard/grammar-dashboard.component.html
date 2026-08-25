@@ -1,0 +1,210 @@
+<div class="grammar-dashboard-container">
+  <!-- Unified Glass Page Header -->
+  <div class="page-header glass-panel">
+    <div class="header-left">
+      <div class="header-icon-box grammar-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div>
+        <h1>Thư Viện Ngữ Pháp Tiếng Anh</h1>
+        <p class="subtitle">Tổng hợp quy tắc, cấu trúc & dấu hiệu nhận biết — Tra cứu nhanh, hiểu ngay trong 3 giây</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="openSearchModal()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>Tra Nhanh (Ctrl+G)</span>
+      </button>
+      <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+        <i class="fa-solid fa-plus"></i>
+        <span>Thêm / Nạp Ngữ Pháp</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Most Missed Grammar Widget (if user has missed grammar questions) -->
+  @if (mostMissed().length > 0) {
+    <div class="most-missed-widget">
+      <div class="widget-header">
+        <div class="widget-title">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Chủ Đề Ngữ Pháp Bạn Hay Làm Sai Nhất</span>
+        </div>
+        <span class="widget-badge">Từ lịch sử làm bài thi</span>
+      </div>
+      <div class="missed-items-grid">
+        @for (item of mostMissed(); track item.topic) {
+          <div class="missed-card" (click)="item.grammarPoint ? openCard(item.grammarPoint) : null">
+            <div class="missed-info">
+              <span class="missed-topic">{{ item.topic }}</span>
+              <span class="missed-count">
+                <i class="fa-solid fa-circle-xmark"></i> Sai {{ item.count }} lần
+              </span>
+            </div>
+            <div class="missed-action">
+              <span>Ôn lại</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Main Content Layout (Sidebar Categories + Sleek Long Horizontal Cards) -->
+  <div class="dashboard-layout">
+    <!-- Category Sidebar Filter -->
+    <aside class="category-sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-list"></i>
+        <span>Danh Mục Chủ Đề</span>
+      </div>
+      <div class="category-list">
+        @for (cat of categories; track cat.key) {
+          <button
+            type="button"
+            class="category-item"
+            [class.active]="selectedCategory() === cat.key"
+            (click)="selectCategory(cat.key)"
+          >
+            <div class="cat-left">
+              <i [class]="cat.icon" [style.color]="cat.color"></i>
+              <span class="cat-label">{{ cat.label }}</span>
+            </div>
+            <span class="cat-count-pill">{{ getCategoryCount(cat.key) }}</span>
+          </button>
+        }
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="grammar-main-content">
+      <!-- Search & Count Toolbar -->
+      <div class="content-toolbar">
+        <div class="toolbar-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            placeholder="Lọc nhanh điểm ngữ pháp trong danh mục..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+          />
+          @if (searchQuery()) {
+            <button type="button" class="btn-clear" (click)="onSearchChange('')">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          }
+        </div>
+        <div class="toolbar-count">
+          Hiển thị <strong>{{ filteredPoints().length }}</strong> điểm ngữ pháp
+        </div>
+      </div>
+
+      <!-- Content State -->
+      @if (loading()) {
+        <app-loading message="Đang tải thư viện ngữ pháp..."></app-loading>
+      } @else if (filteredPoints().length === 0) {
+        <app-empty-state
+          icon="fa-solid fa-book-open"
+          title="Chưa có điểm ngữ pháp nào phù hợp"
+          message="Bạn có thể thêm điểm ngữ pháp mới hoặc dán JSON từ AI bằng nút 'Thêm / Nạp Ngữ Pháp' ở trên."
+        ></app-empty-state>
+      } @else {
+        <!-- Sleek Focused Horizontal Cards List -->
+        <div class="grammar-cards-list">
+          @for (point of paginatedPoints(); track point.id || point.topic) {
+            <div class="grammar-row-card" (click)="openCard(point)">
+              <!-- Left: Category & Topic -->
+              <div class="row-left">
+                <span
+                  class="cat-pill"
+                  [style.color]="getCategoryInfo(point.category).color"
+                  [style.border-color]="getCategoryInfo(point.category).color"
+                >
+                  <i [class]="getCategoryInfo(point.category).icon"></i>
+                  {{ getCategoryInfo(point.category).label }}
+                </span>
+                <h3 class="point-topic-name">{{ point.topic }}</h3>
+              </div>
+
+              <!-- Center: Focused Short Rule (Quick Decision) -->
+              <div class="row-center">
+                @if (point.shortRule) {
+                  <p class="point-short-rule">{{ point.shortRule }}</p>
+                }
+              </div>
+
+              <!-- Right: Quick Actions & View Detail Arrow -->
+              <div class="row-right">
+                <div class="row-actions" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="btn-row-action edit"
+                    (click)="openEditModal(point, $event)"
+                    title="Chỉnh sửa điểm ngữ pháp"
+                  >
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-row-action delete"
+                    (click)="deletePoint(point, $event)"
+                    title="Xóa điểm ngữ pháp"
+                  >
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+
+                <div class="view-detail-hint">
+                  <span>Chi tiết</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginator -->
+        <div class="paginator-wrapper">
+          <app-paginator
+            [(currentPage)]="currentPage"
+            [(pageSize)]="pageSize"
+            [totalItems]="filteredPoints().length"
+            [pageSizeOptions]="[8, 12, 20, 50]"
+          ></app-paginator>
+        </div>
+      }
+    </main>
+  </div>
+
+  <!-- Detail Modal (Split 2-Column with Case-by-Case Formulas) -->
+  @if (showCardModal()) {
+    <app-grammar-card-modal
+      [isOpen]="showCardModal()"
+      [grammarPoint]="selectedCard()"
+      (close)="closeCardModal()"
+      (edit)="openEditModal($event)"
+      (delete)="deletePoint($event)"
+    ></app-grammar-card-modal>
+  }
+
+  <!-- Quick Search Modal -->
+  @if (showSearchModal()) {
+    <app-grammar-search-modal
+      [isOpen]="showSearchModal()"
+      (close)="closeSearchModal()"
+      (selectPoint)="openCard($event)"
+    ></app-grammar-search-modal>
+  }
+
+  <!-- Unified Create / Edit / Import Modal -->
+  @if (showEditModal()) {
+    <app-grammar-edit-modal
+      [isOpen]="showEditModal()"
+      [grammarPoint]="editingPoint()"
+      (close)="closeEditModal()"
+      (saved)="onPointSaved()"
+    ></app-grammar-edit-modal>
+  }
+</div>

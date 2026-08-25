@@ -45,13 +45,20 @@ Chỉ trả về JSON hợp lệ theo đúng format trên.`;
 })
 export class AnswerKeyService {
 
-  getAiParsePrompt(): string {
+  getAiParsePrompt(testName?: string): string {
+    if (testName && testName.trim()) {
+      const name = testName.trim();
+      return TOEIC_AI_PARSE_PROMPT
+        .replace('"test_name": "[Tên đề thi]"', `"test_name": "${name}"`)
+        .replace('"test_name" là tên đề thi nếu có trong file. Nếu không xác định được tên đề, sử dụng "TOEIC Reading".', `"test_name": sử dụng chính xác "${name}".`);
+    }
     return TOEIC_AI_PARSE_PROMPT;
   }
 
-  async copyAiParsePrompt(): Promise<boolean> {
+  async copyAiParsePrompt(testName?: string): Promise<boolean> {
     try {
-      await navigator.clipboard.writeText(TOEIC_AI_PARSE_PROMPT);
+      const prompt = this.getAiParsePrompt(testName);
+      await navigator.clipboard.writeText(prompt);
       return true;
     } catch (e) {
       console.error('Failed to copy prompt to clipboard', e);

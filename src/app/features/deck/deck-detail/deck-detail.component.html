@@ -280,11 +280,9 @@
                   @if (card.partOfSpeech) {
                     <span class="pos-badge">{{ card.partOfSpeech }}</span>
                   }
-                  @if (card.audio) {
-                    <button class="audio-circle-btn" (click)="playAudio(card.audio, $event)" title="Nghe phát âm">
-                      <i class="fa-solid fa-volume-high"></i>
-                    </button>
-                  }
+                  <button class="audio-circle-btn" (click)="playAudio(card, $event)" title="Nghe phát âm">
+                    <i class="fa-solid fa-volume-high"></i>
+                  </button>
                 </div>
               </div>
 

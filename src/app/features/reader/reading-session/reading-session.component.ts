@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild, ChangeDetectorRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LoadingComponent, ErrorStateComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
+import { LoadingComponent, ErrorStateComponent, ModalComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
 import { PdfViewerComponent } from './pdf-viewer/pdf-viewer.component';
 import { AnswerSheetComponent } from './answer-sheet/answer-sheet.component';
 import { PreTestConfigModalComponent } from './pre-test-config-modal/pre-test-config-modal.component';
@@ -28,6 +28,7 @@ import { ToastService } from '@core/services/toast.service';
     AttemptHistoryModalComponent,
     LoadingComponent, 
     ErrorStateComponent,
+    ModalComponent,
     BreadcrumbComponent
   ],
   templateUrl: './reading-session.component.html',
@@ -58,6 +59,7 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
 
   showConfigModal = signal<boolean>(false);
   showResumeModal = signal<boolean>(false);
+  showTimeUpModal = signal<boolean>(false);
   activeAttempt = signal<ToeicAttempt | null>(null);
 
   showHistoryModal = signal<boolean>(false);
@@ -151,7 +153,9 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
     };
 
     this.timerService.init(config, () => {
-      alert('Đã hết thời gian làm bài mục tiêu! Hệ thống vẫn tiếp tục cho phép bạn hoàn thành các câu còn lại.');
+      this.showTimeUpModal.set(true);
+      this.toast.warning('Đã hết giờ làm bài mục tiêu!');
+      this.cdr.markForCheck();
     });
 
     // Restore timer elapsed
@@ -193,11 +197,25 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
     }
 
     this.timerService.init(config, () => {
-      alert('Đã hết thời gian làm bài mục tiêu! Hệ thống vẫn tiếp tục cho phép bạn hoàn thành các câu còn lại.');
+      this.showTimeUpModal.set(true);
+      this.toast.warning('Đã hết giờ làm bài mục tiêu!');
+      this.cdr.markForCheck();
     });
     this.timerService.start();
     this.showConfigModal.set(false);
     this.cdr.markForCheck();
+  }
+
+  closeTimeUpModal(): void {
+    this.showTimeUpModal.set(false);
+    this.cdr.markForCheck();
+  }
+
+  submitFromTimeUpModal(): void {
+    this.showTimeUpModal.set(false);
+    if (this.answerSheet) {
+      this.answerSheet.submitDirectly();
+    }
   }
 
   onCancelConfig(): void {

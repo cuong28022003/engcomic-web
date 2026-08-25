@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DeckApiService } from '@core/services/deck-api.service';
 import { CardApiService } from '@core/services/card-api.service';
+import { PronunciationService } from '@core/services/pronunciation.service';
 import { ToastService } from '@core/services/toast.service';
 import { Deck, Card, PracticePromptResponse } from '@models/index';
 import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
@@ -132,7 +133,8 @@ export class DeckDetailComponent implements OnInit {
     private router: Router,
     private deckApi: DeckApiService,
     private cardApi: CardApiService,
-    private toast: ToastService
+    private toast: ToastService,
+    private pronunciationService: PronunciationService
   ) {}
 
   ngOnInit(): void {
@@ -326,14 +328,11 @@ export class DeckDetailComponent implements OnInit {
     this.router.navigate(['/vocab/word', card.id]);
   }
 
-  playAudio(audioUrl?: string, event?: Event): void {
+  playAudio(card: Card, event?: Event): void {
     if (event) event.stopPropagation();
-    if (!audioUrl) return;
-    try {
-      const audio = new Audio(audioUrl);
-      audio.play();
-    } catch {
-      // Audio playback fallback
+    const word = card.word || card.front;
+    if (word) {
+      this.pronunciationService.speak(word, 'us');
     }
   }
 }

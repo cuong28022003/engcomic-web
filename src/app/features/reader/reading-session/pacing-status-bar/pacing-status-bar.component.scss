@@ -17,53 +17,78 @@
   justify-content: space-between;
   gap: 12px;
 
-  .timer-block {
+  .timer-block.unified-timer {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
 
     .timer-label {
       display: flex;
       align-items: center;
       gap: 6px;
+      font-size: 0.76rem;
+      color: var(--text-muted, #a1a1aa);
 
-      .part-badge, .total-badge {
-        font-size: 0.75rem;
+      .timer-icon {
+        color: #60a5fa;
+        font-size: 0.82rem;
+      }
+
+      .timer-title {
+        font-weight: 600;
+      }
+
+      .danger-badge {
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 2px 6px;
+        padding: 1px 6px;
         border-radius: 4px;
-        background: rgba(255, 255, 255, 0.1);
-        color: #e4e4e7;
-      }
-
-      .part-badge {
-        background: rgba(255, 51, 119, 0.2);
-        color: var(--primary-color, #ff3377);
-        border: 1px solid rgba(255, 51, 119, 0.4);
-      }
-
-      .sub-label {
-        font-size: 0.72rem;
-        color: var(--text-dim, #71717a);
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        color: #f87171;
+        animation: pulseDanger 1s infinite alternate;
       }
     }
 
     .timer-value {
-      font-size: 1.25rem;
+      font-size: 1.45rem;
       font-weight: 800;
-      font-family: monospace;
-      color: #fff;
-      letter-spacing: 0.05em;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      color: #60a5fa;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 12px rgba(96, 165, 250, 0.35);
 
       &.danger {
         color: #ef4444;
-        text-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        text-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
         animation: pulseDanger 1s infinite alternate;
       }
+    }
+  }
 
-      &.total-val {
-        color: #60a5fa;
+  .stats-quick-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+
+    .part-indicator {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 51, 119, 0.15);
+      border: 1px solid rgba(255, 51, 119, 0.35);
+      color: var(--primary-color, #ff3377);
+    }
+
+    .done-counter {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+
+      strong {
+        color: #10b981;
+        font-size: 0.95rem;
       }
     }
   }

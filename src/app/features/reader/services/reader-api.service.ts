@@ -54,6 +54,24 @@ export class ReaderApiService extends ApiBaseService {
     return this.postForm<TestSummary>(this.TEST_BASE, formData);
   }
 
+  updateTestJson(testId: string, payload: Partial<CreateTestPayload>): Observable<TestSummary> {
+    return this.put<TestSummary>(`${this.TEST_BASE}/${testId}`, payload);
+  }
+
+  updateTestMultipart(testId: string, payload: Partial<CreateTestPayload>, pdfFile?: File): Observable<TestSummary> {
+    if (!pdfFile) {
+      return this.updateTestJson(testId, payload);
+    }
+    const formData = new FormData();
+    formData.append('requestData', JSON.stringify(payload));
+    formData.append('pdfFile', pdfFile);
+    return this.putForm<TestSummary>(`${this.TEST_BASE}/${testId}`, formData);
+  }
+
+  deleteTest(testId: string): Observable<{ success: boolean; message: string }> {
+    return this.delete<{ success: boolean; message: string }>(`${this.TEST_BASE}/${testId}`);
+  }
+
   submitSession(testId: string, payload: SubmitSessionPayload): Observable<SubmitSessionResponse> {
     return this.post<SubmitSessionResponse>(`${this.TEST_BASE}/${testId}/submit`, payload);
   }

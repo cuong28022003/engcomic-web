@@ -55,4 +55,27 @@ export class PacingStatusBarComponent {
     if (total === 0) return 0;
     return Math.min(100, Math.round((this.partQuestionsDone() / total) * 100));
   });
+
+  readonly totalQuestionsCount = computed<number>(() => {
+    const answers = this.answeredQuestions();
+    const keys = Object.keys(answers);
+    return keys.length > 0 ? Math.max(100, keys.length) : 100;
+  });
+
+  readonly totalQuestionsDone = computed<number>(() => {
+    const answers = this.answeredQuestions();
+    let count = 0;
+    for (const k of Object.keys(answers)) {
+      if (answers[+k] && answers[+k].trim().length > 0) {
+        count++;
+      }
+    }
+    return count;
+  });
+
+  readonly totalQuestionsPercent = computed<number>(() => {
+    const total = this.totalQuestionsCount();
+    if (total === 0) return 0;
+    return Math.min(100, Math.round((this.totalQuestionsDone() / total) * 100));
+  });
 }

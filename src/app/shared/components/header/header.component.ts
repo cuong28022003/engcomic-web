@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,11 +10,21 @@ import { TranslationService, LanguageCode } from '@core/services/translation.ser
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { CurrentUser, UserStats } from '@models/index';
 import { ComicGenres } from '../../constants/genres';
+import { GrammarSearchModalComponent } from '../../../features/grammar/components/grammar-search-modal/grammar-search-modal.component';
+import { GrammarCardModalComponent } from '../../../features/grammar/components/grammar-card-modal/grammar-card-modal.component';
+import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslatePipe],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    TranslatePipe,
+    GrammarSearchModalComponent,
+    GrammarCardModalComponent
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -32,6 +42,38 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isLangMenuOpen = false;
   isCategoryModalOpen = false;
   genres = ComicGenres;
+
+  // Grammar Modals
+  readonly showGrammarSearchModal = signal<boolean>(false);
+  readonly showGrammarCardModal = signal<boolean>(false);
+  readonly selectedGrammarPoint = signal<GrammarPoint | null>(null);
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcut(event: KeyboardEvent): void {
+    // Ctrl+G or Cmd+G to quickly open Grammar Search
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'g' || event.key === 'G')) {
+      event.preventDefault();
+      this.showGrammarSearchModal.set(!this.showGrammarSearchModal());
+    }
+  }
+
+  openGrammarSearch(): void {
+    this.showGrammarSearchModal.set(true);
+  }
+
+  closeGrammarSearch(): void {
+    this.showGrammarSearchModal.set(false);
+  }
+
+  onGrammarPointSelected(point: GrammarPoint): void {
+    this.selectedGrammarPoint.set(point);
+    this.showGrammarCardModal.set(true);
+  }
+
+  closeGrammarCard(): void {
+    this.showGrammarCardModal.set(false);
+    this.selectedGrammarPoint.set(null);
+  }
 
   private subs = new Subscription();
 
