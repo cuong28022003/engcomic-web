@@ -1,0 +1,322 @@
+.data-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-radius: var(--radius-lg, 12px);
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 22, 36, 0.65);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+// ── Left Group (Select All & Search) ─────────────────────────────────
+.filter-left-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+  flex-wrap: wrap;
+}
+
+// ── Select All Cell ──────────────────────────────────────────────────
+.select-all-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  transition: all 0.2s ease;
+
+  .selected-badge {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #c084fc;
+    background: rgba(168, 85, 247, 0.18);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    padding: 2px 7px;
+    border-radius: 5px;
+
+    strong { color: #fff; }
+  }
+}
+
+.filter-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+// ── 1. Search Box Cell ───────────────────────────────────────────────
+.search-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    color: #64748b;
+    font-size: 0.82rem;
+    pointer-events: none;
+    transition: color 0.2s ease;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 28px 0 30px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #f8fafc;
+    font-size: 0.82rem;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: #64748b;
+      font-size: 0.8rem;
+    }
+
+    &:focus {
+      background: rgba(0, 0, 0, 0.5);
+      border-color: #6366f1;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.35);
+
+      & + .search-icon {
+        color: #818cf8;
+      }
+    }
+  }
+
+  .btn-clear-search {
+    position: absolute;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+  }
+}
+
+// ── 2. Filter Controls Area ──────────────────────────────────────────
+.filter-controls-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.projected-filters-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  // Global styling for projected filter controls
+  ::ng-deep {
+    .filter-select {
+      height: 36px;
+      padding: 0 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      &:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+      }
+
+      option {
+        background: #1e1e2d;
+        color: #fff;
+      }
+    }
+
+    .filter-input {
+      height: 36px;
+      padding: 0 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.2s ease;
+
+      &::placeholder {
+        color: #64748b;
+      }
+
+      &:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+      }
+    }
+  }
+}
+
+// ── 3. Sort Select ───────────────────────────────────────────────────
+.sort-select-wrap {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .sort-icon {
+    color: #818cf8;
+    font-size: 0.82rem;
+  }
+
+  .filter-select {
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    padding: 4px 0;
+
+    option {
+      background: #1e1e2d;
+      color: #fff;
+    }
+  }
+}
+
+// ── 4. View Mode Toggle Switcher ─────────────────────────────────────
+.view-mode-toggle {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+
+  .btn-view-mode {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.86rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: #cbd5e1;
+    }
+
+    &.active {
+      background: rgba(99, 102, 241, 0.35);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+  }
+}
+
+// ── 5. Clear Filters Button ──────────────────────────────────────────
+.btn-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+// ── 6. Count Summary Wrap ────────────────────────────────────────────
+.count-summary-wrap {
+  .count-pill {
+    font-size: 0.84rem;
+    color: #94a3b8;
+
+    ::ng-deep strong {
+      color: #fff;
+      font-weight: 700;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .data-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-left-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-cell {
+    max-width: 100%;
+  }
+
+  .filter-controls-area {
+    justify-content: space-between;
+  }
+}

@@ -1,13 +1,12 @@
-import { Component, input, output, signal, inject, computed } from '@angular/core';
+import { Component, input, output, signal, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardApiService } from '@core/services/card-api.service';
 import { ToastService } from '@core/services/toast.service';
 import { PracticePromptResponse, ImportPracticeJsonResponse } from '@models/index';
-import { ProgressStepperComponent } from '@shared/components/progress-stepper/progress-stepper.component';
-import { AiPromptBoxComponent } from '@shared/components/ai-prompt-box/ai-prompt-box.component';
+import { ModalComponent } from '@shared/components/modal/modal.component';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
-import { JsonTextareaComponent } from '@shared/components/json-textarea/json-textarea.component';
+import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 
 export interface PreviewExerciseEntry {
   word: string;
@@ -29,10 +28,9 @@ export interface PreviewExerciseEntry {
   imports: [
     CommonModule,
     FormsModule,
-    ProgressStepperComponent,
-    AiPromptBoxComponent,
+    ModalComponent,
     StatusBadgeComponent,
-    JsonTextareaComponent,
+    AiImportWorkspaceComponent,
   ],
   templateUrl: './exercise-import-modal.component.html',
   styleUrls: ['./exercise-import-modal.component.scss'],
@@ -51,6 +49,13 @@ export class ExerciseImportModalComponent {
   startPractice = output<void>();
 
   step = signal<'prompt' | 'paste' | 'preview' | 'result'>('prompt');
+
+  readonly workspaceStep = computed<'prompt' | 'paste' | 'preview'>(() => {
+    const s = this.step();
+    if (s === 'result') return 'preview';
+    return s;
+  });
+
   jsonInput = '';
   previewEntries = signal<PreviewExerciseEntry[]>([]);
   parseError = signal<string>('');
@@ -58,19 +63,74 @@ export class ExerciseImportModalComponent {
   importResult = signal<ImportPracticeJsonResponse | null>(null);
   copied = signal<boolean>(false);
 
-  readonly steps = ['Trích Xuất Prompt', 'Dán JSON', 'Xem Trước 4 Level', 'Bắt Đầu Học'];
+  readonly steps = ['1. Trích Xuất Prompt', '2. Dán JSON', '3. Xem Trước 4 Level'];
 
-  currentStepIndex = computed<number>(() => {
-    switch (this.step()) {
-      case 'prompt': return 0;
-      case 'paste': return 1;
-      case 'preview': return 2;
-      case 'result': return 3;
-      default: return 0;
+  readonly metaBadges = computed<AiMetaBadge[]>(() => {
+    const badges: AiMetaBadge[] = [];
+    const name = this.promptData()?.deckName || this.deckName() || 'Bộ từ vựng';
+    badges.push({ icon: 'fa-solid fa-layer-group', label: name, variant: 'primary' });
+    const count = this.promptData()?.wordCount || 0;
+    if (count > 0) {
+      badges.push({ icon: 'fa-regular fa-clock', label: `${count} từ đang chờ tạo bài tập`, variant: 'warning' });
     }
+    return badges;
+  });
+
+  readonly sampleExerciseJson = JSON.stringify([
+    {
+      word: "mitigate",
+      level1_recognition: {
+        question: "Từ nào đồng nghĩa với 'mitigate'?",
+        options: ["alleviate", "intensify", "provoke", "ignore"],
+        correct_answer: "alleviate",
+        explanation: "Mitigate và alleviate đều có nghĩa là làm giảm bớt mức độ nghiêm trọng."
+      },
+      level2_context: {
+        sentence: "Governments should take action to _____ the impact of climate change.",
+        options: ["mitigate", "expand", "hesitate", "violate"],
+        correct_answer: "mitigate",
+        explanation: "Trong ngữ cảnh hạn chế tác động của biến đổi khí hậu, dùng 'mitigate'."
+      },
+      level3_production: {
+        prompt: "Dịch sang tiếng Anh: 'Chúng tôi cần các biện pháp để giảm nhẹ rủi ro tài chính.'",
+        correct_sentence: "We need measures to mitigate financial risks.",
+        hints: ["mitigate", "financial risks", "measures"]
+      },
+      level4_realworld: {
+        scenario: "Trong cuộc họp công ty về quản trị rủi ro dự án...",
+        question: "Cách diễn đạt nào tự nhiên nhất khi đề xuất giải pháp giảm nhẹ?",
+        options: [
+          "We can implement contingency plans to mitigate the project delays.",
+          "We can mitigate by stopping everything.",
+          "The project delay is mitigating our plans.",
+          "Let's not mitigate any risks."
+        ],
+        correct_answer: "We can implement contingency plans to mitigate the project delays."
+      }
+    }
+  ], null, 2);
+
+  readonly jsonValidationStatus = computed<AiValidationStatus | null>(() => {
+    const err = this.parseError();
+    if (err) {
+      return { status: 'invalid', errorMessage: err };
+    }
+    const entries = this.previewEntries();
+    if (entries.length > 0) {
+      return { status: 'valid', itemCount: entries.length };
+    }
+    return null;
   });
 
   validCount = computed(() => this.previewEntries().filter(e => e.valid).length);
+
+  constructor() {
+    effect(() => {
+      if (this.isOpen()) {
+        this.resetWizard();
+      }
+    });
+  }
 
   onStepChange(index: number): void {
     if (index === 0) this.step.set('prompt');

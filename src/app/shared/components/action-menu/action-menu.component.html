@@ -1,0 +1,87 @@
+<div
+  class="action-menu-container"
+  [class.mode-buttons]="mode() === 'buttons'"
+  [class.mode-compact]="mode() === 'compact'"
+  [class.mode-dropdown]="mode() === 'dropdown'"
+  [class.is-disabled]="disabled()"
+  [ngClass]="'size-' + size()"
+>
+  <!-- ── 1. Buttons Mode / Compact Mode ── -->
+  @if (mode() === 'buttons' || mode() === 'compact') {
+    <div class="action-buttons-group" (click)="$event.stopPropagation()">
+      @for (item of allActions(); track item.id) {
+        <button
+          type="button"
+          class="btn-action"
+          [ngClass]="[
+            'variant-' + (item.variant || 'default'),
+            'size-' + size(),
+            item.disabled ? 'disabled' : ''
+          ]"
+          [disabled]="item.disabled || disabled()"
+          [title]="item.tooltip || item.label"
+          (click)="onItemClick(item, $event)"
+        >
+          @if (item.icon) {
+            <i [class]="item.icon"></i>
+          }
+          @if (showLabels() || item.showLabel) {
+            <span class="action-label">{{ item.label }}</span>
+          }
+        </button>
+      }
+
+      <!-- Custom projected content if any -->
+      <ng-content></ng-content>
+    </div>
+  }
+
+  <!-- ── 2. Dropdown Menu Mode (3-Dots Kebab) ── -->
+  @if (mode() === 'dropdown') {
+    <div class="dropdown-wrapper" (click)="$event.stopPropagation()">
+      <button
+        type="button"
+        class="btn-dropdown-trigger"
+        [ngClass]="['size-' + size(), isDropdownOpen() ? 'active' : '']"
+        [disabled]="disabled()"
+        title="Thao tác"
+        (click)="toggleDropdown($event)"
+      >
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+      </button>
+
+      @if (isDropdownOpen()) {
+        <div
+          class="dropdown-menu-panel"
+          [class.align-left]="dropdownAlign() === 'left'"
+          [class.align-right]="dropdownAlign() === 'right'"
+        >
+          @for (item of allActions(); track item.id) {
+            <button
+              type="button"
+              class="dropdown-item"
+              [ngClass]="[
+                'variant-' + (item.variant || 'default'),
+                item.disabled ? 'disabled' : ''
+              ]"
+              [disabled]="item.disabled || disabled()"
+              (click)="onItemClick(item, $event)"
+            >
+              @if (item.icon) {
+                <i [class]="item.icon + ' item-icon'"></i>
+              }
+              <span class="item-label">{{ item.label }}</span>
+            </button>
+
+            @if (item.dividerAfter) {
+              <div class="dropdown-divider"></div>
+            }
+          }
+
+          <!-- Custom projected dropdown items -->
+          <ng-content select="[dropdown-item]"></ng-content>
+        </div>
+      }
+    </div>
+  }
+</div>

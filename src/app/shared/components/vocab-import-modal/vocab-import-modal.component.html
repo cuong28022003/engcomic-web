@@ -1,302 +1,421 @@
-@if (isOpen()) {
-  <div class="modal-backdrop" (click)="onClose()">
-    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <div class="header-title-group">
-          <div class="header-icon-box">
-            <i class="fa-solid fa-plus highlight-icon"></i>
-          </div>
-          <div>
-            <h3>Thêm Từ Vựng Vào Kho</h3>
-            <p class="modal-subtitle">
-              @if (targetDeckName()) {
-                Đang thêm vào bộ thẻ: <strong>{{ targetDeckName() }}</strong>
-              } @else {
-                Kho từ vựng tổng & tự động liên kết họ từ
-              }
-            </p>
-          </div>
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="isEditMode() ? 'Chỉnh Sửa Từ Vựng: ' + (card()?.word || '') : 'Thêm / Nạp Từ Vựng Vào Kho'"
+  size="xl"
+  (closed)="onClose()"
+>
+  @if (importStep() === 'result') {
+    <!-- Step 4: Result -->
+    <div class="step-view result-view">
+      <div class="result-celebration">
+        <i class="fa-solid fa-circle-check success-icon"></i>
+        <h3>Nhập Dữ Liệu Hoàn Tất!</h3>
+        <p>Toàn bộ từ vựng đã được lưu trữ và tự động liên kết quan hệ họ từ/cụm từ.</p>
+      </div>
+
+      <div class="result-stats-row">
+        <div class="result-stat-box green">
+          <span class="num">{{ importResult()?.imported?.length || 0 }}</span>
+          <span class="label">Từ thêm mới</span>
         </div>
-        <button class="close-btn" (click)="onClose()" [disabled]="isImporting() || isSavingManual()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <div class="result-stat-box yellow">
+          <span class="num">{{ importResult()?.skipped?.length || 0 }}</span>
+          <span class="label">Trùng lặp (Bỏ qua)</span>
+        </div>
+        <div class="result-stat-box red">
+          <span class="num">{{ importResult()?.errors?.length || 0 }}</span>
+          <span class="label">Lỗi cú pháp</span>
+        </div>
       </div>
 
-      <!-- Tab Switcher -->
-      <div class="tab-switcher">
-        <button
-          class="tab-btn"
-          [class.active]="activeTab() === 'ai-import'"
-          (click)="activeTab.set('ai-import')"
-        >
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bằng AI JSON (Hàng Loạt)
+      <div class="step-actions-footer center">
+        <button type="button" class="btn btn-primary" (click)="onClose()">
+          <i class="fa-solid fa-check"></i> Hoàn Tất & Đóng
         </button>
-        <button
-          class="tab-btn"
-          [class.active]="activeTab() === 'manual'"
-          (click)="activeTab.set('manual')"
-        >
-          <i class="fa-solid fa-pen"></i> Thêm Thủ Công (1 Thẻ)
-        </button>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="modal-body">
-        <!-- ================= TAB 1: AI JSON IMPORT ================= -->
-        @if (activeTab() === 'ai-import') {
-          <!-- Shared Progress Stepper Component -->
-          <div class="stepper-wrapper">
-            <app-progress-stepper
-              [steps]="steps"
-              [currentStep]="currentStepIndex()"
-              (stepChange)="onStepChange($event)"
-            ></app-progress-stepper>
-          </div>
-
-          <!-- Step 1: Prompt Generator -->
-          @if (importStep() === 'prompt') {
-            <div class="step-view">
-              <app-ai-prompt-box
-                [promptText]="generatedPrompt()"
-                [deckName]="targetDeckName()"
-                instruction="Sao chép System Prompt dưới đây và dán vào ChatGPT hoặc Claude để AI tạo dữ liệu từ vựng chuẩn hóa:"
-                pasteActionLabel="Đã Copy, Sang Dán JSON"
-                (proceedToPaste)="goToPaste()"
-              ></app-ai-prompt-box>
-            </div>
-          }
-
-          <!-- Step 2: Paste JSON -->
-          @if (importStep() === 'paste') {
-            <div class="step-view">
-              <div class="prompt-helper-box glass-panel">
-                <div class="helper-header-row">
-                  <div class="helper-text">
-                    <i class="fa-solid fa-lightbulb"></i>
-                    <span>Bạn có danh sách từ muốn tạo prompt?</span>
-                  </div>
-
-                  @if (collectorPendingWords().length > 0) {
-                    <button
-                      type="button"
-                      class="btn-collector-pill"
-                      (click)="fillFromWordCollector()"
-                      title="Nạp {{ collectorPendingWords().length }} từ đang chờ trong Word Collector"
-                    >
-                      <i class="fa-solid fa-inbox"></i>
-                      <span>Lấy từ Word Collector ({{ collectorPendingWords().length }})</span>
-                    </button>
-                  }
-                </div>
-
-                <div class="quick-input-row">
-                  <div class="quick-input-cell">
-                    <app-form-input
-                      [(value)]="wordListText"
-                      placeholder="VD: decision, reach a decision, mitigate..."
-                      icon="fa-solid fa-spell-check"
-                    ></app-form-input>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" (click)="generateAiPrompt()" [disabled]="!wordListText.trim()">
-                    <i class="fa-solid fa-robot"></i> Tạo AI Prompt
-                  </button>
-                </div>
-              </div>
-
-              <!-- Shared JsonTextarea Component -->
-              <app-json-textarea
-                [(value)]="jsonInputText"
-                label="Dán kết quả JSON từ AI vào đây:"
-                placeholder='[ { "word": "mitigate", "ipa": "/ˈmɪt.ɪ.ɡeɪt/", "meaning_vi": "làm giảm bớt", "examples": [...], "relations": [...] } ]'
-                [rows]="8"
-                [errorMessage]="parseError()"
-              ></app-json-textarea>
-
-              <!-- Target Deck Selection (if not locked) -->
-              @if (!targetDeckId() && availableDecks().length > 0) {
-                <div class="deck-select-group">
-                  <app-form-select
-                    label="Gán vào bộ thẻ (tùy chọn):"
-                    [options]="deckOptions()"
-                    [(value)]="selectedDeckId"
-                    icon="fa-solid fa-folder-tree"
-                  ></app-form-select>
-                </div>
-              }
-
-              <div class="step-actions-footer">
-                <button class="btn btn-secondary" (click)="onClose()">Hủy</button>
-                <button class="btn btn-primary" (click)="parseJson()" [disabled]="!jsonInputText.trim()">
-                  <i class="fa-solid fa-magnifying-glass"></i> Kiểm Tra Dữ Liệu <i class="fa-solid fa-arrow-right"></i>
-                </button>
-              </div>
-            </div>
-          }
-
-          <!-- Step 3: Preview Items -->
-          @if (importStep() === 'preview') {
-            <div class="step-view">
-              <div class="preview-header-summary">
-                <app-status-badge
-                  type="success"
-                  [label]="previewItems().length + ' từ vựng hợp lệ'"
-                  icon="fa-solid fa-check"
-                ></app-status-badge>
-                <span class="preview-hint">Kiểm tra thông tin trước khi lưu vào kho</span>
-              </div>
-
-              <div class="preview-table-wrap">
-                <table class="preview-table">
-                  <thead>
-                    <tr>
-                      <th>Từ Vựng</th>
-                      <th>Phiên Âm</th>
-                      <th>Từ Loại</th>
-                      <th>Nghĩa Tiếng Việt</th>
-                      <th>Ví Dụ</th>
-                      <th>Liên Quan</th>
-                      <th>Trạng Thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (item of previewItems(); track $index) {
-                      <tr [class.invalid-row]="!item.valid">
-                        <td class="col-word"><strong>{{ item.word }}</strong></td>
-                        <td class="col-ipa">{{ item.ipa || '-' }}</td>
-                        <td class="col-pos">
-                          <span class="pos-tag">{{ item.partOfSpeech || 'n/a' }}</span>
-                        </td>
-                        <td class="col-meaning">{{ item.meaningVi }}</td>
-                        <td class="col-num">{{ item.examplesCount }} câu</td>
-                        <td class="col-num">{{ item.relationsCount }} từ</td>
-                        <td>
-                          <app-status-badge
-                            [type]="item.valid ? 'success' : 'danger'"
-                            [label]="item.valid ? 'Hợp lệ' : 'Lỗi'"
-                            [icon]="item.valid ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"
-                          ></app-status-badge>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="step-actions-footer">
-                <button class="btn btn-secondary" (click)="importStep.set('paste')" [disabled]="isImporting()">
-                  <i class="fa-solid fa-arrow-left"></i> Chỉnh sửa JSON
-                </button>
-                <button class="btn btn-primary" (click)="submitBatchImport()" [disabled]="isImporting()">
-                  @if (isImporting()) {
-                    <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu vào kho...
-                  } @else {
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Lưu {{ previewItems().length }} Từ Vào Kho
-                  }
-                </button>
-              </div>
-            </div>
-          }
-
-          <!-- Step 4: Result -->
-          @if (importStep() === 'result') {
-            <div class="step-view result-view">
-              <div class="result-celebration">
-                <i class="fa-solid fa-circle-check success-icon"></i>
-                <h3>Nhập Dữ Liệu Hoàn Tất!</h3>
-                <p>Toàn bộ từ vựng đã được lưu trữ và tự động liên kết quan hệ họ từ/cụm từ.</p>
-              </div>
-
-              <div class="result-stats-row">
-                <div class="result-stat-box green">
-                  <span class="num">{{ importResult()?.imported?.length || 0 }}</span>
-                  <span class="label">Từ thêm mới</span>
-                </div>
-                <div class="result-stat-box yellow">
-                  <span class="num">{{ importResult()?.skipped?.length || 0 }}</span>
-                  <span class="label">Trùng lặp (Bỏ qua)</span>
-                </div>
-                <div class="result-stat-box red">
-                  <span class="num">{{ importResult()?.errors?.length || 0 }}</span>
-                  <span class="label">Lỗi cú pháp</span>
-                </div>
-              </div>
-
-              <div class="step-actions-footer center">
-                <button class="btn btn-primary" (click)="onClose()">
-                  <i class="fa-solid fa-check"></i> Hoàn Tất & Đóng
-                </button>
-              </div>
-            </div>
-          }
-        }
-
-        <!-- ================= TAB 2: MANUAL CARD FORM ================= -->
-        @if (activeTab() === 'manual') {
-          <form (submit)="submitManualCard()" class="manual-form">
-            <div class="form-row">
-              <div class="form-group flex-2">
-                <app-form-input
-                  label="Từ hoặc cụm từ tiếng Anh"
-                  [required]="true"
-                  [(value)]="manualWord"
-                  placeholder="VD: mitigate, reach a decision"
-                  icon="fa-solid fa-spell-check"
-                ></app-form-input>
-              </div>
-              <div class="form-group flex-1">
-                <app-form-select
-                  label="Từ loại"
-                  [options]="posOptions"
-                  [(value)]="manualPos"
-                ></app-form-select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <app-form-input
-                label="Nghĩa tiếng Việt"
-                [required]="true"
-                [(value)]="manualMeaning"
-                placeholder="VD: làm giảm bớt, làm dịu đi"
-                icon="fa-solid fa-language"
-              ></app-form-input>
-            </div>
-
-            <div class="form-group">
-              <app-form-input
-                label="Phiên âm IPA (tùy chọn)"
-                [(value)]="manualIpa"
-                placeholder="VD: /ˈmɪt.ɪ.ɡeɪt/"
-                icon="fa-solid fa-volume-high"
-              ></app-form-input>
-            </div>
-
-            <!-- Target Deck Selection (if not locked) -->
-            @if (!targetDeckId() && availableDecks().length > 0) {
-              <div class="form-group">
-                <app-form-select
-                  label="Gán vào bộ thẻ (tùy chọn)"
-                  [options]="deckOptions()"
-                  [(value)]="selectedDeckId"
-                  icon="fa-solid fa-folder-tree"
-                ></app-form-select>
-              </div>
-            }
-
-            <div class="step-actions-footer">
-              <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isSavingManual()">Hủy</button>
-              <button type="submit" class="btn btn-primary" [disabled]="!manualWord.trim() || !manualMeaning.trim() || isSavingManual()">
-                @if (isSavingManual()) {
-                  <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
-                } @else {
-                  <i class="fa-solid fa-plus"></i> Thêm Thẻ Từ Vựng
-                }
-              </button>
-            </div>
-          </form>
-        }
       </div>
     </div>
-  </div>
-}
+  } @else {
+    <app-ai-import-workspace
+      [enableModeSwitch]="true"
+      [activeMode]="activeTab() === 'manual' ? 'manual' : 'ai'"
+      (activeModeChange)="activeTab.set($event === 'manual' ? 'manual' : 'ai-import')"
+      [aiModeLabel]="isEditMode() ? 'Cập Nhật Bằng AI JSON' : 'Thêm Bằng AI JSON (Hàng Loạt)'"
+      [manualModeLabel]="isEditMode() ? 'Chỉnh Sửa Thủ Công' : 'Thêm Thủ Công (1 Thẻ)'"
+      [steps]="steps"
+      [currentStep]="workspaceStep()"
+      (currentStepChange)="importStep.set($event)"
+      [promptText]="generatedPrompt()"
+      [metaBadges]="metaBadges()"
+      instruction="Tùy biến danh sách từ ở trên, sau đó sao chép System Prompt dưới đây và dán vào ChatGPT hoặc Claude:"
+      pasteActionLabel="Đã Copy, Sang Dán JSON"
+      [(jsonText)]="jsonInputText"
+      jsonPlaceholder='[ { "word": "mitigate", "ipa": "/ˈmɪt.ɪ.ɡeɪt/", "meaning_vi": "làm giảm bớt", "examples": [...], "relations": [...] } ]'
+      [sampleJson]="sampleVocabJson"
+      [validationStatus]="jsonValidationStatus()"
+      [isSubmitting]="isImporting()"
+      submitButtonLabel="Kiểm Tra & Xem Trước Thẻ"
+      (submitImport)="parseJson()"
+      (cancel)="onClose()"
+    >
+      <!-- Prompt Config Slot in Step 1: Word Collector & Quick Prompt generator -->
+      <div prompt-config class="prompt-helper-box glass-panel">
+        <div class="helper-header-row">
+          <div class="helper-text">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>Bạn muốn tạo prompt cho danh sách từ vựng nào?</span>
+          </div>
+
+          @if (collectorPendingWords().length > 0) {
+            <button
+              type="button"
+              class="btn-collector-pill"
+              (click)="fillFromWordCollector()"
+              title="Nạp {{ collectorPendingWords().length }} từ đang chờ trong Word Collector"
+            >
+              <i class="fa-solid fa-inbox"></i>
+              <span>Lấy từ Word Collector ({{ collectorPendingWords().length }})</span>
+            </button>
+          }
+        </div>
+
+        <div class="quick-input-row">
+          <div class="quick-input-cell">
+            <app-form-input
+              [(value)]="wordListText"
+              placeholder="VD: decision, reach a decision, mitigate, resilient..."
+              icon="fa-solid fa-spell-check"
+            ></app-form-input>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="generateAiPrompt()" [disabled]="!wordListText.trim()">
+            <i class="fa-solid fa-robot"></i> Tạo Lại Prompt
+          </button>
+        </div>
+      </div>
+
+      <!-- Target Deck Select in json-extra-fields slot -->
+      @if (!targetDeckId() && availableDecks().length > 0) {
+        <div json-extra-fields class="deck-select-group">
+          <app-form-select
+            label="Gán vào bộ thẻ (tùy chọn):"
+            [options]="deckOptions()"
+            [(value)]="selectedDeckId"
+            icon="fa-solid fa-folder-tree"
+          ></app-form-select>
+        </div>
+      }
+
+      <!-- Preview Content Slot -->
+      <div preview-content class="preview-step-inner">
+        <div class="preview-header-summary">
+          <app-status-badge
+            type="success"
+            [label]="previewItems().length + ' từ vựng hợp lệ'"
+            icon="fa-solid fa-check"
+          ></app-status-badge>
+          <span class="preview-hint">Kiểm tra thông tin chi tiết trước khi lưu vào kho</span>
+        </div>
+
+        <div class="preview-table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th>Từ Vựng</th>
+                <th>Phiên Âm</th>
+                <th>Từ Loại</th>
+                <th>Nghĩa Tiếng Việt</th>
+                <th>Ví Dụ</th>
+                <th>Liên Quan</th>
+                <th>Trạng Thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of previewItems(); track $index) {
+                <tr [class.invalid-row]="!item.valid">
+                  <td class="col-word"><strong>{{ item.word }}</strong></td>
+                  <td class="col-ipa">{{ item.ipa || '-' }}</td>
+                  <td class="col-pos">
+                    <span class="pos-tag">{{ item.partOfSpeech || 'n/a' }}</span>
+                  </td>
+                  <td class="col-meaning">{{ item.meaningVi }}</td>
+                  <td class="col-num">{{ item.examplesCount }} câu</td>
+                  <td class="col-num">{{ item.relationsCount }} từ</td>
+                  <td>
+                    <app-status-badge
+                      [type]="item.valid ? 'success' : 'danger'"
+                      [label]="item.valid ? 'Hợp lệ' : 'Lỗi'"
+                      [icon]="item.valid ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"
+                    ></app-status-badge>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Step Preview Actions Slot -->
+      <div step-preview-actions>
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="submitBatchImport()"
+          [disabled]="isImporting() || previewItems().length === 0"
+        >
+          @if (isImporting()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+          } @else {
+            <i class="fa-solid fa-cloud-arrow-up"></i> Lưu {{ previewItems().length }} Từ Vào Kho
+          }
+        </button>
+      </div>
+
+      <!-- Manual Form Slot -->
+      <form manual-form (submit)="submitManualCard()" class="manual-form-rich">
+        <!-- Row 1: Word & IPA -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label required">Từ vựng (English Word):</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ví dụ: resilient, breakthrough..."
+              [ngModel]="manualWord()"
+              (ngModelChange)="manualWord.set($event)"
+              name="manualWord"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phiên âm IPA:</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ví dụ: /rɪˈzɪl.jənt/"
+              [ngModel]="manualIpa()"
+              (ngModelChange)="manualIpa.set($event)"
+              name="manualIpa"
+            />
+          </div>
+        </div>
+
+        <!-- Row 2: Part of Speech & Meaning Vi -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Từ loại (Part of Speech):</label>
+            <select
+              class="form-control"
+              [ngModel]="manualPos()"
+              (ngModelChange)="manualPos.set($event)"
+              name="manualPos"
+            >
+              @for (pos of posOptions; track pos.value) {
+                <option [value]="pos.value">{{ pos.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Nghĩa tiếng Việt (Meaning):</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ví dụ: kiên cường, mau hồi phục..."
+              [ngModel]="manualMeaning()"
+              (ngModelChange)="manualMeaning.set($event)"
+              name="manualMeaning"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Row 3: Definition En -->
+        <div class="form-group">
+          <label class="form-label">Định nghĩa tiếng Anh (Definition in English):</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Ví dụ: Able to recover quickly from difficult conditions"
+            [ngModel]="manualDefinitionEn()"
+            (ngModelChange)="manualDefinitionEn.set($event)"
+            name="manualDefinitionEn"
+          />
+        </div>
+
+        <!-- Row 4: Deck & Topic -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">Bộ thẻ (Deck):</label>
+            @if (targetDeckName()) {
+              <input
+                type="text"
+                class="form-control"
+                [value]="'🗂️ ' + targetDeckName()"
+                disabled
+              />
+            } @else {
+              <select
+                class="form-control"
+                [ngModel]="selectedDeckId()"
+                (ngModelChange)="selectedDeckId.set($event)"
+                name="selectedDeckId"
+              >
+                @for (opt of deckOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Chủ đề (Topic):</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ví dụ: Business, Technology, Daily Life..."
+              [ngModel]="manualTopic()"
+              (ngModelChange)="manualTopic.set($event)"
+              name="manualTopic"
+            />
+          </div>
+        </div>
+
+        <!-- Row 5: Usages & Nested Examples Section -->
+        <div class="form-group usages-section">
+          <div class="usages-header">
+            <label class="form-label">
+              <i class="fa-solid fa-layer-group"></i> Cấu trúc & Cách dùng (Usages & Examples):
+            </label>
+            <button type="button" class="btn-add-usage" (click)="addManualUsage()">
+              <i class="fa-solid fa-plus"></i> Thêm Cấu Trúc Cách Dùng
+            </button>
+          </div>
+
+          @if (manualUsages().length === 0) {
+            <div class="empty-usages-hint" (click)="addManualUsage()">
+              <i class="fa-solid fa-circle-plus"></i> Chưa có cấu trúc nào. Bấm vào đây để thêm cấu trúc và câu ví dụ minh họa.
+            </div>
+          }
+
+          <div class="usages-stack">
+            @for (u of manualUsages(); track $index; let uIdx = $index) {
+              <div class="usage-edit-card">
+                <div class="usage-card-top">
+                  <span class="usage-index-badge"># Cấu trúc {{ uIdx + 1 }}</span>
+                  <button
+                    type="button"
+                    class="btn-remove-usage"
+                    (click)="removeManualUsage(uIdx)"
+                    title="Xóa cấu trúc này"
+                  >
+                    <i class="fa-solid fa-trash-can"></i> Xóa
+                  </button>
+                </div>
+
+                <div class="usage-inputs-grid">
+                  <!-- Structure & Meaning -->
+                  <div class="form-row-2">
+                    <input
+                      type="text"
+                      class="form-control struct-input"
+                      placeholder="Cấu trúc (VD: look forward to + V-ing, despite + N/V-ing...)"
+                      [ngModel]="u.structure"
+                      (ngModelChange)="updateManualUsageField(uIdx, 'structure', $event)"
+                      [name]="'man_u_struct_' + uIdx"
+                    />
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Nghĩa theo cấu trúc này (VD: trông mong điều gì...)"
+                      [ngModel]="u.meaning"
+                      (ngModelChange)="updateManualUsageField(uIdx, 'meaning', $event)"
+                      [name]="'man_u_mean_' + uIdx"
+                    />
+                  </div>
+
+                  <!-- Note & Category Dropdown -->
+                  <div class="form-row-2">
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Lưu ý / Mẹo thi TOEIC (VD: Sau 'to' là V-ing, không dùng to V)"
+                      [ngModel]="u.note"
+                      (ngModelChange)="updateManualUsageField(uIdx, 'note', $event)"
+                      [name]="'man_u_note_' + uIdx"
+                    />
+                    <select
+                      class="form-control category-select"
+                      [ngModel]="u.category || ''"
+                      (ngModelChange)="updateManualUsageField(uIdx, 'category', $event)"
+                      [name]="'man_u_cat_' + uIdx"
+                    >
+                      @for (opt of categoryOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Nested Examples List for this Usage -->
+                <div class="nested-examples-area">
+                  <div class="nested-examples-header">
+                    <span class="nested-examples-label"><i class="fa-solid fa-comment-dots"></i> Ví dụ cho cấu trúc này:</span>
+                    <button type="button" class="btn-add-nested-ex" (click)="addManualUsageExample(uIdx)">
+                      <i class="fa-solid fa-plus"></i> Thêm ví dụ
+                    </button>
+                  </div>
+
+                  <div class="nested-examples-stack">
+                    @for (ex of u.examples || []; track $index; let exIdx = $index) {
+                      <div class="nested-example-row">
+                        <input
+                          type="text"
+                          class="form-control ex-text-input"
+                          placeholder="Câu tiếng Anh (VD: I look forward to meeting you.)"
+                          [ngModel]="ex.text"
+                          (ngModelChange)="updateManualUsageExampleText(uIdx, exIdx, $event)"
+                          [name]="'man_ex_text_' + uIdx + '_' + exIdx"
+                        />
+                        <input
+                          type="text"
+                          class="form-control ex-trans-input"
+                          placeholder="Bản dịch tiếng Việt"
+                          [ngModel]="ex.translation"
+                          (ngModelChange)="updateManualUsageExampleTranslation(uIdx, exIdx, $event)"
+                          [name]="'man_ex_trans_' + uIdx + '_' + exIdx"
+                        />
+                        @if ((u.examples || []).length > 1) {
+                          <button
+                            type="button"
+                            class="btn-remove-nested-ex"
+                            (click)="removeManualUsageExample(uIdx, exIdx)"
+                            title="Xóa ví dụ này"
+                          >
+                            <i class="fa-solid fa-xmark"></i>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Manual Actions Footer Slot -->
+        <div manual-footer class="step-actions-footer">
+          <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isSavingManual()">Hủy</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!manualWord().trim() || !manualMeaning().trim() || isSavingManual()">
+            @if (isSavingManual()) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+            } @else {
+              <i [class]="isEditMode() ? 'fa-solid fa-floppy-disk' : 'fa-solid fa-plus'"></i>
+              {{ isEditMode() ? 'Lưu Thay Đổi' : 'Thêm Thẻ Từ Vựng' }}
+            }
+          </button>
+        </div>
+      </form>
+    </app-ai-import-workspace>
+  }
+</app-modal>

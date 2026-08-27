@@ -1,0 +1,20 @@
+<div
+  class="glass-panel"
+  [class]="'pad-' + padding() + ' rad-' + radius() + ' var-' + variant() + ' blur-' + blur() + (customClass() ? ' ' + customClass() : '')"
+  [class.is-interactive]="interactive()"
+  [class.is-bordered]="bordered()"
+  [style.--custom-glow]="glowColor() || null"
+  (click)="onClick($event)"
+>
+  <div class="panel-header-slot">
+    <ng-content select="[panel-header]"></ng-content>
+  </div>
+
+  <div class="panel-body-slot">
+    <ng-content></ng-content>
+  </div>
+
+  <div class="panel-footer-slot">
+    <ng-content select="[panel-footer]"></ng-content>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div class="data-filter-bar glass-panel">
+  <!-- 1. Left Group: Select All Cell & Search Box -->
+  <div class="filter-left-group">
+    <!-- Optional Select All Cell -->
+    @if (showSelectAll()) {
+      <div class="select-all-cell" (click)="toggleSelectAll()" [title]="isAllSelected() ? 'Bỏ chọn tất cả' : 'Chọn tất cả'">
+        <app-selection-checkbox
+          [checked]="isAllSelected()"
+          (changed)="toggleSelectAll()"
+        ></app-selection-checkbox>
+        @if (showSelectCountBadge() && selectedCount() > 0) {
+          <span class="selected-badge"><strong>{{ selectedCount() }}</strong></span>
+        }
+      </div>
+      <div class="filter-divider"></div>
+    }
+
+    <!-- Search Box Cell -->
+    @if (showSearch()) {
+      <div class="search-cell">
+        <i [class]="searchIcon() + ' search-icon'"></i>
+        <input
+          type="text"
+          class="search-input"
+          [placeholder]="searchPlaceholder()"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchInput($event)"
+        />
+        @if (searchQuery().trim()) {
+          <button
+            type="button"
+            class="btn-clear-search"
+            (click)="clearSearch()"
+            title="Xóa tìm kiếm"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- 2. Right Group: Controls, Projected Slots, Sort, View Mode, Count -->
+  <div class="filter-controls-area">
+    <!-- Projected Page-Specific Custom Filters / Dropdowns / Chips -->
+    <div class="projected-filters-slot">
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Sort Dropdown -->
+    @if (showSort() && sortOptions().length > 0) {
+      <div class="sort-select-wrap">
+        <i class="fa-solid fa-arrow-down-short-wide sort-icon"></i>
+        <select
+          class="filter-select"
+          [ngModel]="sortBy()"
+          (ngModelChange)="onSortChange($event)"
+        >
+          @for (opt of sortOptions(); track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <!-- View Mode Switcher -->
+    @if (showViewMode()) {
+      <div class="view-mode-toggle">
+        <button
+          type="button"
+          class="btn-view-mode"
+          [class.active]="viewMode() === 'grid'"
+          (click)="setViewMode('grid')"
+          title="Chế độ xem dạng lưới (Grid)"
+        >
+          <i class="fa-solid fa-table-cells-large"></i>
+        </button>
+        <button
+          type="button"
+          class="btn-view-mode"
+          [class.active]="viewMode() === 'list'"
+          (click)="setViewMode('list')"
+          title="Chế độ xem dạng danh sách (List)"
+        >
+          <i class="fa-solid fa-list-ul"></i>
+        </button>
+      </div>
+    }
+
+    <!-- Clear Filters Button -->
+    @if (showClearButton() && hasActiveFilters()) {
+      <button
+        type="button"
+        class="btn-clear-filters"
+        (click)="onClearAll()"
+        title="Xóa tất cả bộ lọc"
+      >
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        <span>Xóa lọc</span>
+      </button>
+    }
+
+    <!-- Count Summary Badge -->
+    @if (showCountSummary() && countSummaryText()) {
+      <div class="count-summary-wrap">
+        <span class="count-pill" [innerHTML]="countSummaryText()"></span>
+      </div>
+    }
+  </div>
+</div>

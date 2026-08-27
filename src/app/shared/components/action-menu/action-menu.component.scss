@@ -1,0 +1,274 @@
+.action-menu-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+
+  &.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// ── 1. Buttons Group Mode ─────────────────────────────────────────────
+.action-buttons-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 500;
+    line-height: 1;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    // ── Sizes ──
+    &.size-xs {
+      width: 24px;
+      height: 24px;
+      font-size: 0.7rem;
+      padding: 0;
+    }
+
+    &.size-sm {
+      width: 28px;
+      height: 28px;
+      font-size: 0.78rem;
+      padding: 0;
+    }
+
+    &.size-md {
+      min-width: 34px;
+      height: 34px;
+      font-size: 0.85rem;
+      padding: 0 10px;
+    }
+
+    &.size-lg {
+      min-width: 40px;
+      height: 40px;
+      font-size: 0.95rem;
+      padding: 0 14px;
+    }
+
+    // ── Variants ──
+    &.variant-default, &.variant-secondary {
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    &.variant-edit {
+      &:hover:not(:disabled) {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.5);
+        color: #a5b4fc;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+      }
+    }
+
+    &.variant-danger {
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #f87171;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+      }
+    }
+
+    &.variant-primary {
+      &:hover:not(:disabled) {
+        background: rgba(14, 165, 233, 0.2);
+        border-color: rgba(14, 165, 233, 0.5);
+        color: #38bdf8;
+        box-shadow: 0 0 10px rgba(14, 165, 233, 0.25);
+      }
+    }
+
+    &.variant-success {
+      &:hover:not(:disabled) {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.5);
+        color: #34d399;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+      }
+    }
+
+    &.variant-warning {
+      &:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.5);
+        color: #fbbf24;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+      }
+    }
+
+    &.variant-info {
+      &:hover:not(:disabled) {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: rgba(56, 189, 248, 0.5);
+        color: #7dd3fc;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+      }
+    }
+  }
+}
+
+// ── 2. Dropdown Menu Mode ──────────────────────────────────────────────
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+
+  .btn-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+
+    &:hover:not(:disabled), &.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &.size-xs { width: 24px; height: 24px; font-size: 0.72rem; }
+    &.size-sm { width: 28px; height: 28px; font-size: 0.8rem; }
+    &.size-md { width: 34px; height: 34px; font-size: 0.9rem; }
+    &.size-lg { width: 40px; height: 40px; font-size: 1rem; }
+  }
+
+  .dropdown-menu-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    z-index: 1000;
+    min-width: 170px;
+    padding: 6px;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &.align-right {
+      right: 0;
+      left: auto;
+    }
+
+    &.align-left {
+      left: 0;
+      right: auto;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      .item-icon {
+        width: 16px;
+        font-size: 0.85rem;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f8fafc;
+      }
+
+      &.variant-edit:hover:not(:disabled) {
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+        .item-icon { color: #818cf8; }
+      }
+
+      &.variant-danger {
+        color: #fca5a5;
+        &:hover:not(:disabled) {
+          background: rgba(239, 68, 68, 0.15);
+          color: #ef4444;
+          .item-icon { color: #ef4444; }
+        }
+      }
+
+      &.variant-primary:hover:not(:disabled) {
+        background: rgba(14, 165, 233, 0.15);
+        color: #38bdf8;
+        .item-icon { color: #38bdf8; }
+      }
+
+      &.variant-success:hover:not(:disabled) {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        .item-icon { color: #34d399; }
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 4px 0;
+    }
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

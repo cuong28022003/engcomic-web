@@ -39,12 +39,34 @@ export class VocabImportComponent {
 
   readonly PROMPT_TEMPLATE = `Với mỗi mục trong danh sách sau: [THÊM TỪ VÀO ĐÂY]
 Trả về JSON array, mỗi phần tử theo schema:
-{ "word": "", "ipa": "", "part_of_speech": "", "meaning_vi": "", "definition_en": "",
-  "usage_note": null, "topic": "",
-  "examples": [{"text": "", "formality": "formal|informal|written"}],
-  "relations": [{"text": "", "type": "family|collocation|synonym", "pos": ""}] }
-Nếu mục là cụm từ, ipa và part_of_speech có thể null.
-Chỉ trả JSON thuần, không markdown, không giải thích thêm.`;
+[
+  {
+    "word": "từ hoặc cụm từ",
+    "ipa": "/phiên_âm_IPA/",
+    "part_of_speech": "noun|verb|adjective|adverb|preposition|conjunction|transition_word|phrasal_verb|idiom|collocation",
+    "meaning_vi": "nghĩa tiếng Việt chính xác",
+    "definition_en": "định nghĩa tiếng Anh ngắn gọn",
+    "topic": "Tên chủ đề tiếng Anh (Title Case, 1-3 từ). Gợi ý: Daily Life, Travel, Food & Drinks, Shopping, Family & Friends, Health & Fitness, Business, Office & Workplace, Finance & Banking, Marketing & Sales, Technology & IT, Education, Environment & Nature, Science, Society & Law... Nếu từ vựng thuộc chuyên ngành khác (Medicine, Sports, Aviation...), hãy tự đặt tên chủ đề chính xác. Nếu là từ đa dụng, đặt 'General Vocabulary'.",
+    "usages": [
+      {
+        "category": "time|place|direction|cause_reason|purpose|contrast|condition|addition|result|manner|degree_extent|collocation|phrasal_verb|idiom|phrase",
+        "structure": "cấu trúc sử dụng / collocation thực tế (BẮT BUỘC có)",
+        "meaning": "nghĩa tiếng Việt theo cấu trúc này",
+        "note": "lưu ý ngữ pháp hoặc bẫy thi",
+        "examples": [
+          { "text": "Câu ví dụ tiếng Anh", "translation": "Bản dịch tiếng Việt" }
+        ]
+      }
+    ],
+    "relations": [
+      { "text": "từ liên quan", "type": "family|collocation|synonym", "pos": "từ loại nếu là family" }
+    ]
+  }
+]
+BẮT BUỘC:
+1. Mọi từ vựng đều phải có ít nhất 1 cấu trúc trong "usages" kèm câu ví dụ minh họa.
+2. Gán "topic" bằng tiếng Anh (Title Case, 1-3 từ). Ưu tiên nhóm chủ đề gợi ý hoặc tự do đặt tên chủ đề chuyên ngành nếu nằm ngoài danh mục.
+3. Chỉ trả JSON thuần trong thẻ [ ... ], không giải thích thêm.`;
 
   constructor(
     private cardApi: CardApiService,

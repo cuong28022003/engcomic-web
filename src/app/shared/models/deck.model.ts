@@ -11,6 +11,8 @@ export interface Deck {
   name: string;
   description?: string;
   userId: string;
+  icon?: string;
+  background?: string;
   totalCards?: number;
   stats?: DeckStats;
   createdAt?: string;

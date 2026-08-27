@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { CardApiService } from '@core/services/card-api.service';
 import { PendingItemApiService } from '@core/services/pending-item-api.service';
 import { ToastService } from '@core/services/toast.service';
-import { Deck, BatchImportResult } from '@models/index';
-import { ProgressStepperComponent } from '@shared/components/progress-stepper/progress-stepper.component';
-import { AiPromptBoxComponent } from '@shared/components/ai-prompt-box/ai-prompt-box.component';
+import { Deck, BatchImportResult, ExampleSentence, Card, WordUsage } from '@models/index';
+import { ModalComponent } from '@shared/components/modal/modal.component';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 import { FormSelectComponent, FormSelectOption } from '@shared/components/form-select/form-select.component';
-import { JsonTextareaComponent } from '@shared/components/json-textarea/json-textarea.component';
+import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 
 export interface PreviewVocabItem {
   word: string;
@@ -30,12 +29,11 @@ export interface PreviewVocabItem {
   imports: [
     CommonModule,
     FormsModule,
-    ProgressStepperComponent,
-    AiPromptBoxComponent,
+    ModalComponent,
     StatusBadgeComponent,
     FormInputComponent,
     FormSelectComponent,
-    JsonTextareaComponent,
+    AiImportWorkspaceComponent
   ],
   templateUrl: './vocab-import-modal.component.html',
   styleUrls: ['./vocab-import-modal.component.scss'],
@@ -45,27 +43,70 @@ export class VocabImportModalComponent {
   private pendingApi = inject(PendingItemApiService);
   private toast = inject(ToastService);
 
-  isOpen = input.required<boolean>();
-  targetDeckId = input<string | undefined>(undefined);
-  targetDeckName = input<string | undefined>(undefined);
-  availableDecks = input<Deck[]>([]);
+  readonly isOpen = input.required<boolean>();
+  readonly card = input<Card | null>(null); // For Edit Mode
+  readonly targetDeckId = input<string | undefined>(undefined);
+  readonly targetDeckName = input<string | undefined>(undefined);
+  readonly availableDecks = input<Deck[]>([]);
+  readonly initialTab = input<'ai-import' | 'manual'>('ai-import');
 
-  closeModal = output<void>();
-  vocabAdded = output<{ count: number; deckId?: string }>();
+  readonly closeModal = output<void>();
+  readonly vocabAdded = output<{ count: number; deckId?: string }>();
+  readonly cardSaved = output<Card>();
+
+  readonly isEditMode = computed(() => !!this.card()?.id);
 
   activeTab = signal<'ai-import' | 'manual'>('ai-import');
-  importStep = signal<'prompt' | 'paste' | 'preview' | 'result'>('paste');
+  importStep = signal<'prompt' | 'paste' | 'preview' | 'result'>('prompt');
 
-  readonly steps = ['Tạo Prompt', 'Dán JSON', 'Xem Trước', 'Kết Quả'];
+  readonly workspaceStep = computed<'prompt' | 'paste' | 'preview'>(() => {
+    const s = this.importStep();
+    if (s === 'result') return 'preview';
+    return s;
+  });
 
-  currentStepIndex = computed<number>(() => {
-    switch (this.importStep()) {
-      case 'prompt': return 0;
-      case 'paste': return 1;
-      case 'preview': return 2;
-      case 'result': return 3;
-      default: return 1;
+  readonly steps = ['1. Tạo Prompt', '2. Dán JSON', '3. Xem Trước'];
+
+  readonly sampleVocabJson = JSON.stringify([
+    {
+      word: "mitigate",
+      ipa: "/ˈmɪt.ɪ.ɡeɪt/",
+      partOfSpeech: "verb",
+      meaning_vi: "làm dịu bớt, giảm nhẹ",
+      definition_en: "to make something less harmful, unpleasant, or bad",
+      examples: [
+        {
+          text: "It is unclear how to mitigate the effects of tourism on the island.",
+          note: "Chưa rõ cách giảm nhẹ tác động của du lịch lên hòn đảo."
+        }
+      ],
+      relations: [
+        { word: "mitigation", pos: "noun", meaning: "sự giảm nhẹ" }
+      ]
     }
+  ], null, 2);
+
+  readonly jsonValidationStatus = computed<AiValidationStatus | null>(() => {
+    const err = this.parseError();
+    if (err) {
+      return { status: 'invalid', errorMessage: err };
+    }
+    const items = this.previewItems();
+    if (items.length > 0) {
+      return { status: 'valid', itemCount: items.length };
+    }
+    return null;
+  });
+
+  readonly metaBadges = computed<AiMetaBadge[]>(() => {
+    const list: AiMetaBadge[] = [];
+    if (this.targetDeckName()) {
+      list.push({ icon: 'fa-solid fa-layer-group', label: `Bộ: ${this.targetDeckName()}`, variant: 'primary' });
+    }
+    if (this.collectorPendingWords().length > 0) {
+      list.push({ icon: 'fa-solid fa-inbox', label: `${this.collectorPendingWords().length} từ trong Word Collector`, variant: 'info' });
+    }
+    return list;
   });
 
   // Word Collector pending words cache
@@ -81,12 +122,15 @@ export class VocabImportModalComponent {
   importResult = signal<BatchImportResult | null>(null);
   selectedDeckId = signal<string>('');
 
-  // Manual Form State
-  manualWord = '';
-  manualMeaning = '';
-  manualIpa = '';
-  manualPos = 'noun';
-  manualNote = '';
+  // Manual Form State (Rich Format)
+  manualWord = signal<string>('');
+  manualIpa = signal<string>('');
+  manualPos = signal<string>('noun');
+  manualMeaning = signal<string>('');
+  manualDefinitionEn = signal<string>('');
+  manualTopic = signal<string>('');
+  manualDeckId = signal<string>('');
+  manualUsages = signal<WordUsage[]>([]);
   isSavingManual = signal<boolean>(false);
 
   promptCopied = signal<boolean>(false);
@@ -96,7 +140,33 @@ export class VocabImportModalComponent {
     { label: 'Động từ (verb)', value: 'verb' },
     { label: 'Tính từ (adjective)', value: 'adjective' },
     { label: 'Trạng từ (adverb)', value: 'adverb' },
-    { label: 'Cụm từ (phrase)', value: 'phrase' },
+    { label: 'Giới từ (preposition)', value: 'preposition' },
+    { label: 'Liên từ (conjunction)', value: 'conjunction' },
+    { label: 'Trạng từ liên kết (transition word)', value: 'transition_word' },
+    { label: 'Cụm động từ (phrasal verb)', value: 'phrasal_verb' },
+    { label: 'Thành ngữ (idiom)', value: 'idiom' },
+    { label: 'Cụm từ (collocation)', value: 'collocation' }
+  ];
+
+  readonly categoryOptions = [
+    { value: '', label: '-- Không phân nhóm --' },
+    { value: 'time', label: '⏱️ Thời gian (Time)' },
+    { value: 'place', label: '📍 Nơi chốn & Vị trí (Place)' },
+    { value: 'direction', label: '↗️ Hướng & Di chuyển (Direction)' },
+    { value: 'cause_reason', label: '💡 Nguyên nhân & Lý do (Cause & Reason)' },
+    { value: 'purpose', label: '🎯 Mục đích (Purpose)' },
+    { value: 'contrast', label: '⚖️ Tương phản & Nhượng bộ (Contrast)' },
+    { value: 'condition', label: '🔀 Điều kiện (Condition)' },
+    { value: 'addition', label: '➕ Bổ sung & Liệt kê (Addition)' },
+    { value: 'result', label: '🏁 Kết quả & Hệ quả (Result)' },
+    { value: 'agent_means', label: '🛠️ Phương tiện & Tác nhân (Means)' },
+    { value: 'manner', label: '🎨 Cách thức (Manner)' },
+    { value: 'degree_extent', label: '📏 Mức độ & Phạm vi (Degree)' },
+    { value: 'exception', label: '🚫 Ngoại lệ (Exception)' },
+    { value: 'collocation', label: '🔗 Cụm từ cố định (Collocation)' },
+    { value: 'phrasal_verb', label: '🔄 Cụm động từ (Phrasal Verb)' },
+    { value: 'idiom', label: '🎭 Thành ngữ (Idiom)' },
+    { value: 'formal_written', label: '📜 Văn phong trang trọng (Formal)' }
   ];
 
   deckOptions = computed<FormSelectOption[]>(() => {
@@ -110,32 +180,114 @@ export class VocabImportModalComponent {
   });
 
   readonly PROMPT_TEMPLATE = `Với mỗi mục trong danh sách sau: [{WORDS}]
-Trả về JSON array, mỗi phần tử theo đúng schema:
+Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema:
 [
   {
-    "word": "từ hoặc cụm từ",
-    "ipa": "/phiên_âm/",
-    "part_of_speech": "noun|verb|adjective|adverb",
-    "meaning_vi": "nghĩa tiếng Việt chính xác",
-    "definition_en": "định nghĩa tiếng Anh ngắn gọn",
-    "usage_note": null,
-    "topic": "chủ đề liên quan",
-    "examples": [
-      { "text": "Câu ví dụ tiếng Anh", "formality": "formal|informal|written" }
+    "word": "từ hoặc cụm từ tiếng Anh",
+    "ipa": "/phiên_âm_IPA/",
+    "part_of_speech": "noun|verb|adjective|adverb|preposition|conjunction|transition_word|phrasal_verb|idiom|collocation",
+    "meaning_vi": "nghĩa tiếng Việt chính xác và ngắn gọn",
+    "definition_en": "định nghĩa tiếng Anh ngắn gọn, súc tích",
+    "topic": "Tên chủ đề tiếng Anh (Title Case, 1-3 từ). Gợi ý: Daily Life, Travel, Food & Drinks, Shopping, Family & Friends, Health & Fitness, Business, Office & Workplace, Finance & Banking, Marketing & Sales, Technology & IT, Education, Environment & Nature, Science, Society & Law... Nếu từ vựng thuộc lĩnh vực chuyên biệt khác (ví dụ: Medicine, Sports, Aviation, Fashion...), hãy tự đặt tên chủ đề chính xác. Nếu là từ vựng đa dụng không thuộc riêng lĩnh vực nào, đặt là 'General Vocabulary'.",
+    "usages": [
+      {
+        "category": "time|place|direction|cause_reason|purpose|contrast|condition|addition|result|manner|degree_extent|collocation|phrasal_verb|idiom|phrase",
+        "structure": "cấu trúc sử dụng / collocation thực tế của từ (BẮT BUỘC có)",
+        "meaning": "nghĩa tiếng Việt cụ thể theo cấu trúc này",
+        "note": "lưu ý ngữ pháp / giới từ đi kèm / bẫy thi TOEIC (nếu có)",
+        "examples": [
+          {
+            "text": "Câu ví dụ tiếng Anh tự nhiên minh họa trực tiếp cho cấu trúc trên",
+            "translation": "Bản dịch tiếng Việt câu ví dụ"
+          }
+        ]
+      }
     ],
     "relations": [
       { "text": "từ liên quan", "type": "family|collocation|synonym", "pos": "từ loại nếu là family" }
     ]
   }
 ]
-Nếu mục là cụm từ (collocation), ipa và part_of_speech có thể null.
-Chỉ trả JSON thuần trong thẻ [ ... ], không giải thích thêm.`;
+
+QUY TẮC QUAN TRỌNG:
+1. BẮT BUỘC: MỌI TỪ VỰNG (dù là Danh từ, Động từ, Tính từ, Trạng từ, Giới từ, Liên từ hay Cụm từ) ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
+2. QUY TẮC GÁN CHỦ ĐỀ ("topic"):
+   - Viết hoa chữ cái đầu mỗi từ (Title Case), ngắn gọn bằng tiếng Anh (1-3 từ, VD: "Travel", "Technology & IT", "Medicine").
+   - Nếu từ vựng có thể xếp vào các chủ đề quen thuộc (TOEIC / IELTS / Đời sống), ưu tiên chọn từ danh sách gợi ý để đồng bộ bộ lọc.
+   - Nếu từ vựng thuộc chuyên ngành/lĩnh vực khác ngoài danh sách (Y tế, Hàng không, Thể thao, Thời trang...), HÃY TỰ DO ĐẶT TÊN CHỦ ĐỀ PHÙ HỢP (hệ thống sẽ tự động tổng hợp chủ đề mới vào danh mục lọc của người dùng).
+   - Nếu là từ trừu tượng hoặc từ ngữ pháp đa dụng, đặt là "General Vocabulary".
+3. Mọi câu ví dụ ngữ cảnh minh họa phải nằm trực tiếp bên trong danh sách "examples" của từng cấu trúc trong "usages".
+4. Chỉ trả về JSON array thuần túy trong cặp ngoặc vuông [ ... ], không bao bọc thêm bất kỳ lời giải thích nào.`;
 
   generatedPrompt = signal<string>('');
 
   constructor() {
     effect(() => {
       if (this.isOpen()) {
+        const c = this.card();
+        if (c) {
+          // Prefill existing card into manual form
+          this.manualWord.set(c.word || (c as any).front || '');
+          this.manualIpa.set(c.ipa || '');
+          this.manualPos.set(c.partOfSpeech || 'noun');
+          this.manualMeaning.set(c.meaning || (c as any).back || '');
+          this.manualDefinitionEn.set(c.definitionEn || '');
+          this.manualTopic.set(c.topic || '');
+          this.manualDeckId.set(c.deckId || '');
+
+          this.manualUsages.set(
+            c.usages && c.usages.length > 0
+              ? c.usages.map(u => ({
+                  category: u.category || '',
+                  structure: u.structure || '',
+                  meaning: u.meaning || '',
+                  note: u.note || '',
+                  examples: u.examples && u.examples.length > 0
+                    ? u.examples.map(ex => ({ text: ex.text || '', translation: ex.translation || '' }))
+                    : [{ text: '', translation: '' }]
+                }))
+              : []
+          );
+
+          // Prefill AI JSON generator text
+          this.wordListText = c.word || (c as any).front || '';
+          this.generatedPrompt.set(
+            this.PROMPT_TEMPLATE.replace('{WORDS}', c.word || (c as any).front || '')
+          );
+
+          // Format existing card as clean sample JSON in textarea
+          const sampleJson = [
+            {
+              word: c.word || (c as any).front,
+              ipa: c.ipa || '',
+              part_of_speech: c.partOfSpeech || 'noun',
+              meaning_vi: c.meaning || (c as any).back,
+              definition_en: c.definitionEn || '',
+              topic: c.topic || '',
+              usages: c.usages && c.usages.length > 0
+                ? c.usages
+                : [
+                    {
+                      structure: c.word || (c as any).front,
+                      meaning: c.meaning || (c as any).back,
+                      examples: [
+                        { text: `Example using ${c.word || (c as any).front}.`, translation: 'Câu ví dụ minh họa.' }
+                      ]
+                    }
+                  ]
+            }
+          ];
+          this.jsonInputText = JSON.stringify(sampleJson, null, 2);
+        } else {
+          this.resetManualForm();
+          this.wordListText = '';
+          this.jsonInputText = '';
+          const defaultList = 'mitigate, implement, accommodate, tentative, prerequisite';
+          this.generatedPrompt.set(this.PROMPT_TEMPLATE.replace('{WORDS}', defaultList));
+        }
+
+        this.importStep.set('prompt');
+        this.activeTab.set(this.initialTab());
         this.loadCollectorWords();
       }
     });
@@ -158,58 +310,100 @@ Chỉ trả JSON thuần trong thẻ [ ... ], không giải thích thêm.`;
 
   fillFromWordCollector(): void {
     const words = this.collectorPendingWords();
-    if (words.length === 0) {
-      this.toast.info('Không có từ vựng nào trong Word Collector.');
-      return;
-    }
+    if (words.length === 0) return;
     this.wordListText = words.join(', ');
-    this.toast.success(`Đã nạp ${words.length} từ từ Word Collector vào ô nhập!`);
+    this.toast.info(`Đã điền ${words.length} từ từ Collector vào danh sách.`);
   }
 
-  generateAiPrompt(): void {
+  goToPromptStep(): void {
     const raw = this.wordListText.trim();
-    const words = raw ? raw.split(/[\n,;]+/).map(w => w.trim()).filter(Boolean) : ['decision', 'mitigate', 'reach a decision'];
-    const prompt = this.PROMPT_TEMPLATE.replace('{WORDS}', words.join(', '));
+    if (!raw) {
+      this.toast.warning('Vui lòng nhập ít nhất 1 từ vựng.');
+      return;
+    }
+    const prompt = this.PROMPT_TEMPLATE.replace('{WORDS}', raw);
     this.generatedPrompt.set(prompt);
     this.importStep.set('prompt');
   }
 
-  onStepChange(index: number): void {
-    if (index === 0 && this.generatedPrompt()) this.importStep.set('prompt');
-    else if (index === 1) this.importStep.set('paste');
-    else if (index === 2 && this.previewItems().length > 0) this.importStep.set('preview');
+  generateAiPrompt(): void {
+    this.goToPromptStep();
+  }
+
+  onStepChange(stepIdx: number): void {
+    switch (stepIdx) {
+      case 0:
+        this.importStep.set('prompt');
+        break;
+      case 1:
+        this.importStep.set('paste');
+        break;
+      case 2:
+        if (this.previewItems().length > 0) {
+          this.importStep.set('preview');
+        } else {
+          this.parseJson();
+        }
+        break;
+      case 3:
+        if (this.importResult()) {
+          this.importStep.set('result');
+        }
+        break;
+    }
   }
 
   goToPaste(): void {
     this.importStep.set('paste');
   }
 
+  insertSampleJson(): void {
+    const sample = [
+      {
+        word: "resilient",
+        ipa: "/rɪˈzɪl.jənt/",
+        part_of_speech: "adjective",
+        meaning_vi: "kiên cường, có khả năng phục hồi nhanh chóng",
+        definition_en: "able to recover quickly from difficult conditions",
+        topic: "Personality",
+        examples: [
+          { text: "Local businesses have been remarkably resilient during the crisis.", translation: "Các doanh nghiệp địa phương đã kiên cường vượt qua khủng hoảng." }
+        ]
+      }
+    ];
+    this.jsonInputText = JSON.stringify(sample, null, 2);
+  }
+
+  clearJsonText(): void {
+    this.jsonInputText = '';
+  }
+
   parseJson(): void {
     this.parseError.set('');
-    const raw = this.jsonInputText.trim();
+    let raw = this.jsonInputText.trim();
+
     if (!raw) {
-      this.parseError.set('Vui lòng dán nội dung JSON vào ô trên.');
+      this.parseError.set('Vui lòng dán nội dung JSON vào ô.');
       return;
     }
 
-    try {
-      let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(cleaned);
-      if (!Array.isArray(parsed)) {
-        throw new Error('Dữ liệu JSON phải là một mảng (Array [...])');
-      }
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
-      const items: PreviewVocabItem[] = parsed.map((entry: any) => {
+    try {
+      const parsed = JSON.parse(raw);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+
+      const items: PreviewVocabItem[] = arr.map((entry: any) => {
         const missing: string[] = [];
-        if (!entry.word) missing.push('word');
-        if (!entry.meaning_vi && !entry.meaning) missing.push('meaning_vi');
+        if (!entry.word && !entry.front) missing.push('word');
+        if (!entry.meaning_vi && !entry.meaning && !entry.back) missing.push('meaning_vi');
 
         return {
-          word: entry.word ?? '?',
+          word: entry.word ?? entry.front ?? '',
           ipa: entry.ipa,
-          partOfSpeech: entry.part_of_speech,
-          meaningVi: entry.meaning_vi ?? entry.meaning ?? '',
-          definitionEn: entry.definition_en,
+          partOfSpeech: entry.part_of_speech ?? entry.partOfSpeech,
+          meaningVi: entry.meaning_vi ?? entry.meaning ?? entry.back ?? '',
+          definitionEn: entry.definition_en ?? entry.definitionEn,
           examplesCount: Array.isArray(entry.examples) ? entry.examples.length : 0,
           relationsCount: Array.isArray(entry.relations) ? entry.relations.length : 0,
           valid: missing.length === 0,
@@ -231,14 +425,56 @@ Chỉ trả JSON thuần trong thẻ [ ... ], không giải thích thêm.`;
   submitBatchImport(): void {
     const validCount = this.previewItems().filter(i => i.valid).length;
     if (validCount === 0) {
-      this.toast.error('Không có từ vựng hợp lệ để import.');
+      this.toast.error('Không có từ vựng hợp lệ để cập nhật / import.');
       return;
     }
 
     this.isImporting.set(true);
     let cleaned = this.jsonInputText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-    const dId = this.targetDeckId() || this.selectedDeckId() || undefined;
+    const dId = this.targetDeckId() || this.manualDeckId() || this.selectedDeckId() || undefined;
 
+    const currentCard = this.card();
+
+    // If in Edit Mode and editing 1 card:
+    if (currentCard?.id && this.previewItems().length === 1) {
+      try {
+        const parsed = JSON.parse(cleaned);
+        const item = Array.isArray(parsed) ? parsed[0] : parsed;
+
+        const payload: Partial<Card> = {
+          word: item.word ?? item.front,
+          front: item.word ?? item.front,
+          meaning: item.meaning_vi ?? item.meaning ?? item.back,
+          back: item.meaning_vi ?? item.meaning ?? item.back,
+          ipa: item.ipa,
+          partOfSpeech: item.part_of_speech ?? item.partOfSpeech,
+          definitionEn: item.definition_en ?? item.definitionEn,
+          topic: item.topic,
+          deckId: dId,
+          usages: item.usages,
+          comparisonGroup: item.comparison_group ?? item.comparisonGroup
+        };
+
+        this.cardApi.updateCard(currentCard.id, payload).subscribe({
+          next: (updated) => {
+            this.isImporting.set(false);
+            this.toast.success(`Đã cập nhật từ "${updated.word}" thành công từ AI JSON!`);
+            this.cardSaved.emit(updated);
+            this.vocabAdded.emit({ count: 1, deckId: dId });
+            this.onClose();
+          },
+          error: (err) => {
+            this.isImporting.set(false);
+            this.toast.error('Lỗi khi cập nhật từ: ' + (err.error?.message || err.message));
+          }
+        });
+        return;
+      } catch (e) {
+        // Fall back to batchImport
+      }
+    }
+
+    // Default: Batch import
     this.cardApi.batchImport({ jsonContent: cleaned, deckId: dId }).subscribe({
       next: (res: BatchImportResult) => {
         this.isImporting.set(false);
@@ -255,46 +491,178 @@ Chỉ trả JSON thuần trong thẻ [ ... ], không giải thích thêm.`;
     });
   }
 
+  // ── Manual Usages & Nested Examples Management ────────────────
+  addManualUsage(): void {
+    this.manualUsages.update(list => [
+      ...list,
+      {
+        category: '',
+        structure: '',
+        meaning: '',
+        note: '',
+        examples: [{ text: '', translation: '' }]
+      }
+    ]);
+  }
+
+  removeManualUsage(uIndex: number): void {
+    this.manualUsages.update(list => list.filter((_, i) => i !== uIndex));
+  }
+
+  updateManualUsageField(uIndex: number, field: keyof WordUsage, val: any): void {
+    this.manualUsages.update(list => {
+      const next = [...list];
+      if (next[uIndex]) {
+        next[uIndex] = { ...next[uIndex], [field]: val };
+      }
+      return next;
+    });
+  }
+
+  addManualUsageExample(uIndex: number): void {
+    this.manualUsages.update(list => {
+      const next = [...list];
+      if (next[uIndex]) {
+        const curEx = next[uIndex].examples || [];
+        next[uIndex] = {
+          ...next[uIndex],
+          examples: [...curEx, { text: '', translation: '' }]
+        };
+      }
+      return next;
+    });
+  }
+
+  removeManualUsageExample(uIndex: number, exIndex: number): void {
+    this.manualUsages.update(list => {
+      const next = [...list];
+      if (next[uIndex] && next[uIndex].examples) {
+        const curEx = next[uIndex].examples!.filter((_, i) => i !== exIndex);
+        next[uIndex] = {
+          ...next[uIndex],
+          examples: curEx.length > 0 ? curEx : [{ text: '', translation: '' }]
+        };
+      }
+      return next;
+    });
+  }
+
+  updateManualUsageExampleText(uIndex: number, exIndex: number, val: string): void {
+    this.manualUsages.update(list => {
+      const next = [...list];
+      if (next[uIndex] && next[uIndex].examples && next[uIndex].examples![exIndex]) {
+        const curEx = [...next[uIndex].examples!];
+        curEx[exIndex] = { ...curEx[exIndex], text: val };
+        next[uIndex] = { ...next[uIndex], examples: curEx };
+      }
+      return next;
+    });
+  }
+
+  updateManualUsageExampleTranslation(uIndex: number, exIndex: number, val: string): void {
+    this.manualUsages.update(list => {
+      const next = [...list];
+      if (next[uIndex] && next[uIndex].examples && next[uIndex].examples![exIndex]) {
+        const curEx = [...next[uIndex].examples!];
+        curEx[exIndex] = { ...curEx[exIndex], translation: val };
+        next[uIndex] = { ...next[uIndex], examples: curEx };
+      }
+      return next;
+    });
+  }
+
   submitManualCard(): void {
-    if (!this.manualWord.trim() || !this.manualMeaning.trim()) {
-      this.toast.warning('Vui lòng nhập Từ tiếng Anh và Nghĩa tiếng Việt.');
+    const w = this.manualWord().trim();
+    const m = this.manualMeaning().trim();
+
+    if (!w) {
+      this.toast.warning('Vui lòng nhập từ vựng tiếng Anh!');
+      return;
+    }
+    if (!m) {
+      this.toast.warning('Vui lòng nhập nghĩa tiếng Việt!');
       return;
     }
 
     this.isSavingManual.set(true);
-    const dId = this.targetDeckId() || this.selectedDeckId() || undefined;
+    const dId = this.targetDeckId() || this.manualDeckId() || this.selectedDeckId() || undefined;
 
-    this.cardApi.createCard({
-      word: this.manualWord.trim(),
-      meaning: this.manualMeaning.trim(),
-      ipa: this.manualIpa.trim() || undefined,
-      partOfSpeech: this.manualPos,
+    const cleanedUsages: WordUsage[] = this.manualUsages()
+      .filter(u => (u.structure && u.structure.trim()) || (u.meaning && u.meaning.trim()))
+      .map(u => ({
+        category: u.category?.trim() || undefined,
+        structure: u.structure?.trim() || undefined,
+        meaning: u.meaning?.trim() || undefined,
+        note: u.note?.trim() || undefined,
+        examples: (u.examples || [])
+          .filter(e => e.text && e.text.trim())
+          .map(e => ({
+            text: e.text.trim(),
+            translation: e.translation?.trim() || undefined
+          }))
+      }));
+
+    const payload: Partial<Card> = {
+      word: w,
+      meaning: m,
+      ipa: this.manualIpa().trim() || undefined,
+      partOfSpeech: this.manualPos(),
+      definitionEn: this.manualDefinitionEn().trim() || undefined,
+      topic: this.manualTopic().trim() || undefined,
       deckId: dId,
-    }).subscribe({
-      next: () => {
-        this.isSavingManual.set(false);
-        this.toast.success(`Đã thêm thẻ từ "${this.manualWord}" thành công!`);
-        this.vocabAdded.emit({ count: 1, deckId: dId });
-        this.resetManualForm();
-        this.onClose();
-      },
-      error: (err) => {
-        this.isSavingManual.set(false);
-        this.toast.error('Không thể tạo thẻ từ: ' + (err.error?.message || err.message));
-      }
-    });
+      usages: cleanedUsages
+    };
+
+    const currentCard = this.card();
+
+    if (currentCard?.id) {
+      // Update existing card
+      this.cardApi.updateCard(currentCard.id, payload).subscribe({
+        next: (updated) => {
+          this.isSavingManual.set(false);
+          this.toast.success(`Đã cập nhật thẻ từ "${w}" thành công!`);
+          this.cardSaved.emit(updated);
+          this.vocabAdded.emit({ count: 1, deckId: dId });
+          this.resetManualForm();
+          this.onClose();
+        },
+        error: (err) => {
+          this.isSavingManual.set(false);
+          this.toast.error('Không thể cập nhật thẻ từ: ' + (err.error?.message || err.message));
+        }
+      });
+    } else {
+      // Create new card
+      this.cardApi.createCard(payload).subscribe({
+        next: (created) => {
+          this.isSavingManual.set(false);
+          this.toast.success(`Đã thêm thẻ từ "${w}" thành công!`);
+          this.cardSaved.emit(created);
+          this.vocabAdded.emit({ count: 1, deckId: dId });
+          this.resetManualForm();
+          this.onClose();
+        },
+        error: (err) => {
+          this.isSavingManual.set(false);
+          this.toast.error('Không thể tạo thẻ từ: ' + (err.error?.message || err.message));
+        }
+      });
+    }
   }
 
   private resetManualForm(): void {
-    this.manualWord = '';
-    this.manualMeaning = '';
-    this.manualIpa = '';
-    this.manualPos = 'noun';
-    this.manualNote = '';
+    this.manualWord.set('');
+    this.manualMeaning.set('');
+    this.manualIpa.set('');
+    this.manualPos.set('noun');
+    this.manualDefinitionEn.set('');
+    this.manualTopic.set('');
+    this.manualDeckId.set('');
+    this.manualUsages.set([]);
   }
 
   onClose(): void {
-    this.importStep.set('paste');
+    this.importStep.set('prompt');
     this.previewItems.set([]);
     this.parseError.set('');
     this.importResult.set(null);

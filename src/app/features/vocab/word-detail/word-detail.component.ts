@@ -7,7 +7,9 @@ import { PendingItemApiService } from '@services/pending-item-api.service';
 import { PendingCountService } from '@services/pending-count.service';
 import { PronunciationService } from '@core/services/pronunciation.service';
 import { Card, WordRelation, CardDetailResponse } from '@models/index';
+import { ToastService } from '@core/services/toast.service';
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
+import { USAGE_CATEGORY_GROUPS } from '../config/usage-categories.config';
 import { computed } from '@angular/core';
 
 type RelationTab = 'family' | 'collocation' | 'synonym';
@@ -24,8 +26,8 @@ export class WordDetailComponent implements OnInit, OnDestroy {
   reverseRelations = signal<Card[]>([]);
   loading = signal(true);
   activeRelTab = signal<RelationTab>('family');
-  activeExampleFormality = signal<string>('all');
   addingPending = signal<Set<string>>(new Set());
+  playingExampleText = signal<string | null>(null);
 
   breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     { label: 'Kho Từ Vựng', url: '/vocab', icon: 'fa-solid fa-book-bookmark' },
@@ -43,7 +45,8 @@ export class WordDetailComponent implements OnInit, OnDestroy {
     private cardApi: CardApiService,
     private pendingApi: PendingItemApiService,
     public pendingCountService: PendingCountService,
-    private pronunciationService: PronunciationService
+    private pronunciationService: PronunciationService,
+    private toast: ToastService
   ) {}
 
   ngOnInit() {
@@ -87,6 +90,37 @@ export class WordDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  async playExampleAudio(text?: string) {
+    if (!text || !text.trim()) return;
+    const clean = text.trim();
+    this.playingExampleText.set(clean);
+    try {
+      await this.pronunciationService.speak(clean, 'us');
+    } finally {
+      this.playingExampleText.set(null);
+    }
+  }
+
+  copyStructure(structure?: string) {
+    if (!structure) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(structure).then(() => {
+        this.toast.info(`Đã sao chép: "${structure}"`);
+      });
+    }
+  }
+
+  getCategoryMeta(catKey?: string): { label: string; icon: string; color: string } | null {
+    if (!catKey) return null;
+    for (const grp of USAGE_CATEGORY_GROUPS) {
+      const item = grp.categories.find(c => c.key === catKey);
+      if (item) {
+        return { label: item.labelVi, icon: item.icon, color: item.color };
+      }
+    }
+    return { label: catKey, icon: 'fa-solid fa-tag', color: '#6366f1' };
+  }
+
   get usIpa(): string {
     return this.card()?.ipa || '';
   }
@@ -105,13 +139,6 @@ export class WordDetailComponent implements OnInit, OnDestroy {
 
   get synonymRelations(): WordRelation[] {
     return this.card()?.relations?.filter(r => (r.type || r.relationType) === 'synonym') ?? [];
-  }
-
-  get filteredExamples() {
-    const examples = this.card()?.examples ?? [];
-    const f = this.activeExampleFormality();
-    if (f === 'all') return examples;
-    return examples.filter(e => e.formality === f);
   }
 
   getRelationWord(rel: WordRelation): string {

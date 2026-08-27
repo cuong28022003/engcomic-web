@@ -1,0 +1,192 @@
+@if (layout() === 'grid') {
+  <!-- ── GRID CARD LAYOUT ── -->
+  <div
+    class="grammar-card layout-grid glass-panel"
+    [class.selected-card]="selected()"
+    [style.--cat-accent]="categoryInfo().color"
+    (click)="onCardClick()"
+  >
+    <!-- 1. Header: Selection Checkbox, Category Pill & Level -->
+    <div class="card-header">
+      <div class="header-left">
+        @if (showCheckbox()) {
+          <div class="checkbox-wrap" (click)="$event.stopPropagation()">
+            <app-selection-checkbox
+              [checked]="selected()"
+              (changed)="onToggleSelect($event)"
+            ></app-selection-checkbox>
+          </div>
+        }
+        <span class="category-pill">
+          <i [class]="categoryInfo().icon"></i>
+          <span>{{ categoryInfo().label }}</span>
+        </span>
+      </div>
+
+      <div class="header-right">
+        <span class="level-pill" [ngClass]="levelInfo().class">
+          {{ levelInfo().label }}
+        </span>
+      </div>
+    </div>
+
+    <!-- 2. Body: Topic Title & Quick Takeaway -->
+    <div class="card-body">
+      <h3 class="topic-title" [title]="point().topic">
+        {{ point().topic }}
+      </h3>
+
+      @if (point().shortRule || point().summary) {
+        <p class="quick-rule">
+          <i class="fa-solid fa-lightbulb"></i>
+          <span>{{ point().shortRule || point().summary }}</span>
+        </p>
+      }
+
+      <!-- Formula Preview Box -->
+      @if (point().structure) {
+        <div class="formula-box">
+          <div class="formula-label">
+            <i class="fa-solid fa-code"></i>
+            <span>Cấu trúc</span>
+          </div>
+          <code class="formula-text">{{ point().structure }}</code>
+        </div>
+      }
+
+      <!-- Signal Words Cloud -->
+      @if (displayedSignals().length > 0) {
+        <div class="signals-wrap">
+          <span class="signals-label">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Dấu hiệu:</span>
+          </span>
+          <div class="signals-list">
+            @for (sig of displayedSignals(); track sig) {
+              <span class="signal-tag">{{ sig }}</span>
+            }
+            @if (remainingSignalsCount() > 0) {
+              <span class="signal-tag tag-more">+{{ remainingSignalsCount() }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- 3. Footer: Meta Badges & Detail Trigger -->
+    <div class="card-footer">
+      <div class="footer-badges">
+        @if (totalExamplesCount() > 0) {
+          <span class="meta-badge" title="Số lượng ví dụ / trường hợp">
+            <i class="fa-solid fa-book-open"></i>
+            <span>{{ totalExamplesCount() }} ví dụ</span>
+          </span>
+        }
+        @if (hasPitfalls()) {
+          <span class="meta-badge badge-warning" title="Có phân tích bẫy lỗi sai thường gặp">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Bẫy lỗi</span>
+          </span>
+        }
+        @if (hasTips()) {
+          <span class="meta-badge badge-tip" title="Có mẹo làm bài thi">
+            <i class="fa-solid fa-star"></i>
+            <span>Mẹo thi</span>
+          </span>
+        }
+        @if (hasComparisons()) {
+          <span class="meta-badge badge-compare" title="Có so sánh phân biệt">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <span>So sánh</span>
+          </span>
+        }
+      </div>
+
+      <div class="card-action-btn" title="Xem chi tiết">
+        <i class="fa-solid fa-arrow-right"></i>
+      </div>
+    </div>
+  </div>
+} @else {
+  <!-- ── LIST ROW LAYOUT ── -->
+  <div
+    class="grammar-card layout-list glass-panel"
+    [class.selected-row]="selected()"
+    [style.--cat-accent]="categoryInfo().color"
+    (click)="onCardClick()"
+  >
+    <!-- 1. Selection Checkbox -->
+    @if (showCheckbox()) {
+      <div class="checkbox-wrap" (click)="$event.stopPropagation()">
+        <app-selection-checkbox
+          [checked]="selected()"
+          (changed)="onToggleSelect($event)"
+        ></app-selection-checkbox>
+      </div>
+    }
+
+    <!-- 2. Main Info Column -->
+    <div class="list-main">
+      <div class="list-title-row">
+        <span class="category-pill">
+          <i [class]="categoryInfo().icon"></i>
+          <span>{{ categoryInfo().label }}</span>
+        </span>
+
+        <h4 class="list-topic">{{ point().topic }}</h4>
+
+        <span class="level-pill" [ngClass]="levelInfo().class">
+          {{ levelInfo().label }}
+        </span>
+      </div>
+
+      <div class="list-content-row">
+        @if (point().structure) {
+          <div class="list-formula-pill">
+            <i class="fa-solid fa-code"></i>
+            <code>{{ point().structure }}</code>
+          </div>
+        }
+        @if (point().shortRule || point().summary) {
+          <span class="list-rule-text">{{ point().shortRule || point().summary }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- 3. Meta & Signals Column -->
+    <div class="list-meta">
+      @if (displayedSignals().length > 0) {
+        <div class="list-signals-wrap">
+          @for (sig of displayedSignals(); track sig) {
+            <span class="signal-tag">{{ sig }}</span>
+          }
+          @if (remainingSignalsCount() > 0) {
+            <span class="signal-tag tag-more">+{{ remainingSignalsCount() }}</span>
+          }
+        </div>
+      }
+
+      <div class="list-badges">
+        @if (hasPitfalls()) {
+          <span class="meta-badge badge-warning" title="Có phân tích bẫy lỗi sai">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </span>
+        }
+        @if (hasTips()) {
+          <span class="meta-badge badge-tip" title="Có mẹo làm bài thi">
+            <i class="fa-solid fa-star"></i>
+          </span>
+        }
+        @if (hasComparisons()) {
+          <span class="meta-badge badge-compare" title="Có so sánh phân biệt">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </span>
+        }
+      </div>
+
+      <button type="button" class="list-open-btn" title="Xem chi tiết">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+}

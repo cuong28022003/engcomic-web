@@ -165,16 +165,26 @@
 
     <!-- Cards Management Section -->
     <section class="cards-section">
-      <!-- Search & Filters Header -->
-      <div class="section-toolbar glass-panel">
-        <div class="search-wrap">
-          <app-form-input
-            [(value)]="searchQuery"
-            placeholder="Tìm theo từ tiếng Anh, nghĩa tiếng Việt hoặc phiên âm..."
-            icon="fa-solid fa-magnifying-glass"
-          ></app-form-input>
-        </div>
-
+      <!-- Search & Filters Toolbar using DataFilterBarComponent -->
+      <app-data-filter-bar
+        [(searchQuery)]="searchQuery"
+        searchPlaceholder="Tìm theo từ tiếng Anh, nghĩa tiếng Việt hoặc phiên âm..."
+        [showSelectAll]="filteredCards().length > 0"
+        [isAllSelected]="isAllSelected()"
+        [selectedCount]="selectedCount()"
+        selectAllLabel="Chọn tất cả"
+        (selectAll)="toggleSelectAll()"
+        [showSort]="false"
+        [showViewMode]="true"
+        [(viewMode)]="viewMode"
+        (viewModeChange)="onViewModeChange($event)"
+        [totalCount]="cards().length"
+        [filteredCount]="filteredCards().length"
+        itemLabel="từ vựng"
+        [isFilterActive]="filterTab() !== 'all'"
+        (clear)="searchQuery.set(''); setFilterTab('all')"
+      >
+        <!-- Filter Tabs Row as Projected Content -->
         <div class="filter-tabs-row">
           <button
             class="tab-chip"
@@ -228,9 +238,9 @@
             L4 ⭐ ({{ levelStats().l4 }})
           </button>
         </div>
-      </div>
+      </app-data-filter-bar>
 
-      <!-- Cards Grid -->
+      <!-- Cards Grid / List -->
       @if (loading()) {
         <div class="cards-loading-grid">
           @for (i of [1,2,3,4,5,6]; track i) {
@@ -264,78 +274,19 @@
           </div>
         </div>
       } @else {
-        <div class="cards-grid">
+
+        <div [class.cards-grid]="viewMode() === 'grid'" [class.card-list]="viewMode() === 'list'">
           @for (card of filteredCards(); track card.id) {
-            <div class="word-flashcard glass-panel" (click)="goToWordDetail(card)">
-              <!-- Card Top Row: Word, IPA, POS Tag, Audio -->
-              <div class="card-header-row">
-                <div class="word-group">
-                  <h3 class="word-title">{{ card.word }}</h3>
-                  @if (card.ipa) {
-                    <span class="ipa-pill">{{ card.ipa }}</span>
-                  }
-                </div>
-
-                <div class="card-top-right" (click)="$event.stopPropagation()">
-                  @if (card.partOfSpeech) {
-                    <span class="pos-badge">{{ card.partOfSpeech }}</span>
-                  }
-                  <button class="audio-circle-btn" (click)="playAudio(card, $event)" title="Nghe phát âm">
-                    <i class="fa-solid fa-volume-high"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Meaning Vietnamese -->
-              <p class="meaning-vi-text">{{ card.meaning }}</p>
-
-              <!-- English definition / note preview if available -->
-              @if (card.definitionEn) {
-                <p class="definition-en-text">{{ card.definitionEn }}</p>
-              }
-
-              <!-- Card Bottom Meta: Status Badge & Card Actions -->
-              <div class="card-footer-meta" (click)="$event.stopPropagation()">
-                <div class="badges-group">
-                  <app-status-badge
-                    type="level"
-                    [label]="'Level ' + (card.masteryLevel || 1)"
-                    icon="fa-solid fa-layer-group"
-                  ></app-status-badge>
-
-                  @if (card.exercisePackage) {
-                    <app-status-badge
-                      type="success"
-                      label="AI Ready"
-                      icon="fa-solid fa-wand-magic-sparkles"
-                    ></app-status-badge>
-                  } @else {
-                    <app-status-badge
-                      type="warning"
-                      label="Pending"
-                      icon="fa-regular fa-clock"
-                    ></app-status-badge>
-                  }
-                </div>
-
-                <div class="card-action-btns">
-                  <button
-                    class="btn-icon edit-btn"
-                    (click)="openEditCardModal(card, $event)"
-                    title="Chỉnh sửa thẻ"
-                  >
-                    <i class="fa-solid fa-pen-to-square"></i>
-                  </button>
-                  <button
-                    class="btn-icon delete-btn"
-                    (click)="confirmDeleteCard(card, $event)"
-                    title="Xóa thẻ"
-                  >
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <app-vocab-card
+              [card]="card"
+              [layout]="viewMode()"
+              [selected]="isCardSelected(card.id)"
+              [showCheckbox]="true"
+              [showDeckBadge]="false"
+              (selectChange)="toggleSelectCard(card.id)"
+              (cardClick)="goToWordDetail($event)"
+              (favoriteClick)="toggleFavorite($event.card, $event.event)"
+            ></app-vocab-card>
           }
         </div>
       }
@@ -343,14 +294,14 @@
   </main>
 </div>
 
-<!-- Modal Edit Deck -->
+<!-- Modal Edit Deck Info -->
 @if (isEditDeckModalOpen()) {
   <div class="modal-backdrop" (click)="isEditDeckModalOpen.set(false)">
     <div class="modal-card glass-panel edit-deck-modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div class="header-title-group">
           <i class="fa-solid fa-pen-to-square header-icon"></i>
-          <h3>Chỉnh sửa bộ thẻ</h3>
+          <h3>Chỉnh sửa thông tin bộ thẻ</h3>
         </div>
         <button class="close-btn" (click)="isEditDeckModalOpen.set(false)"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -390,111 +341,29 @@
   </div>
 }
 
-<!-- Modal Edit Card -->
-@if (isEditCardModalOpen()) {
-  <div class="modal-backdrop" (click)="isEditCardModalOpen.set(false)">
-    <div class="modal-card glass-panel edit-card-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title-group">
-          <i class="fa-solid fa-pen-to-square header-icon"></i>
-          <h3>Chỉnh sửa thẻ từ</h3>
-        </div>
-        <button class="close-btn" (click)="isEditCardModalOpen.set(false)"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <form (submit)="saveEditCard()">
-        <div class="form-row">
-          <div class="form-group flex-2">
-            <app-form-input
-              label="Từ tiếng Anh"
-              [required]="true"
-              [(value)]="editCardWord"
-              [disabled]="isSavingCard()"
-              icon="fa-solid fa-spell-check"
-            ></app-form-input>
-          </div>
-          <div class="form-group flex-1">
-            <app-form-select
-              label="Từ loại"
-              [options]="posOptions"
-              [(value)]="editCardPos"
-              [disabled]="isSavingCard()"
-            ></app-form-select>
-          </div>
-        </div>
-        <div class="form-group">
-          <app-form-input
-            label="Nghĩa tiếng Việt"
-            [required]="true"
-            [(value)]="editCardMeaning"
-            [disabled]="isSavingCard()"
-            icon="fa-solid fa-language"
-          ></app-form-input>
-        </div>
-        <div class="form-group">
-          <app-form-input
-            label="Phiên âm IPA"
-            [(value)]="editCardIpa"
-            [disabled]="isSavingCard()"
-            icon="fa-solid fa-volume-high"
-          ></app-form-input>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="isEditCardModalOpen.set(false)" [disabled]="isSavingCard()">Hủy</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!editCardWord.trim() || !editCardMeaning.trim() || isSavingCard()">
-            @if (isSavingCard()) {
-              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
-            } @else {
-              <i class="fa-solid fa-check"></i> Cập nhật
-            }
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-}
-
-<!-- Modal Delete Card Confirmation -->
-@if (cardToDelete()) {
-  <div class="modal-backdrop" (click)="cancelDeleteCard()">
-    <div class="modal-card glass-panel delete-card-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title-group">
-          <i class="fa-solid fa-triangle-exclamation danger-icon"></i>
-          <h3>Xác nhận xóa thẻ từ</h3>
-        </div>
-        <button class="close-btn" (click)="cancelDeleteCard()" [disabled]="isDeletingCard()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="modal-body">
-        <p>
-          Bạn có chắc chắn muốn xóa thẻ từ <strong>"{{ cardToDelete()?.word }}"</strong> ({{ cardToDelete()?.meaning }}) khỏi bộ thẻ này không?
-        </p>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelDeleteCard()" [disabled]="isDeletingCard()">Hủy</button>
-        <button type="button" class="btn btn-danger" (click)="executeDeleteCard()" [disabled]="isDeletingCard()">
-          @if (isDeletingCard()) {
-            <i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...
-          } @else {
-            <i class="fa-solid fa-trash"></i> Xóa Thẻ
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
+<!-- ── Shared Floating Bulk Actions Bar (Appears when >= 1 card is selected) ── -->
+<app-bulk-actions-bar
+  [selectedCount]="selectedCount()"
+  [totalCount]="filteredCards().length"
+  itemLabel="từ vựng"
+  [isAllSelected]="isAllSelected()"
+  (selectAll)="toggleSelectAll()"
+  (clearSelection)="clearSelection()"
+  (edit)="editSelectedCard()"
+  (delete)="deleteSelectedCards()"
+></app-bulk-actions-bar>
 
 <!-- ================= SHARED DEDICATED MODALS ================= -->
 
-<!-- 1. Modal Thêm Từ Vựng Mới (VocabImportModal) -->
+<!-- 1. Unified Vocab Import & Edit Modal -->
 <app-vocab-import-modal
   [isOpen]="isVocabModalOpen()"
+  [card]="editingCard()"
   [targetDeckId]="deckId()"
   [targetDeckName]="deck()?.name"
-  (closeModal)="isVocabModalOpen.set(false)"
+  (closeModal)="closeVocabModal()"
   (vocabAdded)="onVocabAdded()"
+  (cardSaved)="onCardSaved($event)"
 ></app-vocab-import-modal>
 
 <!-- 2. Modal Thêm Bài Tập 4-Level AI (ExerciseImportModal) -->

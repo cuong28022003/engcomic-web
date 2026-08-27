@@ -1,18 +1,23 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { DeckApiService } from '@core/services/deck-api.service';
 import { CardApiService } from '@core/services/card-api.service';
 import { PronunciationService } from '@core/services/pronunciation.service';
 import { ToastService } from '@core/services/toast.service';
+import { ConfirmDialogService } from '@shared/components/confirm-dialog/confirm-dialog.service';
 import { Deck, Card, PracticePromptResponse } from '@models/index';
 import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
 import { ExerciseImportModalComponent } from '@shared/components/exercise-import-modal/exercise-import-modal.component';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
-import { FormInputComponent } from '@shared/components/form-input/form-input.component';
-import { FormSelectComponent, FormSelectOption } from '@shared/components/form-select/form-select.component';
+import { SelectionCheckboxComponent } from '@shared/components/selection-checkbox/selection-checkbox.component';
+import { BulkActionsBarComponent } from '@shared/components/bulk-actions-bar/bulk-actions-bar.component';
+import { VocabCardComponent } from '@shared/components/vocab-card/vocab-card.component';
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
+import { FormInputComponent } from '@shared/components/form-input/form-input.component';
+import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-filter-bar.component';
 
 @Component({
   selector: 'app-deck-detail',
@@ -23,35 +28,41 @@ import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcru
     FormsModule,
     VocabImportModalComponent,
     ExerciseImportModalComponent,
-    StatusBadgeComponent,
-    FormInputComponent,
-    FormSelectComponent,
+    BulkActionsBarComponent,
+    VocabCardComponent,
     BreadcrumbComponent,
+    FormInputComponent,
+    DataFilterBarComponent,
   ],
   templateUrl: './deck-detail.component.html',
   styleUrls: ['./deck-detail.component.scss'],
 })
 export class DeckDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private deckApi = inject(DeckApiService);
+  private cardApi = inject(CardApiService);
+  private toast = inject(ToastService);
+  private pronunciationService = inject(PronunciationService);
+  private confirmDialog = inject(ConfirmDialogService);
+
   deckId = signal<string>('');
   deck = signal<Deck | null>(null);
+  allDecks = signal<Deck[]>([]);
   cards = signal<Card[]>([]);
   loading = signal<boolean>(true);
   searchQuery = signal<string>('');
   filterTab = signal<'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'>('all');
+  viewMode = signal<'grid' | 'list'>((localStorage.getItem('deck_detail_view_mode') as 'grid' | 'list') || 'grid');
   notFound = signal<boolean>(false);
+
+  // Selection state for Bulk Actions
+  selectedCardIds = signal<Set<string>>(new Set());
 
   breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     { label: 'Bộ Thẻ', url: '/deck', icon: 'fa-solid fa-layer-group' },
     { label: this.deck()?.name || 'Chi Tiết Bộ Thẻ' }
   ]);
-
-  readonly posOptions: FormSelectOption[] = [
-    { label: 'Danh từ (noun)', value: 'noun' },
-    { label: 'Động từ (verb)', value: 'verb' },
-    { label: 'Tính từ (adjective)', value: 'adjective' },
-    { label: 'Trạng từ (adverb)', value: 'adverb' },
-    { label: 'Cụm từ (phrase)', value: 'phrase' },
-  ];
 
   // Shared Modals
   isVocabModalOpen = signal<boolean>(false);
@@ -64,18 +75,9 @@ export class DeckDetailComponent implements OnInit {
   editDeckDesc = '';
   isSavingDeck = signal<boolean>(false);
 
-  // Edit Card Modal
+  // Edit / Create Card Modal
   isEditCardModalOpen = signal<boolean>(false);
   editingCard = signal<Card | null>(null);
-  editCardWord = '';
-  editCardMeaning = '';
-  editCardIpa = '';
-  editCardPos = 'noun';
-  isSavingCard = signal<boolean>(false);
-
-  // Delete Card Modal
-  cardToDelete = signal<Card | null>(null);
-  isDeletingCard = signal<boolean>(false);
 
   // Pending vs Ready statistics
   pendingCards = computed<Card[]>(() => {
@@ -128,14 +130,14 @@ export class DeckDetailComponent implements OnInit {
     );
   });
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private deckApi: DeckApiService,
-    private cardApi: CardApiService,
-    private toast: ToastService,
-    private pronunciationService: PronunciationService
-  ) {}
+  selectedCount = computed(() => this.selectedCardIds().size);
+
+  isAllSelected = computed(() => {
+    const list = this.filteredCards();
+    if (list.length === 0) return false;
+    const set = this.selectedCardIds();
+    return list.every(c => set.has(c.id));
+  });
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -193,10 +195,99 @@ export class DeckDetailComponent implements OnInit {
 
   setFilterTab(tab: 'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'): void {
     this.filterTab.set(tab);
+    this.clearSelection();
   }
 
+  onViewModeChange(mode: 'grid' | 'list'): void {
+    this.viewMode.set(mode);
+    try {
+      localStorage.setItem('deck_detail_view_mode', mode);
+    } catch {
+      // ignore
+    }
+  }
+
+  // ─── Selection & Bulk Actions ───────────────────────────────────
+
+  toggleSelectAll(): void {
+    if (this.isAllSelected()) {
+      this.selectedCardIds.set(new Set());
+    } else {
+      const allIds = new Set(this.filteredCards().map(c => c.id));
+      this.selectedCardIds.set(allIds);
+    }
+  }
+
+  toggleSelectCard(cardId: string): void {
+    const current = new Set(this.selectedCardIds());
+    if (current.has(cardId)) {
+      current.delete(cardId);
+    } else {
+      current.add(cardId);
+    }
+    this.selectedCardIds.set(current);
+  }
+
+  isCardSelected(cardId: string): boolean {
+    return this.selectedCardIds().has(cardId);
+  }
+
+  clearSelection(): void {
+    this.selectedCardIds.set(new Set());
+  }
+
+  editSelectedCard(): void {
+    const ids = Array.from(this.selectedCardIds());
+    if (ids.length !== 1) return;
+    const card = this.cards().find(c => c.id === ids[0]);
+    if (card) {
+      this.openEditCardModal(card);
+    }
+  }
+
+  deleteSelectedCards(): void {
+    const ids = Array.from(this.selectedCardIds());
+    if (ids.length === 0) return;
+
+    const count = ids.length;
+    const msg = count === 1
+      ? `Bạn có chắc chắn muốn xóa từ vựng đã chọn khỏi bộ thẻ? Hành động này không thể hoàn tác.`
+      : `Bạn có chắc chắn muốn xóa toàn bộ ${count} từ vựng đã chọn khỏi bộ thẻ? Hành động này không thể hoàn tác.`;
+
+    this.confirmDialog.confirm({
+      title: `Xóa ${count} Từ Vựng`,
+      message: msg,
+      confirmText: 'Xóa ngay',
+      cancelText: 'Hủy bỏ',
+      type: 'danger'
+    }).subscribe((confirmed) => {
+      if (confirmed) {
+        const deleteObservables = ids.map(id => this.cardApi.deleteCard(id));
+        forkJoin(deleteObservables).subscribe({
+          next: () => {
+            this.toast.success(`Đã xóa thành công ${count} từ vựng!`);
+            this.clearSelection();
+            this.loadCards();
+          },
+          error: () => {
+            this.toast.error('Có lỗi xảy ra trong quá trình xóa dữ liệu.');
+            this.loadCards();
+          }
+        });
+      }
+    });
+  }
+
+  // ─── Modals ───────────────────────────────────────────────────
+
   openVocabModal(): void {
+    this.editingCard.set(null);
     this.isVocabModalOpen.set(true);
+  }
+
+  closeVocabModal(): void {
+    this.isVocabModalOpen.set(false);
+    this.editingCard.set(null);
   }
 
   openExerciseModal(): void {
@@ -214,6 +305,7 @@ export class DeckDetailComponent implements OnInit {
 
   onVocabAdded(): void {
     this.loadCards();
+    this.clearSelection();
   }
 
   onExerciseImportSuccess(): void {
@@ -225,7 +317,8 @@ export class DeckDetailComponent implements OnInit {
     this.router.navigate(['/vocab/practice'], { queryParams: { deckId: id } });
   }
 
-  // Edit Deck
+  // ─── Edit Deck ────────────────────────────────────────────────
+
   openEditDeckModal(): void {
     const d = this.deck();
     if (!d) return;
@@ -258,70 +351,19 @@ export class DeckDetailComponent implements OnInit {
       });
   }
 
-  // Edit Card
-  openEditCardModal(card: Card, event: Event): void {
-    event.stopPropagation();
+  openEditCardModal(card: Card, event?: Event): void {
+    if (event) event.stopPropagation();
     this.editingCard.set(card);
-    this.editCardWord = card.word;
-    this.editCardMeaning = card.meaning;
-    this.editCardIpa = card.ipa || '';
-    this.editCardPos = card.partOfSpeech || 'noun';
-    this.isEditCardModalOpen.set(true);
+    this.isVocabModalOpen.set(true);
   }
 
-  saveEditCard(): void {
-    const card = this.editingCard();
-    if (!card || !this.editCardWord.trim() || !this.editCardMeaning.trim()) return;
-
-    this.isSavingCard.set(true);
-    this.cardApi
-      .updateCard(card.id, {
-        word: this.editCardWord.trim(),
-        meaning: this.editCardMeaning.trim(),
-        ipa: this.editCardIpa.trim() || undefined,
-        partOfSpeech: this.editCardPos,
-      })
-      .subscribe({
-        next: (updated) => {
-          this.isSavingCard.set(false);
-          this.cards.update(list => list.map(c => (c.id === updated.id ? updated : c)));
-          this.isEditCardModalOpen.set(false);
-          this.toast.success(`Đã cập nhật thẻ "${updated.word}"!`);
-        },
-        error: () => {
-          this.isSavingCard.set(false);
-          this.toast.error('Không thể cập nhật thẻ từ vựng');
-        },
-      });
+  openCreateCardModal(): void {
+    this.openVocabModal();
   }
 
-  // Delete Card
-  confirmDeleteCard(card: Card, event: Event): void {
-    event.stopPropagation();
-    this.cardToDelete.set(card);
-  }
-
-  cancelDeleteCard(): void {
-    this.cardToDelete.set(null);
-  }
-
-  executeDeleteCard(): void {
-    const card = this.cardToDelete();
-    if (!card) return;
-
-    this.isDeletingCard.set(true);
-    this.cardApi.deleteCard(card.id).subscribe({
-      next: () => {
-        this.isDeletingCard.set(false);
-        this.cards.update(list => list.filter(c => c.id !== card.id));
-        this.cardToDelete.set(null);
-        this.toast.success(`Đã xóa thẻ "${card.word}"`);
-      },
-      error: () => {
-        this.isDeletingCard.set(false);
-        this.toast.error('Không thể xóa thẻ từ');
-      },
-    });
+  onCardSaved(savedCard: Card): void {
+    this.loadCards();
+    this.clearSelection();
   }
 
   goToWordDetail(card: Card): void {
@@ -334,5 +376,18 @@ export class DeckDetailComponent implements OnInit {
     if (word) {
       this.pronunciationService.speak(word, 'us');
     }
+  }
+
+  toggleFavorite(card: Card, event: MouseEvent): void {
+    event.stopPropagation();
+    const newFav = !(card.favorite || card.isFavorite);
+    this.cardApi.updateCard(card.id, { favorite: newFav } as Partial<Card>).subscribe({
+      next: (updated: Card) => {
+        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: updated.favorite ?? newFav, isFavorite: updated.isFavorite ?? newFav } : c));
+      },
+      error: () => {
+        this.toast.error('Không thể cập nhật yêu thích');
+      }
+    });
   }
 }

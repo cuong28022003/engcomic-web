@@ -1,0 +1,341 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// ── Base Shared Card Styles ──────────────────────────────────────────
+.vocab-card {
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+
+  .card-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+}
+
+// ── 1. LIST LAYOUT (Sleek Minimalist Horizontal Row) ────────────────
+.vocab-card.layout-list {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 14px;
+  border-radius: 12px;
+  background: rgba(18, 18, 28, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(25, 25, 38, 0.85);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  &.selected-row {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.25);
+  }
+
+  .card-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .card-word-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+
+    .card-word {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .card-meaning-inline {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &::before {
+        content: "•";
+        margin-right: 6px;
+        color: #64748b;
+      }
+    }
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
+// ── 2. GRID LAYOUT (Clean Minimalist Flashcard) ─────────────────────
+.vocab-card.layout-grid {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 145px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(18, 22, 36, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(24, 28, 48, 0.88);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(99, 102, 241, 0.12);
+  }
+
+  &.selected-card {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.14);
+    box-shadow: 0 0 18px rgba(99, 102, 241, 0.3);
+  }
+
+  .grid-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+  }
+
+  .grid-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+
+    .grid-word-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+
+      .card-word {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        word-break: break-word;
+      }
+    }
+
+    .grid-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-meaning {
+      color: #e2e8f0;
+      font-size: 0.92rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin: 4px 0 0 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  .grid-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+  }
+}
+
+// ── Shared Typography & Badges ────────────────────────────────────────
+.card-ipa {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.card-pos-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.card-audio-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    transform: scale(1.15);
+  }
+}
+
+.card-fav-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #eab308;
+    transform: scale(1.15);
+    background: rgba(234, 179, 8, 0.1);
+  }
+
+  &.favorited {
+    color: #eab308;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+  }
+}
+
+.badge-deck {
+  background: rgba(6, 182, 212, 0.12);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(6, 182, 212, 0.25);
+    color: #fff;
+    transform: scale(1.03);
+  }
+}
+
+.clickable-topic-badge {
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+
+  &:hover {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+// ── Status & Next Review ──────────────────────────────────────────────
+.status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  &.status-new { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+  &.status-learning { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+  &.status-mature { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  &.status-leech { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+}
+
+.next-review {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+
+  &.overdue { color: #f87171; font-weight: 600; }
+}
+
+@media (max-width: 768px) {
+  .vocab-card.layout-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    .card-meta {
+      width: 100%;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 6px;
+      margin-left: 0;
+    }
+  }
+}

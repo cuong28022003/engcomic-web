@@ -1,0 +1,120 @@
+<app-glass-panel padding="sm" radius="md">
+  <aside class="nav-sidebar">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div class="header-title">
+        @if (icon()) {
+          <i [class]="icon()"></i>
+        }
+        <span>{{ title() }}</span>
+      </div>
+      <ng-content select="[header-actions]"></ng-content>
+    </div>
+
+    <!-- Optional Search in Sidebar -->
+    @if (showSearch()) {
+      <div class="sidebar-search">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          [placeholder]="searchPlaceholder()"
+          [ngModel]="searchFilter()"
+          (ngModelChange)="searchFilter.set($event)"
+        />
+        @if (searchFilter()) {
+          <button type="button" class="btn-clear" (click)="searchFilter.set('')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Single Flat List -->
+    @if (items().length > 0) {
+      <div class="nav-items-list">
+        @for (item of displayItems(); track item.key) {
+          <button
+            type="button"
+            class="nav-item-btn"
+            [class.active]="activeKey() === item.key"
+            (click)="selectItem(item)"
+          >
+            <div class="item-left">
+              @if (item.icon) {
+                <i [class]="item.icon" [style.color]="item.color || null"></i>
+              }
+              <div class="label-box">
+                <span class="main-label">{{ item.label }}</span>
+                @if (item.labelSub) {
+                  <span class="sub-label">{{ item.labelSub }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="item-right">
+              @if (item.badge) {
+                <span class="item-badge">{{ item.badge }}</span>
+              }
+              @if (item.count !== undefined) {
+                <span class="item-count-pill">{{ item.count }}</span>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Sectioned Group List (if sections provided) -->
+    @if (sections().length > 0) {
+      <div class="nav-sections-list">
+        @for (sec of sections(); track sec.title || $index) {
+          <div class="nav-section-block">
+            @if (sec.title) {
+              <div class="section-heading">
+                @if (sec.icon) {
+                  <i [class]="sec.icon"></i>
+                }
+                <span>{{ sec.title }}</span>
+              </div>
+            }
+            <div class="section-items">
+              @for (item of sec.items; track item.key) {
+                <button
+                  type="button"
+                  class="nav-item-btn"
+                  [class.active]="activeKey() === item.key"
+                  (click)="selectItem(item)"
+                >
+                  <div class="item-left">
+                    @if (item.icon) {
+                      <i [class]="item.icon" [style.color]="item.color || null"></i>
+                    }
+                    <div class="label-box">
+                      <span class="main-label">{{ item.label }}</span>
+                      @if (item.labelSub) {
+                        <span class="sub-label">{{ item.labelSub }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="item-right">
+                    @if (item.badge) {
+                      <span class="item-badge">{{ item.badge }}</span>
+                    }
+                    @if (item.count !== undefined) {
+                      <span class="item-count-pill">{{ item.count }}</span>
+                    }
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Custom Projected Content Slot -->
+    <ng-content></ng-content>
+  </aside>
+</app-glass-panel>
+

@@ -1,0 +1,36 @@
+<div class="page-header glass-panel" [attr.data-theme]="theme()">
+  <div class="header-left">
+    @if (showBack() || backUrl()) {
+      <a [routerLink]="backUrl() || '..'" class="btn-back" title="Quay lại">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+    }
+
+    @if (icon()) {
+      <div
+        class="header-icon-box"
+        [class]="'theme-' + theme()"
+        [style.background]="customIconBg() || null"
+        [style.color]="customIconColor() || null"
+      >
+        <i [class]="icon()"></i>
+      </div>
+    }
+
+    <div class="header-title-wrap">
+      <div class="title-row">
+        <h1>{{ title() }}</h1>
+        @if (badge()) {
+          <span class="header-badge">{{ badge() }}</span>
+        }
+      </div>
+      @if (subtitle()) {
+        <p class="subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <ng-content></ng-content>
+  </div>
+</div>

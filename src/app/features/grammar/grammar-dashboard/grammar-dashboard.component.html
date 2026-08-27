@@ -1,184 +1,314 @@
 <div class="grammar-dashboard-container">
-  <!-- Unified Glass Page Header -->
-  <div class="page-header glass-panel">
-    <div class="header-left">
-      <div class="header-icon-box grammar-icon">
-        <i class="fa-solid fa-graduation-cap"></i>
-      </div>
-      <div>
-        <h1>Thư Viện Ngữ Pháp Tiếng Anh</h1>
-        <p class="subtitle">Tổng hợp quy tắc, cấu trúc & dấu hiệu nhận biết — Tra cứu nhanh, hiểu ngay trong 3 giây</p>
-      </div>
-    </div>
+  <!-- Unified Glass Page Header (Shared Component) -->
+  <app-page-header
+    title="Thư Viện Ngữ Pháp Tiếng Anh"
+    subtitle="Tổng hợp quy tắc, cấu trúc & dấu hiệu nhận biết — Tra cứu nhanh, hiểu ngay trong 3 giây"
+    icon="fa-solid fa-graduation-cap"
+    theme="grammar"
+  >
+    <button type="button" class="btn btn-secondary" (click)="openSearchModal()">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <span>Tra Nhanh (Ctrl+G)</span>
+    </button>
+    <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fa-solid fa-plus"></i>
+      <span>Thêm / Nạp Ngữ Pháp</span>
+    </button>
+  </app-page-header>
 
-    <div class="header-actions">
-      <button type="button" class="btn btn-secondary" (click)="openSearchModal()">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <span>Tra Nhanh (Ctrl+G)</span>
+  <!-- ── Top Navigation Switcher Tabs (Topbar) ── -->
+  <app-glass-panel padding="xs" radius="md">
+    <div class="grammar-nav-tabs-bar">
+      <button
+        type="button"
+        class="grammar-tab-btn"
+        [class.active]="activeTab() === 'points'"
+        (click)="setTab('points')"
+      >
+        <i class="fa-solid fa-book-open"></i>
+        <span>Chủ Điểm Ngữ Pháp</span>
+        <span class="tab-badge">{{ allPoints().length }}</span>
       </button>
-      <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-        <i class="fa-solid fa-plus"></i>
-        <span>Thêm / Nạp Ngữ Pháp</span>
+
+      <button
+        type="button"
+        class="grammar-tab-btn"
+        [class.active]="activeTab() === 'functional'"
+        (click)="setTab('functional')"
+      >
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Ngữ Pháp Chức Năng</span>
+        <span class="tab-badge func-badge">Giới từ • Liên từ • Cụm từ</span>
       </button>
     </div>
-  </div>
+  </app-glass-panel>
 
-  <!-- Most Missed Grammar Widget (if user has missed grammar questions) -->
-  @if (mostMissed().length > 0) {
-    <div class="most-missed-widget">
-      <div class="widget-header">
-        <div class="widget-title">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span>Chủ Đề Ngữ Pháp Bạn Hay Làm Sai Nhất</span>
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- ── TAB 1: GRAMMAR POINTS & RULES ─────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'points') {
+    <!-- Most Missed Grammar Widget (if user has missed questions) -->
+    @if (mostMissed().length > 0) {
+      <div class="most-missed-widget">
+        <div class="widget-header">
+          <div class="widget-title">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Chủ Đề Ngữ Pháp Bạn Hay Làm Sai Nhất</span>
+          </div>
+          <span class="widget-badge">Từ lịch sử làm bài thi</span>
         </div>
-        <span class="widget-badge">Từ lịch sử làm bài thi</span>
+        <div class="missed-items-grid">
+          @for (item of mostMissed(); track item.topic) {
+            <div class="missed-card" (click)="item.grammarPoint ? openCard(item.grammarPoint) : null">
+              <div class="missed-info">
+                <span class="missed-topic">{{ item.topic }}</span>
+                <span class="missed-count">
+                  <i class="fa-solid fa-circle-xmark"></i> Sai {{ item.count }} lần
+                </span>
+              </div>
+              <div class="missed-action">
+                <span>Ôn lại</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </div>
+            </div>
+          }
+        </div>
       </div>
-      <div class="missed-items-grid">
-        @for (item of mostMissed(); track item.topic) {
-          <div class="missed-card" (click)="item.grammarPoint ? openCard(item.grammarPoint) : null">
-            <div class="missed-info">
-              <span class="missed-topic">{{ item.topic }}</span>
-              <span class="missed-count">
-                <i class="fa-solid fa-circle-xmark"></i> Sai {{ item.count }} lần
-              </span>
+    }
+
+    <!-- 2-Column Layout (Shared NavSidebarComponent on Left + Points on Right) -->
+    <div class="dashboard-layout">
+      <aside class="sidebar-column">
+        <app-nav-sidebar
+          title="Danh Mục Chủ Đề"
+          icon="fa-solid fa-list"
+          [items]="pointsSidebarItems()"
+          [(activeKey)]="selectedCategory"
+          (itemSelected)="onPointsCategorySelected($event)"
+        ></app-nav-sidebar>
+      </aside>
+
+      <main class="grammar-main-content">
+        <!-- Content Toolbar with Shared DataFilterBarComponent -->
+        <app-data-filter-bar
+          [showSearch]="false"
+          [showSelectAll]="filteredPoints().length > 0"
+          [isAllSelected]="isAllPointsSelected()"
+          [selectedCount]="selectedCount()"
+          selectAllLabel="Chọn tất cả"
+          (selectAll)="toggleSelectAll()"
+          [showViewMode]="true"
+          [(viewMode)]="pointsViewMode"
+          (viewModeChange)="setPointsViewMode($event)"
+          [showSort]="false"
+          [showCountSummary]="false"
+        >
+          <!-- Active Category Badge as Projected Content -->
+          <div class="active-cat-badge" [style.--accent]="activeCategoryInfo().color">
+            <i [class]="activeCategoryInfo().icon"></i>
+            <span class="cat-name">{{ activeCategoryInfo().label }}</span>
+            <span class="count-pill">{{ filteredPoints().length }} quy tắc</span>
+          </div>
+        </app-data-filter-bar>
+
+        <!-- Content State -->
+        @if (loading()) {
+          <app-loading message="Đang tải thư viện ngữ pháp..."></app-loading>
+        } @else if (filteredPoints().length === 0) {
+          <app-empty-state
+            icon="fa-solid fa-book-open"
+            title="Chưa có điểm ngữ pháp nào phù hợp"
+            message="Bạn có thể thêm điểm ngữ pháp mới hoặc dán JSON từ AI bằng nút 'Thêm / Nạp Ngữ Pháp' ở trên."
+          ></app-empty-state>
+        } @else {
+          @if (pointsViewMode() === 'grid') {
+            <!-- ── Grid View: Modern Glassmorphic Cards ── -->
+            <div class="grammar-cards-grid">
+              @for (point of paginatedPoints(); track point.id || point.topic) {
+                <app-grammar-card
+                  [point]="point"
+                  layout="grid"
+                  [selected]="isSelected(point.id)"
+                  [showCheckbox]="true"
+                  (cardClick)="openCard($event)"
+                  (selectChange)="onPointSelectChange($event)"
+                ></app-grammar-card>
+              }
             </div>
-            <div class="missed-action">
-              <span>Ôn lại</span>
-              <i class="fa-solid fa-arrow-right"></i>
+          } @else {
+            <!-- ── List View: Sleek Horizontal Row Cards ── -->
+            <div class="grammar-cards-list">
+              @for (point of paginatedPoints(); track point.id || point.topic) {
+                <app-grammar-card
+                  [point]="point"
+                  layout="list"
+                  [selected]="isSelected(point.id)"
+                  [showCheckbox]="true"
+                  (cardClick)="openCard($event)"
+                  (selectChange)="onPointSelectChange($event)"
+                ></app-grammar-card>
+              }
             </div>
+          }
+
+          <!-- Paginator -->
+          <div class="paginator-wrapper">
+            <app-paginator
+              [(currentPage)]="currentPage"
+              [(pageSize)]="pageSize"
+              [totalItems]="filteredPoints().length"
+              [pageSizeOptions]="[8, 12, 20, 50]"
+            ></app-paginator>
           </div>
         }
-      </div>
+      </main>
     </div>
+
+    <!-- Shared Bulk Actions Floating Bar (Appears when >= 1 item is selected) -->
+    <app-bulk-actions-bar
+      [selectedCount]="selectedCount()"
+      [totalCount]="filteredPoints().length"
+      itemLabel="điểm ngữ pháp"
+      [isAllSelected]="isAllPointsSelected()"
+      (selectAll)="selectAllPoints()"
+      (clearSelection)="clearAllSelection()"
+      (edit)="editSelectedPoint()"
+      (delete)="deleteSelectedPoints()"
+    ></app-bulk-actions-bar>
   }
 
-  <!-- Main Content Layout (Sidebar Categories + Sleek Long Horizontal Cards) -->
-  <div class="dashboard-layout">
-    <!-- Category Sidebar Filter -->
-    <aside class="category-sidebar">
-      <div class="sidebar-header">
-        <i class="fa-solid fa-list"></i>
-        <span>Danh Mục Chủ Đề</span>
-      </div>
-      <div class="category-list">
-        @for (cat of categories; track cat.key) {
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- ── TAB 2: FUNCTIONAL GRAMMAR (SLEEK & MINIMALIST) ─────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'functional') {
+    <!-- POS Type Switcher Sub-Bar -->
+    <app-glass-panel padding="xs" radius="sm">
+      <div class="func-pos-pills-bar">
+        @for (grp of usageGroups; track grp.posKey) {
           <button
             type="button"
-            class="category-item"
-            [class.active]="selectedCategory() === cat.key"
-            (click)="selectCategory(cat.key)"
+            class="pos-pill-btn"
+            [class.active]="selectedFuncPos() === grp.posKey"
+            (click)="selectFuncPos(grp.posKey)"
           >
-            <div class="cat-left">
-              <i [class]="cat.icon" [style.color]="cat.color"></i>
-              <span class="cat-label">{{ cat.label }}</span>
-            </div>
-            <span class="cat-count-pill">{{ getCategoryCount(cat.key) }}</span>
+            <i [class]="grp.icon" [style.color]="grp.color"></i>
+            <span class="pos-text">{{ grp.labelVi }}</span>
+            <span class="pos-badge">{{ grp.categories.length }}</span>
           </button>
         }
       </div>
-    </aside>
+    </app-glass-panel>
 
-    <!-- Main Content Area -->
-    <main class="grammar-main-content">
-      <!-- Search & Count Toolbar -->
-      <div class="content-toolbar">
-        <div class="toolbar-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input
-            type="text"
-            placeholder="Lọc nhanh điểm ngữ pháp trong danh mục..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="onSearchChange($event)"
-          />
-          @if (searchQuery()) {
-            <button type="button" class="btn-clear" (click)="onSearchChange('')">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          }
-        </div>
-        <div class="toolbar-count">
-          Hiển thị <strong>{{ filteredPoints().length }}</strong> điểm ngữ pháp
-        </div>
-      </div>
+    <!-- 2-Column Layout (Shared NavSidebarComponent on Left + Sleek Functional Detail on Right) -->
+    <div class="dashboard-layout">
+      <aside class="sidebar-column">
+        <app-nav-sidebar
+          [title]="activeFunctionalGroup().labelEn + ' (' + activeFunctionalGroup().categories.length + ')'"
+          [icon]="activeFunctionalGroup().icon"
+          [items]="functionalSidebarItems()"
+          [(activeKey)]="selectedFuncCatKey"
+          (itemSelected)="onFunctionalCategorySelected($event)"
+        ></app-nav-sidebar>
+      </aside>
 
-      <!-- Content State -->
-      @if (loading()) {
-        <app-loading message="Đang tải thư viện ngữ pháp..."></app-loading>
-      } @else if (filteredPoints().length === 0) {
-        <app-empty-state
-          icon="fa-solid fa-book-open"
-          title="Chưa có điểm ngữ pháp nào phù hợp"
-          message="Bạn có thể thêm điểm ngữ pháp mới hoặc dán JSON từ AI bằng nút 'Thêm / Nạp Ngữ Pháp' ở trên."
-        ></app-empty-state>
-      } @else {
-        <!-- Sleek Focused Horizontal Cards List -->
-        <div class="grammar-cards-list">
-          @for (point of paginatedPoints(); track point.id || point.topic) {
-            <div class="grammar-row-card" (click)="openCard(point)">
-              <!-- Left: Category & Topic -->
-              <div class="row-left">
-                <span
-                  class="cat-pill"
-                  [style.color]="getCategoryInfo(point.category).color"
-                  [style.border-color]="getCategoryInfo(point.category).color"
-                >
-                  <i [class]="getCategoryInfo(point.category).icon"></i>
-                  {{ getCategoryInfo(point.category).label }}
-                </span>
-                <h3 class="point-topic-name">{{ point.topic }}</h3>
+      <main class="grammar-main-content">
+        @if (activeFunctionalCategory(); as fCat) {
+          <app-glass-panel padding="md" radius="md">
+            <div class="functional-detail-view">
+              <!-- 1. Top Category Bar with View Mode -->
+              <div class="func-top-bar">
+                <div class="cat-title-badge" [style.--accent]="fCat.color">
+                  <i [class]="fCat.icon"></i>
+                  <span class="pos-prefix">[{{ activeFunctionalGroup().labelVi }}]</span>
+                  <span class="cat-name">{{ fCat.labelVi }}</span>
+                  <span class="en-name">({{ fCat.labelEn }})</span>
+                </div>
+
+                <!-- View Mode Switcher -->
+                <div class="view-mode-toggle">
+                  <button
+                    type="button"
+                    class="btn-view-mode"
+                    [class.active]="functionalViewMode() === 'grid'"
+                    (click)="setFunctionalViewMode('grid')"
+                    title="Xem dạng thẻ lưới (Grid)"
+                  >
+                    <i class="fa-solid fa-table-cells-large"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-view-mode"
+                    [class.active]="functionalViewMode() === 'list'"
+                    (click)="setFunctionalViewMode('list')"
+                    title="Xem dạng danh sách (List)"
+                  >
+                    <i class="fa-solid fa-list-ul"></i>
+                  </button>
+                </div>
               </div>
 
-              <!-- Center: Focused Short Rule (Quick Decision) -->
-              <div class="row-center">
-                @if (point.shortRule) {
-                  <p class="point-short-rule">{{ point.shortRule }}</p>
+              <!-- Description Line -->
+              <p class="func-desc-line">{{ fCat.desc }}</p>
+
+              <!-- 2. Sample Words & Patterns Cloud -->
+              @if (fCat.commonWords && fCat.commonWords.length > 0) {
+                <div class="func-sample-cloud-block">
+                  <div class="sample-label">
+                    <i class="fa-solid fa-lightbulb highlight-yellow"></i>
+                    <span>Từ tiêu biểu:</span>
+                  </div>
+                  <div class="sample-words-wrap">
+                    @for (w of fCat.commonWords; track w) {
+                      <div class="sample-word-badge" (click)="playAudio(w, $event)" title="Bấm để nghe phát âm">
+                        <span class="w-text">{{ w }}</span>
+                        <i class="fa-solid fa-volume-high audio-icon"></i>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- 3. Real-time Cards in User's Vault using Shared VocabCardComponent -->
+              <div class="func-vocab-cards-block">
+                <div class="block-header">
+                  <div class="title-wrap">
+                    <i class="fa-solid fa-vault highlight-purple"></i>
+                    <span>Từ vựng trong kho của bạn (<strong>{{ matchedCards().length }}</strong>)</span>
+                  </div>
+                </div>
+
+                @if (loadingCards()) {
+                  <div class="cards-loading-state">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>Đang tải từ vựng trong kho...</span>
+                  </div>
+                } @else if (matchedCards().length > 0) {
+                  <div [class.cards-grid]="functionalViewMode() === 'grid'" [class.card-list]="functionalViewMode() === 'list'">
+                    @for (c of matchedCards(); track c.id) {
+                      <app-vocab-card
+                        [card]="c"
+                        [layout]="functionalViewMode()"
+                        [showCheckbox]="false"
+                        [showDeckBadge]="true"
+                        (cardClick)="onVocabCardClick($event)"
+                      ></app-vocab-card>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-compact-box">
+                    <i class="fa-solid fa-inbox"></i>
+                    <p>Kho từ vựng của bạn chưa có từ nào được gán nhóm <strong>"{{ fCat.labelVi }}"</strong>.</p>
+                  </div>
                 }
               </div>
-
-              <!-- Right: Quick Actions & View Detail Arrow -->
-              <div class="row-right">
-                <div class="row-actions" (click)="$event.stopPropagation()">
-                  <button
-                    type="button"
-                    class="btn-row-action edit"
-                    (click)="openEditModal(point, $event)"
-                    title="Chỉnh sửa điểm ngữ pháp"
-                  >
-                    <i class="fa-solid fa-pen-to-square"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-row-action delete"
-                    (click)="deletePoint(point, $event)"
-                    title="Xóa điểm ngữ pháp"
-                  >
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </div>
-
-                <div class="view-detail-hint">
-                  <span>Chi tiết</span>
-                  <i class="fa-solid fa-arrow-right"></i>
-                </div>
-              </div>
             </div>
-          }
-        </div>
+          </app-glass-panel>
+        }
+      </main>
+    </div>
+  }
 
-        <!-- Paginator -->
-        <div class="paginator-wrapper">
-          <app-paginator
-            [(currentPage)]="currentPage"
-            [(pageSize)]="pageSize"
-            [totalItems]="filteredPoints().length"
-            [pageSizeOptions]="[8, 12, 20, 50]"
-          ></app-paginator>
-        </div>
-      }
-    </main>
-  </div>
-
-  <!-- Detail Modal (Split 2-Column with Case-by-Case Formulas) -->
+  <!-- Detail Modal -->
   @if (showCardModal()) {
     <app-grammar-card-modal
       [isOpen]="showCardModal()"

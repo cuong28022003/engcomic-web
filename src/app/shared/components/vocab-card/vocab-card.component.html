@@ -1,0 +1,166 @@
+@if (layout() === 'grid') {
+  <!-- GRID LAYOUT (Clean Minimalist Flashcard) -->
+  <div
+    class="vocab-card layout-grid glass-panel"
+    [class.selected-card]="selected()"
+    (click)="onCardClick()"
+  >
+    <!-- 1. Top Header: Checkbox, Status & Favorite -->
+    <div class="grid-card-header">
+      <div class="header-left">
+        @if (showCheckbox()) {
+          <div class="card-checkbox-wrap" (click)="$event.stopPropagation()">
+            <app-selection-checkbox
+              [checked]="selected()"
+              (changed)="onToggleSelect($event)"
+            ></app-selection-checkbox>
+          </div>
+        }
+        <span class="status-badge" [class]="getStatusClass(card().status)">
+          {{ getStatusLabel(card().status) }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="card-fav-btn"
+        [class.favorited]="card().isFavorite || card().favorite"
+        (click)="onFavoriteClick($event)"
+        title="Đánh dấu yêu thích"
+      >
+        <i [class]="(card().isFavorite || card().favorite) ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+      </button>
+    </div>
+
+    <!-- 2. Hero Word & Meaning (Essential Focus) -->
+    <div class="grid-card-body">
+      <div class="grid-word-row">
+        <span class="card-word" [title]="card().word || card().front">{{ card().word || card().front }}</span>
+        <button
+          type="button"
+          class="card-audio-btn"
+          (click)="playAudio($event)"
+          title="Phát âm tiếng Anh (US)"
+        >
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+
+      <div class="grid-meta-row">
+        @if (card().ipa) {
+          <span class="card-ipa">{{ card().ipa }}</span>
+        }
+        @if (card().partOfSpeech) {
+          <span class="card-pos-pill">{{ card().partOfSpeech }}</span>
+        }
+      </div>
+
+      <!-- Clean Vietnamese Meaning -->
+      <p class="card-meaning">{{ card().meaning || card().back }}</p>
+    </div>
+
+    <!-- 3. Bottom Footer: Deck & Next Review -->
+    <div class="grid-card-footer">
+      <div class="footer-left">
+        @if (showDeckBadge() && card().deckId) {
+          <span
+            class="badge badge-deck"
+            (click)="onDeckClick($event)"
+            title="Thuộc bộ thẻ '{{ deckName() || 'Bộ thẻ' }}'"
+          >
+            <i class="fa-solid fa-layer-group"></i> {{ deckName() || 'Bộ thẻ' }}
+          </span>
+        } @else if (card().topic) {
+          <span
+            class="badge badge-genre clickable-topic-badge"
+            (click)="onTopicClick($event)"
+            title="Chủ đề '{{ card().topic }}'"
+          >
+            <i class="fa-solid fa-tag"></i> {{ card().topic }}
+          </span>
+        }
+      </div>
+
+      <span class="next-review" [class.overdue]="isOverdue(card().nextReview, card().status)">
+        <i class="fa-regular fa-clock"></i>
+        {{ formatNextReview(card().nextReview, card().status) }}
+      </span>
+    </div>
+  </div>
+} @else {
+  <!-- LIST LAYOUT (Sleek Minimalist Row) -->
+  <div
+    class="vocab-card layout-list glass-panel"
+    [class.selected-row]="selected()"
+    (click)="onCardClick()"
+  >
+    <!-- 1. Checkbox Column -->
+    @if (showCheckbox()) {
+      <div class="card-checkbox-wrap" (click)="$event.stopPropagation()">
+        <app-selection-checkbox
+          [checked]="selected()"
+          (changed)="onToggleSelect($event)"
+        ></app-selection-checkbox>
+      </div>
+    }
+
+    <!-- 2. Main Content Column -->
+    <div class="card-main">
+      <div class="card-word-row">
+        <span class="card-word">{{ card().word || card().front }}</span>
+
+        <button
+          type="button"
+          class="card-audio-btn"
+          (click)="playAudio($event)"
+          title="Phát âm tiếng Anh"
+        >
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+
+        @if (card().ipa) {
+          <span class="card-ipa">{{ card().ipa }}</span>
+        }
+
+        @if (card().partOfSpeech) {
+          <span class="card-pos-pill">{{ card().partOfSpeech }}</span>
+        }
+
+        <span class="card-meaning-inline">{{ card().meaning || card().back }}</span>
+      </div>
+    </div>
+
+    <!-- 3. Right Metadata Column -->
+    <div class="card-meta">
+      @if (showDeckBadge() && card().deckId) {
+        <span
+          class="badge badge-deck"
+          (click)="onDeckClick($event)"
+          title="Thuộc bộ thẻ '{{ deckName() || 'Bộ thẻ' }}'"
+        >
+          <i class="fa-solid fa-layer-group"></i> {{ deckName() || 'Bộ thẻ' }}
+        </span>
+      }
+
+      <span class="status-badge" [class]="getStatusClass(card().status)">
+        {{ getStatusLabel(card().status) }}
+      </span>
+
+      <span class="next-review" [class.overdue]="isOverdue(card().nextReview, card().status)">
+        <i class="fa-regular fa-clock"></i>
+        {{ formatNextReview(card().nextReview, card().status) }}
+      </span>
+
+      <!-- Favorite Star -->
+      <button
+        type="button"
+        class="card-fav-btn"
+        [class.favorited]="card().isFavorite || card().favorite"
+        (click)="onFavoriteClick($event)"
+        title="Đánh dấu yêu thích"
+      >
+        <i [class]="(card().isFavorite || card().favorite) ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+      </button>
+    </div>
+  </div>
+}

@@ -7,7 +7,7 @@ import { AnswerKeyService } from '../services/answer-key.service';
 import { TestSummary, ToeicDashboardData, ToeicAttempt } from '../models';
 import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@shared/pipes/time-ago.pipe';
-import { EmptyStateComponent, ModalComponent, FormInputComponent } from '@shared/components';
+import { EmptyStateComponent, ModalComponent, FormInputComponent, PageHeaderComponent, DataFilterBarComponent } from '@shared/components';
 import { AttemptHistoryModalComponent } from '../reading-session/attempt-history-modal/attempt-history-modal.component';
 import { ToastService } from '@core/services/toast.service';
 
@@ -22,7 +22,8 @@ import { ToastService } from '@core/services/toast.service';
     EmptyStateComponent, 
     AttemptHistoryModalComponent,
     ModalComponent,
-    FormInputComponent
+    FormInputComponent,
+    PageHeaderComponent
   ],
   templateUrl: './reader-dashboard.component.html',
   styleUrls: ['./reader-dashboard.component.scss']
@@ -61,10 +62,15 @@ export class ReaderDashboardComponent implements OnInit {
   deletingTest = signal<TestSummary | null>(null);
   isDeleting = signal<boolean>(false);
 
-  filterStatus = signal<'all' | 'not_started' | 'completed'>('all');
+  searchQuery = signal<string>('');
+  filterStatus = signal<'all' | 'not_started' | 'in_progress' | 'completed'>('all');
 
   filteredTests = computed(() => {
-    const list = this.tests();
+    let list = this.tests();
+    const query = this.searchQuery().trim().toLowerCase();
+    if (query) {
+      list = list.filter(t => t.testName?.toLowerCase().includes(query));
+    }
     const filter = this.filterStatus();
     if (filter === 'all') return list;
     return list.filter(t => t.status === filter);

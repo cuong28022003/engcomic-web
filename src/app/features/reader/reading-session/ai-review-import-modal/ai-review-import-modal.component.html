@@ -1,105 +1,27 @@
 <app-modal
   [isOpen]="isOpen()"
   [title]="'🤖 AI Phân Tích Lỗi Sai & Trích Đoạn Đề Thi'"
-  [size]="'lg'"
-  (close)="onClose()">
+  [size]="'xl'"
+  (closed)="onClose()">
   <div class="import-modal-container">
-    <!-- Tabs Header -->
-    <div class="modal-tabs">
-      <button 
-        type="button" 
-        class="tab-btn" 
-        [class.active]="activeTab() === 'prompt'"
-        (click)="activeTab.set('prompt')"
-      >
-        <i class="fas fa-magic"></i> Bước 1: Copy AI Prompt
-      </button>
-      <button 
-        type="button" 
-        class="tab-btn" 
-        [class.active]="activeTab() === 'import'"
-        (click)="activeTab.set('import')"
-      >
-        <i class="fas fa-file-import"></i> Bước 2: Dán & Import JSON
-      </button>
-    </div>
-
-    <!-- Tab 1: Prompt Generator -->
-    @if (activeTab() === 'prompt') {
-      <div class="tab-content">
-        <div class="guide-banner">
-          <div class="guide-icon">💡</div>
-          <div class="guide-text">
-            <strong>Hướng dẫn sử dụng:</strong>
-            <ol>
-              <li>Bấm nút <strong>"Copy AI Prompt"</strong> bên dưới.</li>
-              <li>Mở <strong>ChatGPT</strong> hoặc <strong>Claude</strong>.</li>
-              <li><strong>Đính kèm file PDF đề thi</strong> này vào ô chat và dán prompt vừa copy.</li>
-              <li>AI sẽ đọc trực tiếp đề trong PDF và trả về JSON chuẩn xác.</li>
-            </ol>
-          </div>
-        </div>
-
-        <div class="prompt-box-wrapper">
-          <div class="prompt-header">
-            <span class="prompt-lbl">Nội dung Prompt ({{ questionsToReview().length }} câu cần phân tích)</span>
-            <button type="button" class="btn-copy" (click)="copyPrompt()">
-              @if (copied()) {
-                <i class="fas fa-check"></i> Đã sao chép!
-              } @else {
-                <i class="fas fa-copy"></i> Sao chép Prompt
-              }
-            </button>
-          </div>
-          <textarea class="prompt-textarea" readonly [value]="generatedPrompt()"></textarea>
-        </div>
-
-        <div class="tab-actions">
-          <button type="button" class="btn btn-primary" (click)="activeTab.set('import')">
-            Tiếp tục đến Bước 2: Import JSON →
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- Tab 2: JSON Importer -->
-    @if (activeTab() === 'import') {
-      <div class="tab-content">
-        <p class="import-hint">
-          Dán toàn bộ kết quả JSON nhận được từ AI vào khung bên dưới và bấm <strong>"Bắt đầu Import"</strong>:
-        </p>
-
-        <textarea 
-          class="import-textarea" 
-          placeholder="Dán JSON từ AI vào đây... (Ví dụ: { &quot;items&quot;: [ ... ] })"
-          [(ngModel)]="rawJsonInput"
-          (input)="clearError()"
-        ></textarea>
-
-        @if (parseError()) {
-          <div class="parse-error-box">
-            <i class="fas fa-exclamation-triangle"></i> {{ parseError() }}
-          </div>
-        }
-
-        <div class="tab-actions justify-between">
-          <button type="button" class="btn btn-outline" (click)="activeTab.set('prompt')">
-            ← Quay lại Bước 1
-          </button>
-          <button 
-            type="button" 
-            class="btn btn-success" 
-            [disabled]="!rawJsonInput.trim() || isImporting()"
-            (click)="onImport()"
-          >
-            @if (isImporting()) {
-              <i class="fas fa-spinner fa-spin"></i> Đang import...
-            } @else {
-              <i class="fas fa-check"></i> Bắt đầu Import Phân Tích
-            }
-          </button>
-        </div>
-      </div>
-    }
+    <app-ai-import-workspace
+      [enableModeSwitch]="false"
+      [steps]="steps"
+      [currentStep]="workspaceStep()"
+      (currentStepChange)="activeTab.set($event === 'prompt' ? 'prompt' : 'import')"
+      [promptText]="generatedPrompt()"
+      [guideSteps]="guideSteps"
+      [metaBadges]="metaBadges()"
+      promptTerminalTitle="AI Mistake Analysis Prompt (.json)"
+      pasteActionLabel="Đã Copy Prompt, Sang Bước Dán JSON"
+      [(jsonText)]="rawJsonInput"
+      jsonPlaceholder='Dán JSON từ AI vào đây... (Ví dụ: { "items": [ { "question_number": 101, ... } ] })'
+      [sampleJson]="sampleReviewJson"
+      [validationStatus]="jsonValidationStatus()"
+      [isSubmitting]="isImporting()"
+      submitButtonLabel="Bắt Đầu Import Phân Tích"
+      (submitImport)="onImport()"
+      (cancel)="onClose()"
+    ></app-ai-import-workspace>
   </div>
 </app-modal>

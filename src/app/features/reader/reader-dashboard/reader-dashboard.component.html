@@ -1,32 +1,25 @@
 <div class="dashboard-container">
-  <!-- Top Hero Header -->
-  <div class="page-header glass-panel">
-    <div class="header-left">
-      <div class="header-icon-box reader-icon">
-        <i class="fa-solid fa-file-lines"></i>
-      </div>
-      <div>
-        <h1 class="hero-title">TOEIC Reader & Error Tracker</h1>
-        <p class="hero-subtitle">Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, tự động gom lỗi sai để phân tích cùng AI.</p>
-      </div>
-    </div>
-
-    <div class="header-actions">
-      <a routerLink="/reader/mistakes" class="btn btn-secondary btn-mistakes">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>Hàng đợi lỗi</span>
-        @if ((mistakeQueueService.pendingCount$ | async); as count) {
-          @if (count > 0) {
-            <span class="badge-count">{{ count }}</span>
-          }
+  <!-- Top Hero Header (Shared Component) -->
+  <app-page-header
+    title="TOEIC Reader & Error Tracker"
+    subtitle="Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, tự động gom lỗi sai để phân tích cùng AI."
+    icon="fa-solid fa-file-lines"
+    theme="reader"
+  >
+    <a routerLink="/reader/mistakes" class="btn btn-secondary btn-mistakes">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Hàng đợi lỗi</span>
+      @if ((mistakeQueueService.pendingCount$ | async); as count) {
+        @if (count > 0) {
+          <span class="badge-count">{{ count }}</span>
         }
-      </a>
-      <a routerLink="/reader/new" class="btn btn-primary btn-create">
-        <i class="fa-solid fa-plus"></i>
-        <span>Tạo đề thi mới</span>
-      </a>
-    </div>
-  </div>
+      }
+    </a>
+    <a routerLink="/reader/new" class="btn btn-primary btn-create">
+      <i class="fa-solid fa-plus"></i>
+      <span>Tạo đề thi mới</span>
+    </a>
+  </app-page-header>
 
   <!-- Active Dang Do Attempt Banner -->
   @if (activeAttempt(); as att) {

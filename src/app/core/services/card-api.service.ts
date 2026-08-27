@@ -56,6 +56,11 @@ export class CardApiService extends ApiBaseService {
     });
   }
 
+  /** GET /api/card/topics — danh sách chủ đề distinct của người dùng */
+  getUserTopics(): Observable<string[]> {
+    return this.get<string[]>(`${this.BASE}/topics`);
+  }
+
   /** GET /api/card/dashboard — stats + danh sách cards có filter */
   getDashboard(params?: Record<string, string | number | boolean | undefined>): Observable<DashboardResponse> {
     return this.get<DashboardResponse>(`${this.BASE}/dashboard`, params);

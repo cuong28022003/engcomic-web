@@ -75,37 +75,104 @@
       </div>
     </div>
 
-    <!-- ── Examples ── -->
-    <div class="section glass-panel" *ngIf="c.examples && c.examples.length > 0">
-      <div class="section-header">
-        <h2><i class="fa-solid fa-comment-dots highlight"></i> Ví dụ ngữ cảnh</h2>
-        <div class="formality-tabs">
-          <button [class.active]="activeExampleFormality() === 'all'"
-                  (click)="activeExampleFormality.set('all')">Tất cả</button>
-          <button [class.active]="activeExampleFormality() === 'formal'"
-                  (click)="activeExampleFormality.set('formal')">Trang trọng</button>
-          <button [class.active]="activeExampleFormality() === 'informal'"
-                  (click)="activeExampleFormality.set('informal')">Thông thường</button>
-          <button [class.active]="activeExampleFormality() === 'written'"
-                  (click)="activeExampleFormality.set('written')">Văn viết</button>
+    <!-- ── Usages & Examples ── -->
+    @if (c.usages && c.usages.length > 0) {
+      <div class="section glass-panel">
+        <div class="section-header">
+          <h2><i class="fa-solid fa-layer-group highlight"></i> Cấu trúc & Cách dùng ({{ c.usages.length }})</h2>
         </div>
-      </div>
 
-      <div class="example-list">
-        <div class="example-item" *ngFor="let ex of filteredExamples">
-          <div class="example-text">
-            <i class="fa-solid fa-minus example-bullet"></i>
-            {{ ex.text }}
-          </div>
-          <div class="example-footer">
-            <span class="formality-tag" [class]="getFormalityClass(ex.formality)">
-              {{ getFormalityLabel(ex.formality) }}
-            </span>
-            <span class="example-translation" *ngIf="ex.translation">{{ ex.translation }}</span>
-          </div>
+        <div class="usages-detailed-list">
+          @for (u of c.usages; track $index; let uIdx = $index) {
+            <div class="usage-detail-card">
+              <!-- Usage Top Header -->
+              <div class="usage-header-row">
+                <div class="usage-title-left">
+                  @if (getCategoryMeta(u.category); as catMeta) {
+                    <span
+                      class="usage-category-badge"
+                      [style.borderColor]="catMeta.color + '60'"
+                      [style.background]="catMeta.color + '20'"
+                      [style.color]="catMeta.color"
+                    >
+                      <i [class]="catMeta.icon"></i> {{ catMeta.label }}
+                    </span>
+                  }
+
+                  <div class="usage-formula-pill">
+                    <span class="usage-structure-text">{{ u.structure || 'Cấu trúc' }}</span>
+                    <button
+                      type="button"
+                      class="btn-copy-formula"
+                      (click)="copyStructure(u.structure)"
+                      title="Sao chép cấu trúc này"
+                    >
+                      <i class="fa-regular fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                @if (u.meaning) {
+                  <div class="usage-meaning-box">
+                    <span class="meaning-label">Nghĩa:</span>
+                    <span class="usage-meaning-text">{{ u.meaning }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- TOEIC Note / Trap Callout -->
+              @if (u.note) {
+                <div class="usage-note-banner">
+                  <div class="note-icon-wrap">
+                    <i class="fa-solid fa-lightbulb"></i>
+                  </div>
+                  <div class="note-content">
+                    <strong>Lưu ý / Mẹo thi:</strong>
+                    <span>{{ u.note }}</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Nested Examples -->
+              @if (u.examples && u.examples.length > 0) {
+                <div class="usage-examples-sublist">
+                  <div class="examples-sublabel">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <span>Ví dụ minh họa ({{ u.examples.length }}):</span>
+                  </div>
+
+                  <div class="examples-cards-grid">
+                    @for (ex of u.examples; track $index) {
+                      <div class="example-card-item">
+                        <div class="example-top-line">
+                          <button
+                            type="button"
+                            class="btn-speak-example"
+                            (click)="playExampleAudio(ex.text)"
+                            [class.speaking]="playingExampleText() === ex.text"
+                            title="Nghe phát âm câu ví dụ này"
+                          >
+                            <i
+                              class="fa-solid"
+                              [class.fa-volume-high]="playingExampleText() !== ex.text"
+                              [class.fa-waveform-lines]="playingExampleText() === ex.text"
+                            ></i>
+                          </button>
+                          <p class="example-en-text">{{ ex.text }}</p>
+                        </div>
+                        @if (ex.translation) {
+                          <p class="example-vi-trans">{{ ex.translation }}</p>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
-    </div>
+    }
 
     <!-- ── Relations ── -->
     <div class="section glass-panel" *ngIf="c.relations && c.relations.length > 0">

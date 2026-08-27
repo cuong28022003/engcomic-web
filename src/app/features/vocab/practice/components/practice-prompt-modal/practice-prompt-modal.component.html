@@ -12,40 +12,25 @@
       </div>
 
       <div class="modal-body">
-        <p class="modal-intro">
-          Sao chép System Prompt dưới đây và dán vào <strong>ChatGPT (GPT-4o)</strong> hoặc <strong>Claude 3.5 Sonnet</strong>.
-          AI sẽ sinh gói bài tập 4 Level chuẩn hóa cho các từ vựng <strong>chưa có bài tập (Pending)</strong> để bạn import.
-        </p>
-
-        <div class="deck-meta-badge">
-          <span><i class="fa-solid fa-layer-group"></i> {{ promptData()?.deckName || 'Bộ từ vựng' }}</span>
-          <span><i class="fa-solid fa-spell-check"></i> {{ promptData()?.wordCount || 0 }} từ chưa có bài tập</span>
-        </div>
-
         @if ((promptData()?.wordCount || 0) === 0) {
           <div class="all-done-notice">
             <i class="fa-solid fa-circle-check"></i>
             <p>Tất cả từ vựng trong danh sách này đều đã được tạo bài tập từ trước!</p>
           </div>
         } @else {
-          <div class="prompt-code-block">
-            <pre><code>{{ promptData()?.systemPrompt }}</code></pre>
-          </div>
+          <app-ai-import-workspace
+            [enableModeSwitch]="false"
+            [showStepper]="false"
+            currentStep="prompt"
+            [promptText]="promptData()?.systemPrompt || ''"
+            [metaBadges]="metaBadges()"
+            instruction="Sao chép System Prompt dưới đây và dán vào ChatGPT (GPT-4o) hoặc Claude 3.5 Sonnet để AI sinh gói bài tập 4-Level:"
+            promptTerminalTitle="Practice Prompt Generator (.json)"
+            pasteActionLabel="Đã Copy, Sang Dán JSON Bài Tập"
+            (proceedToPaste)="goToImport()"
+            (cancel)="onClose()"
+          ></app-ai-import-workspace>
         }
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="onClose()">Đóng</button>
-        <button class="btn btn-secondary copy-btn" (click)="copyPrompt()" [disabled]="(promptData()?.wordCount || 0) === 0">
-          @if (copied()) {
-            <i class="fa-solid fa-check"></i> Đã sao chép!
-          } @else {
-            <i class="fa-regular fa-copy"></i> Sao chép Prompt
-          }
-        </button>
-        <button class="btn btn-primary" (click)="goToImport()">
-          <i class="fa-solid fa-file-import"></i> Dán JSON Bài Tập <i class="fa-solid fa-arrow-right"></i>
-        </button>
       </div>
     </div>
   </div>

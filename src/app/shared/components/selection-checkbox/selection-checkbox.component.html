@@ -1,0 +1,19 @@
+<label
+  class="custom-checkbox-wrap"
+  [class.checked]="checked()"
+  [class.indeterminate]="indeterminate()"
+  [class.disabled]="disabled()"
+  [ngClass]="'size-' + size()"
+  (click)="toggle($event)"
+>
+  <span class="checkbox-box">
+    @if (checked()) {
+      <i class="fa-solid fa-check check-icon"></i>
+    } @else if (indeterminate()) {
+      <i class="fa-solid fa-minus check-icon"></i>
+    }
+  </span>
+  @if (label()) {
+    <span class="checkbox-label">{{ label() }}</span>
+  }
+</label>

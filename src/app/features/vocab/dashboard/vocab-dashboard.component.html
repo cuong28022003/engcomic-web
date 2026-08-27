@@ -1,38 +1,22 @@
 <div class="vocab-dashboard">
 
-  <!-- ── Page Header ── -->
-  <div class="page-header glass-panel">
-    <div class="header-left">
-      <div class="header-icon-box vocab-icon">
-        <i class="fa-solid fa-book-open-reader"></i>
-      </div>
-      <div>
-        <h1>Vocab Vault</h1>
-        <p class="subtitle">Kho từ vựng thông minh & Quản lý bộ thẻ Flashcard</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="btn-primary" (click)="openVocabModal()">
-        <i class="fa-solid fa-plus"></i> Thêm Từ Vựng
-      </button>
-      <button class="btn-secondary" (click)="openExerciseModal()">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bài Tập AI
-      </button>
-      <button class="btn-secondary" (click)="goToDecks()">
-        <i class="fa-solid fa-layer-group"></i> Quản Lý Bộ Thẻ ({{ decks().length }})
-      </button>
-      <button class="btn-secondary" (click)="goToCollector()">
-        <i class="fa-solid fa-inbox"></i> Collector
-        @if (pendingCount() > 0) {
-          <span class="action-badge">{{ pendingCount() }}</span>
-        }
-      </button>
-      <button class="btn-secondary" (click)="startPractice()" [disabled]="stats().dueToday === 0">
-        <i class="fa-solid fa-bolt"></i>
-        Luyện tập {{ stats().dueToday > 0 ? '(' + stats().dueToday + ')' : '' }}
-      </button>
-    </div>
-  </div>
+  <!-- ── Page Header (Shared Component) ── -->
+  <app-page-header
+    title="Vocab Vault"
+    subtitle="Kho từ vựng thông minh & Quản lý bộ thẻ Flashcard"
+    icon="fa-solid fa-book-open-reader"
+    theme="vocab"
+  >
+    <button class="btn-primary" (click)="openVocabModal()">
+      <i class="fa-solid fa-plus"></i> Thêm / Nạp Từ Vựng
+    </button>
+    <button class="btn-secondary" (click)="goToCollector()">
+      <i class="fa-solid fa-inbox"></i> Collector
+      @if (pendingCount() > 0) {
+        <span class="action-badge">{{ pendingCount() }}</span>
+      }
+    </button>
+  </app-page-header>
 
   <!-- ── Stats Bar ── -->
   <div class="stats-bar">
@@ -68,25 +52,30 @@
     </div>
   </div>
 
-  <!-- ── Filters ── -->
-  <div class="filter-bar glass-panel">
-    <div class="search-wrap">
-      <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Tìm từ vựng..."
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchInput()"
-      />
-    </div>
-
-    <!-- Deck Filter Dropdown -->
-    <select class="filter-select deck-select" [(ngModel)]="filterDeckId" (change)="onFilterChange()">
-      <option value="">📁 Tất cả bộ thẻ</option>
-      <option value="unassigned">📂 Chưa phân bộ thẻ</option>
-      @for (d of decks(); track d.id) {
-        <option [value]="d.id">🗂️ {{ d.name }}</option>
+  <!-- ── Filters Bar (Using Shared DataFilterBarComponent) ── -->
+  <app-data-filter-bar
+    [(searchQuery)]="searchQuery"
+    searchPlaceholder="Tìm từ vựng theo từ, nghĩa, phát âm..."
+    [showSelectAll]="cards().length > 0"
+    [isAllSelected]="isAllSelected()"
+    [selectedCount]="selectedCount()"
+    selectAllLabel="Chọn tất cả"
+    (selectAll)="toggleSelectAll()"
+    [showSort]="false"
+    [showViewMode]="true"
+    [(viewMode)]="viewMode"
+    (viewModeChange)="onViewModeChange($event)"
+    [totalCount]="totalElements()"
+    [filteredCount]="totalElements()"
+    itemLabel="từ vựng"
+    [isFilterActive]="!!(filterPos || filterStatus || filterTopic || activeCategoryFilter())"
+    (searchChange)="onSearchInput()"
+    (clear)="clearFilters()"
+  >
+    <!-- Projected Custom Filters: Part of Speech, Status, Topic Selector Button, Active Category -->
+    <select class="filter-select pos-select" [(ngModel)]="filterPos" (change)="onFilterChange()">
+      @for (opt of posOptions; track opt.key) {
+        <option [value]="opt.key">{{ opt.label }}</option>
       }
     </select>
 
@@ -98,17 +87,29 @@
       <option value="leech">Khó nhớ</option>
     </select>
 
-    <input
-      type="text"
-      class="filter-input"
-      placeholder="Chủ đề..."
-      [(ngModel)]="filterTopic"
-      (ngModelChange)="onTopicInput()"
-    />
-    <button class="btn-icon" (click)="clearFilters()" title="Xóa bộ lọc">
-      <i class="fa-solid fa-xmark"></i>
+    <button
+      type="button"
+      class="btn-topic-selector"
+      [class.has-topic]="!!filterTopic"
+      (click)="openTopicModal()"
+      title="Chọn chủ đề từ vựng"
+    >
+      <i class="fa-solid fa-tags"></i>
+      <span class="topic-btn-text">{{ filterTopic ? 'Chủ đề: ' + filterTopic : 'Chọn chủ đề' }}</span>
+      @if (filterTopic) {
+        <i class="fa-solid fa-xmark btn-clear-topic-icon" (click)="clearTopicFilter($event)" title="Bỏ lọc chủ đề này"></i>
+      } @else {
+        <i class="fa-solid fa-chevron-down caret-icon"></i>
+      }
     </button>
-  </div>
+
+    @if (activeCategoryFilter()) {
+      <div class="active-category-chip" (click)="clearCategoryFilter()" title="Bấm để bỏ lọc nhóm chức năng này">
+        <i class="fa-solid fa-tree"></i> {{ activeCategoryFilter() }}
+        <i class="fa-solid fa-xmark chip-close"></i>
+      </div>
+    }
+  </app-data-filter-bar>
 
   <!-- ── Loading ── -->
   @if (loading()) {
@@ -130,132 +131,24 @@
     </div>
   }
 
-  <!-- ── Card List ── -->
+  <!-- ── Card Grid / List Container ── -->
   @if (!loading() && cards().length > 0) {
-    <div class="list-controls-bar">
-      <label class="select-all-label">
-        <input
-          type="checkbox"
-          class="custom-checkbox"
-          [checked]="isAllSelected()"
-          (change)="toggleSelectAll()"
-        />
-        <span>Chọn tất cả trang này ({{ cards().length }} từ)</span>
-      </label>
-      <span class="selection-indicator" *ngIf="selectedCount() > 0">
-        Đã chọn <strong>{{ selectedCount() }}</strong> thẻ từ
-      </span>
-    </div>
-
-    <div class="card-list">
+    <div [class.cards-grid]="viewMode() === 'grid'" [class.card-list]="viewMode() === 'list'">
       @for (card of cards(); track card.id) {
-        <div
-          class="vocab-card glass-panel"
-          [class.selected-row]="isCardSelected(card.id)"
-          (click)="goToDetail(card)"
-        >
-          <!-- Checkbox selector -->
-          <div class="card-checkbox-wrap" (click)="toggleSelectCard(card.id, $event)">
-            <input
-              type="checkbox"
-              class="custom-checkbox"
-              [checked]="isCardSelected(card.id)"
-              (click)="$event.stopPropagation()"
-              (change)="toggleSelectCard(card.id, $event)"
-            />
-          </div>
-
-          <!-- Main Content: Compact 2-line layout -->
-          <div class="card-main">
-            <div class="card-word-row">
-              <span class="card-word">{{ card.word || card.front }}</span>
-
-              @if (card.ipa) {
-                <span class="card-ipa">{{ card.ipa }}</span>
-              }
-
-              @if (card.partOfSpeech) {
-                <span class="card-pos-pill">{{ card.partOfSpeech }}</span>
-              }
-
-              <button class="card-audio-btn" (click)="playAudio(card, $event)" title="Phát âm tiếng Anh">
-                <i class="fa-solid fa-volume-high"></i>
-              </button>
-
-              <!-- Deck Badge -->
-              @if (card.deckId) {
-                <span
-                  class="badge badge-deck"
-                  (click)="goToDeckDetail(card.deckId, $event)"
-                  title="Thuộc bộ thẻ '{{ getDeckName(card.deckId) }}'. Bấm để xem chi tiết bộ thẻ"
-                >
-                  <i class="fa-solid fa-layer-group"></i> {{ getDeckName(card.deckId) }}
-                </span>
-              } @else {
-                <span
-                  class="badge badge-unassigned"
-                  (click)="openAssignDeckModal(card, $event)"
-                  title="Chưa gán vào bộ thẻ. Bấm để thêm vào bộ thẻ"
-                >
-                  <i class="fa-solid fa-folder-plus"></i> + Gán Deck
-                </span>
-              }
-
-              @if (card.topic) {
-                <span
-                  class="badge badge-genre clickable-topic-badge"
-                  (click)="$event.stopPropagation(); filterByTopic(card.topic)"
-                  title="Lọc các từ thuộc chủ đề '{{ card.topic }}'"
-                >
-                  <i class="fa-solid fa-tag"></i> {{ card.topic }}
-                </span>
-              }
-
-              <button
-                class="card-fav-btn"
-                [class.favorited]="card.isFavorite"
-                (click)="toggleFavorite(card, $event)"
-                title="Đánh dấu yêu thích"
-              >
-                <i [class]="card.isFavorite ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
-              </button>
-            </div>
-
-            <!-- Meaning and definition on one sleek line -->
-            <div class="card-meaning-row">
-              <span class="card-meaning">{{ card.meaning || card.back }}</span>
-              @if (card.definitionEn) {
-                <span class="card-definition-en">• {{ card.definitionEn }}</span>
-              }
-            </div>
-          </div>
-
-          <!-- Card Right Column: Mastery Level, Status & Next Review -->
-          <div class="card-meta">
-            <app-status-badge
-              type="level"
-              [label]="'L' + (card.masteryLevel || 1)"
-              [title]="'Mastery Level ' + (card.masteryLevel || 1)"
-            ></app-status-badge>
-
-            <span class="status-badge" [class]="getStatusClass(card.status)">
-              {{ getStatusLabel(card.status) }}
-            </span>
-
-            <span class="next-review" [class.overdue]="isOverdue(card.nextReview, card.status)">
-              <i class="fa-regular fa-clock"></i>
-              {{ formatNextReview(card.nextReview, card.status) }}
-            </span>
-
-            <button
-              class="btn-icon change-deck-btn"
-              (click)="openAssignDeckModal(card, $event)"
-              title="Đổi bộ thẻ"
-            >
-              <i class="fa-solid fa-folder-tree"></i>
-            </button>
-          </div>
-        </div>
+        <app-vocab-card
+          [card]="card"
+          [layout]="viewMode()"
+          [selected]="isCardSelected(card.id)"
+          [showCheckbox]="true"
+          [showDeckBadge]="true"
+          [deckName]="getDeckName(card.deckId)"
+          (selectChange)="toggleSelectCard(card.id)"
+          (cardClick)="goToDetail($event)"
+          (favoriteClick)="toggleFavorite($event.card, $event.event)"
+          (deckClick)="goToDeckDetail($event.deckId, $event.event)"
+          (topicClick)="filterByTopic($event.topic)"
+          (assignDeckClick)="openAssignDeckModal($event.card, $event.event)"
+        ></app-vocab-card>
       }
     </div>
   }
@@ -274,41 +167,43 @@
     </div>
   }
 
-  <!-- ── Bulk Action Floating Bar ── -->
-  @if (selectedCount() > 0) {
-    <div class="bulk-action-bar glass-panel animate-slide-up">
-      <div class="bulk-info">
-        <i class="fa-solid fa-circle-check highlight-icon"></i>
-        <span>Đã chọn <strong>{{ selectedCount() }}</strong> thẻ từ vựng</span>
-      </div>
+  <!-- ── Shared Floating Bulk Actions Bar (Appears when >= 1 card is selected) ── -->
+  <app-bulk-actions-bar
+    [selectedCount]="selectedCount()"
+    [totalCount]="totalElements()"
+    itemLabel="thẻ từ vựng"
+    [isAllSelected]="isAllSelected()"
+    (selectAll)="toggleSelectAll()"
+    (clearSelection)="clearSelection()"
+    (edit)="editSelectedCard()"
+    (delete)="deleteSelectedCards()"
+  >
+    <!-- Custom Bulk Deck Assignment Inside Bulk Bar -->
+    <div class="bulk-deck-assign-group" (click)="$event.stopPropagation()">
+      <select class="bulk-deck-select-styled" [(ngModel)]="targetDeckIdForBulk" [disabled]="isAssigningBulk()">
+        <option value="">-- Chuyển bộ thẻ --</option>
+        <option value="unassigned">📂 Hủy gán (Không thuộc Deck)</option>
+        @for (d of decks(); track d.id) {
+          <option [value]="d.id">🗂️ {{ d.name }}</option>
+        }
+      </select>
 
-      <div class="bulk-controls">
-        <select class="bulk-deck-select" [(ngModel)]="targetDeckIdForBulk" [disabled]="isAssigningBulk()">
-          <option value="">-- Chọn bộ thẻ mục tiêu --</option>
-          <option value="unassigned">📂 Hủy gán (Chưa phân bộ thẻ)</option>
-          @for (d of decks(); track d.id) {
-            <option [value]="d.id">🗂️ {{ d.name }}</option>
-          }
-        </select>
-
-        <button
-          class="btn-primary btn-sm"
-          (click)="executeBulkAssignDeck()"
-          [disabled]="!targetDeckIdForBulk || isAssigningBulk()"
-        >
-          @if (isAssigningBulk()) {
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang gán...
-          } @else {
-            <i class="fa-solid fa-arrow-right-to-bracket"></i> Gán Vào Bộ Thẻ
-          }
-        </button>
-
-        <button class="btn-secondary btn-sm" (click)="clearSelection()" [disabled]="isAssigningBulk()">
-          <i class="fa-solid fa-xmark"></i> Bỏ chọn
-        </button>
-      </div>
+      <button
+        type="button"
+        class="btn-bulk-assign-deck"
+        (click)="executeBulkAssignDeck()"
+        [disabled]="!targetDeckIdForBulk || isAssigningBulk()"
+        title="Gán tất cả từ đã chọn vào bộ thẻ này"
+      >
+        @if (isAssigningBulk()) {
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+        } @else {
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        }
+        <span>Gán Deck</span>
+      </button>
     </div>
-  }
+  </app-bulk-actions-bar>
 
   <!-- ── Single Card Assign Deck Modal ── -->
   @if (cardToAssignDeck()) {
@@ -352,25 +247,143 @@
     </div>
   }
 
-  <!-- ================= SHARED DEDICATED MODALS ================= -->
-
-  <!-- 1. Modal Thêm Từ Vựng Mới (VocabImportModal) -->
+  <!-- Unified Vocab Import & Edit Modal -->
   <app-vocab-import-modal
     [isOpen]="isVocabModalOpen()"
-    [targetDeckId]="filterDeckId && filterDeckId !== 'unassigned' ? filterDeckId : undefined"
+    [card]="editingCard()"
     [availableDecks]="decks()"
-    (closeModal)="isVocabModalOpen.set(false)"
+    (closeModal)="closeVocabModal()"
     (vocabAdded)="onVocabAdded()"
+    (cardSaved)="onCardSaved($event)"
   ></app-vocab-import-modal>
 
-  <!-- 2. Modal Thêm Bài Tập 4-Level AI (ExerciseImportModal) -->
+  <!-- 3. Modal Thêm Bài Tập 4-Level AI (ExerciseImportModal) -->
   <app-exercise-import-modal
     [isOpen]="isExerciseModalOpen()"
-    [deckId]="filterDeckId && filterDeckId !== 'unassigned' ? filterDeckId : undefined"
     [promptData]="promptData()"
     (closeModal)="isExerciseModalOpen.set(false)"
     (importSuccess)="onExerciseImportSuccess()"
     (startPractice)="startPractice()"
   ></app-exercise-import-modal>
+  <app-modal
+    [isOpen]="isTopicModalOpen()"
+    title="Bộ Lọc Chủ Đề Từ Vựng"
+    size="lg"
+    (closed)="closeTopicModal()"
+  >
+    <div class="topic-modal-body">
+      <!-- Search inside Topic Modal -->
+      <div class="topic-search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          class="topic-search-input"
+          placeholder="Tìm kiếm hoặc gõ tên chủ đề bất kỳ (VD: Travel, Medicine, Sports...)"
+          [ngModel]="searchTopicModalQuery()"
+          (ngModelChange)="searchTopicModalQuery.set($event)"
+        />
+        @if (searchTopicModalQuery()) {
+          <button type="button" class="btn-clear-search" (click)="searchTopicModalQuery.set('')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+
+      @if (searchTopicModalQuery().trim()) {
+        <div class="custom-search-topic-banner">
+          <span>Tìm nhanh:</span>
+          <button
+            type="button"
+            class="topic-chip custom-keyword-chip"
+            (click)="selectTopic(searchTopicModalQuery().trim())"
+          >
+            <i class="fa-solid fa-bolt highlight"></i>
+            <span>Lọc theo từ khóa: <strong>"{{ searchTopicModalQuery().trim() }}"</strong></span>
+          </button>
+        </div>
+      }
+
+      <!-- Quick Action: All Topics (Reset) -->
+      <div class="topic-action-header">
+        <button
+          type="button"
+          class="topic-chip all-topics-chip"
+          [class.active]="!filterTopic"
+          (click)="selectTopic('')"
+        >
+          <i class="fa-solid fa-border-all"></i>
+          <span>Tất cả chủ đề (Bỏ lọc)</span>
+        </button>
+        @if (filterTopic) {
+          <span class="current-selected-label">
+            Đang lọc: <strong>{{ filterTopic }}</strong>
+          </span>
+        }
+      </div>
+
+      <!-- User's Existing Custom Topics (if available) -->
+      @if (filteredUserTopicsInModal().length > 0) {
+        <div class="topic-category-group">
+          <div class="category-group-header">
+            <i class="fa-solid fa-bookmark highlight"></i>
+            <h4>Chủ đề trong kho từ của bạn ({{ filteredUserTopicsInModal().length }})</h4>
+          </div>
+          <div class="topics-pills-grid">
+            @for (ut of filteredUserTopicsInModal(); track ut) {
+              <button
+                type="button"
+                class="topic-chip user-topic-chip"
+                [class.active]="filterTopic.toLowerCase() === ut.toLowerCase()"
+                (click)="selectTopic(ut)"
+              >
+                <i class="fa-solid fa-tag"></i>
+                <span>{{ ut }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Curated Preset Categories -->
+      @for (cat of filteredCategoriesInModal(); track cat.categoryName) {
+        <div class="topic-category-group">
+          <div class="category-group-header">
+            <i [class]="cat.icon + ' highlight'"></i>
+            <h4>{{ cat.categoryName }}</h4>
+          </div>
+          <div class="topics-pills-grid">
+            @for (t of cat.topics; track t.key) {
+              <button
+                type="button"
+                class="topic-chip preset-topic-chip"
+                [class.active]="filterTopic.toLowerCase() === t.key.toLowerCase()"
+                (click)="selectTopic(t.key)"
+              >
+                <i [class]="t.icon"></i>
+                <div class="topic-label-group">
+                  <span class="topic-key">{{ t.key }}</span>
+                  <span class="topic-vn-desc">{{ t.label }}</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (filteredCategoriesInModal().length === 0 && filteredUserTopicsInModal().length === 0) {
+        <div class="empty-topic-results">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          <p>Không tìm thấy chủ đề phù hợp với "<strong>{{ searchTopicModalQuery() }}</strong>"</p>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="selectTopic(searchTopicModalQuery().trim())">
+            <i class="fa-solid fa-plus"></i> Lọc theo từ khóa "{{ searchTopicModalQuery().trim() }}"
+          </button>
+        </div>
+      }
+    </div>
+
+    <div footer class="topic-modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeTopicModal()">Đóng</button>
+    </div>
+  </app-modal>
 
 </div>

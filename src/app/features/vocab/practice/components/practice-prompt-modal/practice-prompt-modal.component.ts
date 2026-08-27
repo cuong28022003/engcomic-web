@@ -1,11 +1,12 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PracticePromptResponse } from '@models/index';
+import { AiImportWorkspaceComponent, AiMetaBadge } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 
 @Component({
   selector: 'app-practice-prompt-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AiImportWorkspaceComponent],
   templateUrl: './practice-prompt-modal.component.html',
   styleUrls: ['./practice-prompt-modal.component.scss'],
 })
@@ -15,6 +16,16 @@ export class PracticePromptModalComponent {
 
   closeModal = output<void>();
   openImport = output<void>();
+
+  readonly metaBadges = computed<AiMetaBadge[]>(() => {
+    const data = this.promptData();
+    const badges: AiMetaBadge[] = [];
+    badges.push({ icon: 'fa-solid fa-layer-group', label: data?.deckName || 'Bộ từ vựng', variant: 'primary' });
+    if (data?.wordCount !== undefined) {
+      badges.push({ icon: 'fa-regular fa-clock', label: `${data.wordCount} từ chưa có bài tập`, variant: 'warning' });
+    }
+    return badges;
+  });
 
   copied = signal<boolean>(false);
 

@@ -1,0 +1,292 @@
+<div class="ai-import-workspace">
+  <!-- Optional Mode Switcher (AI Flow vs Manual Form) -->
+  @if (enableModeSwitch()) {
+    <div class="mode-tab-bar">
+      <button
+        type="button"
+        class="mode-tab-btn"
+        [class.active]="activeMode() === 'ai'"
+        (click)="activeMode.set('ai')"
+      >
+        <i [class]="aiModeIcon()"></i>
+        <span>{{ aiModeLabel() }}</span>
+      </button>
+      <button
+        type="button"
+        class="mode-tab-btn"
+        [class.active]="activeMode() === 'manual'"
+        (click)="activeMode.set('manual')"
+      >
+        <i [class]="manualModeIcon()"></i>
+        <span>{{ manualModeLabel() }}</span>
+      </button>
+    </div>
+  }
+
+  <!-- ================= MODE 1: AI IMPORT FLOW ================= -->
+  @if (activeMode() === 'ai') {
+    <!-- Optional Stepper -->
+    @if (showStepper()) {
+      <div class="stepper-wrapper">
+        <app-progress-stepper
+          [steps]="steps()"
+          [currentStep]="currentStepIndex()"
+          (stepChange)="onStepChange($event)"
+        ></app-progress-stepper>
+      </div>
+    }
+
+    <!-- ── STEP 1: PROMPT BUILDER & TERMINAL ── -->
+    @if (currentStep() === 'prompt') {
+      <div class="step-view step-prompt">
+        <!-- Optional Prompt Config Slot (Word list input, Word collector pill, etc.) -->
+        <div class="prompt-config-slot">
+          <ng-content select="[prompt-config]"></ng-content>
+        </div>
+
+        <!-- Preset Dropdown / Toolbar (if presets provided) -->
+        @if (presets().length > 0) {
+          <div class="presets-toolbar">
+            <div class="preset-label-group">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Chọn chủ đề mẫu:</span>
+            </div>
+            <select
+              class="preset-select"
+              [ngModel]="selectedPreset()"
+              (ngModelChange)="onSelectPreset($event)"
+            >
+              @for (preset of presets(); track preset.key) {
+                <option [value]="preset.key">{{ preset.label }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        <!-- Meta Badges Row (if any) -->
+        @if (metaBadges().length > 0) {
+          <div class="meta-badges-row">
+            @for (badge of metaBadges(); track badge.label) {
+              <span class="meta-badge-pill" [class]="badge.variant || 'primary'">
+                @if (badge.icon) {
+                  <i [class]="badge.icon"></i>
+                }
+                <span>{{ badge.label }}</span>
+              </span>
+            }
+          </div>
+        }
+
+        <!-- Guide Steps / Instruction Banner -->
+        @if (guideSteps().length > 0) {
+          <div class="guide-banner">
+            <div class="guide-icon"><i class="fa-solid fa-lightbulb"></i></div>
+            <div class="guide-text">
+              <strong>Hướng dẫn nhanh:</strong>
+              <ol>
+                @for (g of guideSteps(); track g) {
+                  <li>{{ g }}</li>
+                }
+              </ol>
+            </div>
+          </div>
+        } @else if (instruction()) {
+          <p class="prompt-instruction">{{ instruction() }}</p>
+        }
+
+        <!-- Hacker-Style Code Terminal Prompt Box -->
+        <div class="code-terminal glass-panel">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="terminal-title">{{ promptTerminalTitle() }}</span>
+            <button
+              type="button"
+              class="terminal-copy-btn"
+              [class.copied]="copied()"
+              (click)="onCopyPrompt()"
+            >
+              @if (copied()) {
+                <i class="fa-solid fa-check"></i>
+                <span>Đã sao chép!</span>
+              } @else {
+                <i class="fa-regular fa-copy"></i>
+                <span>Sao chép Prompt (1-Click)</span>
+              }
+            </button>
+          </div>
+
+          <div class="terminal-body">
+            <pre class="prompt-code"><code>{{ promptText() }}</code></pre>
+          </div>
+        </div>
+
+        <!-- Step 1 Footer Actions -->
+        <div class="step-actions-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [class.btn-copied]="copied()"
+            (click)="onCopyPrompt()"
+          >
+            @if (copied()) {
+              <i class="fa-solid fa-check"></i> <span>Đã sao chép Prompt!</span>
+            } @else {
+              <i class="fa-regular fa-copy"></i> <span>Sao chép Prompt</span>
+            }
+          </button>
+          <button type="button" class="btn btn-primary" (click)="goToPasteStep()">
+            <i class="fa-solid fa-file-import"></i>
+            <span>{{ pasteActionLabel() }}</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── STEP 2: JSON INPUT & REAL-TIME VALIDATOR ── -->
+    @if (currentStep() === 'paste') {
+      <div class="step-view step-paste">
+        <!-- Optional Top Helper Slot -->
+        <div class="helper-slot">
+          <ng-content select="[json-helper]"></ng-content>
+        </div>
+
+        <!-- Optional Extra Fields Slot (Target Deck Selection, etc.) -->
+        <div class="extra-fields-slot">
+          <ng-content select="[json-extra-fields]"></ng-content>
+        </div>
+
+        <!-- JSON Input Toolbar -->
+        <div class="json-input-card">
+          <div class="json-toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-title">
+                <i class="fa-solid fa-code"></i> Dán dữ liệu JSON từ AI:
+              </span>
+            </div>
+            <div class="toolbar-right">
+              @if (sampleJson()) {
+                <button type="button" class="btn-tool-pill" (click)="insertSample()">
+                  <i class="fa-solid fa-lightbulb"></i> Dán Dữ Liệu Mẫu
+                </button>
+              }
+              @if (jsonText()) {
+                <button type="button" class="btn-tool-pill" (click)="formatJson()" title="Định dạng JSON">
+                  <i class="fa-solid fa-align-left"></i> Format
+                </button>
+                <button type="button" class="btn-tool-pill danger" (click)="clearJson()" title="Xóa">
+                  <i class="fa-solid fa-trash-can"></i> Xóa
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea
+              class="form-control json-textarea"
+              [rows]="jsonRows()"
+              [placeholder]="jsonPlaceholder()"
+              [ngModel]="jsonText()"
+              (ngModelChange)="jsonText.set($event)"
+            ></textarea>
+          </div>
+
+          <!-- Real-Time Validation Status -->
+          @if (validationStatus(); as val) {
+            @if (val.status === 'valid') {
+              <div class="validation-status-box valid">
+                <div class="status-header">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Cú pháp JSON hợp lệ! Nhận diện <strong>{{ val.itemCount || 0 }}</strong> phần tử:</span>
+                </div>
+                <!-- Custom Chips or Built-in Slot -->
+                <div class="chips-slot">
+                  <ng-content select="[json-preview-chips]"></ng-content>
+                </div>
+              </div>
+            } @else if (val.status === 'invalid') {
+              <div class="validation-status-box invalid">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div class="error-detail">
+                  <strong>JSON chưa đúng định dạng:</strong>
+                  <span>{{ val.errorMessage }}</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Step 2 Footer Actions -->
+        <div class="step-actions-footer justify-between">
+          <button type="button" class="btn btn-secondary" (click)="goToPromptStep()">
+            <i class="fa-solid fa-arrow-left"></i> <span>Xem Lại Prompt</span>
+          </button>
+          
+          <div class="footer-right-actions">
+            <ng-content select="[step-paste-actions]"></ng-content>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="isSubmitting() || !jsonText().trim() || (validationStatus()?.status === 'invalid')"
+              (click)="submitImport.emit()"
+            >
+              @if (isSubmitting()) {
+                <i class="fa-solid fa-spinner fa-spin"></i> <span>Đang xử lý...</span>
+              } @else {
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>{{ submitButtonLabel() }}</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── STEP 3: PREVIEW & CONFIRMATION (OPTIONAL) ── -->
+    @if (currentStep() === 'preview') {
+      <div class="step-view step-preview">
+        <div class="preview-content-slot">
+          <ng-content select="[preview-content]"></ng-content>
+        </div>
+
+        <!-- Step 3 Footer Actions -->
+        <div class="step-actions-footer justify-between">
+          <button type="button" class="btn btn-secondary" (click)="goToPasteStep()">
+            <i class="fa-solid fa-arrow-left"></i> <span>Quay Lại Sửa JSON</span>
+          </button>
+          <div class="footer-right-actions">
+            <ng-content select="[step-preview-actions]"></ng-content>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="isSubmitting()"
+              (click)="submitImport.emit()"
+            >
+              @if (isSubmitting()) {
+                <i class="fa-solid fa-spinner fa-spin"></i> <span>Đang lưu...</span>
+              } @else {
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>{{ submitButtonLabel() }}</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ================= MODE 2: MANUAL FORM ================= -->
+  @if (activeMode() === 'manual') {
+    <div class="manual-form-wrapper">
+      <ng-content select="[manual-form]"></ng-content>
+
+      <div class="manual-footer-slot">
+        <ng-content select="[manual-footer]"></ng-content>
+      </div>
+    </div>
+  }
+</div>

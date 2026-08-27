@@ -1,297 +1,195 @@
 <app-modal
   [isOpen]="isOpen()"
   [title]="isEditMode() ? 'Chỉnh Sửa Điểm Ngữ Pháp' : 'Thêm / Nạp Điểm Ngữ Pháp'"
-  size="lg"
+  size="xl"
   (closed)="onClose()"
 >
-  <div class="unified-modal-wrapper">
-    <!-- Mode Switcher Tabs (Only shown when creating new) -->
-    @if (!isEditMode()) {
-      <div class="modal-tab-bar">
-        <button
-          type="button"
-          class="modal-tab-btn"
-          [class.active]="activeTab() === 'manual'"
-          (click)="setTab('manual')"
-        >
-          <i class="fa-solid fa-pen-nib"></i> Nhập Thủ Công
-        </button>
-        <button
-          type="button"
-          class="modal-tab-btn"
-          [class.active]="activeTab() === 'import_json'"
-          (click)="setTab('import_json')"
-        >
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Nạp Hàng Loạt Bằng AI JSON
-        </button>
-      </div>
-    }
-
-    <!-- TAB 1: MANUAL FORM -->
-    @if (activeTab() === 'manual') {
-      <form class="grammar-edit-form" (ngSubmit)="onSubmitManual()">
-        <!-- Row 1: Topic & Category -->
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label required">Chủ Đề Ngữ Pháp (Topic):</label>
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Ví dụ: Present Perfect (Hiện Tại Hoàn Thành)"
-              [ngModel]="topic()"
-              (ngModelChange)="topic.set($event)"
-              name="topic"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label required">Danh Mục (Category):</label>
-            <select
-              class="form-control form-select"
-              [ngModel]="category()"
-              (ngModelChange)="category.set($event)"
-              name="category"
-              required
-            >
-              @for (cat of categories; track cat.key) {
-                <option [value]="cat.key">{{ cat.label }}</option>
-              }
-            </select>
-          </div>
+  <app-ai-import-workspace
+    [enableModeSwitch]="!isEditMode()"
+    [activeMode]="activeTab() === 'manual' ? 'manual' : 'ai'"
+    (activeModeChange)="setTab($event === 'manual' ? 'manual' : 'import_json')"
+    aiModeLabel="Nạp Hàng Loạt Bằng AI JSON"
+    [showStepper]="true"
+    [steps]="grammarSteps"
+    [(currentStep)]="currentAiStep"
+    [promptText]="generatedPrompt()"
+    [presets]="promptPresets"
+    [(selectedPreset)]="selectedPreset"
+    (presetChanged)="selectPreset($event?.key || $event)"
+    instruction="Chọn chủ đề & Sao chép Prompt cho AI (ChatGPT / Claude), sau đó dán kết quả JSON vào ô dưới:"
+    promptTerminalTitle="Grammar System Prompt (.json)"
+    [(jsonText)]="importJsonContent"
+    jsonPlaceholder="Dán JSON array từ ChatGPT/Claude vào đây..."
+    [sampleJson]="sampleJsonData"
+    [validationStatus]="validationStatusObj()"
+    [isSubmitting]="saving()"
+    [submitButtonLabel]="'Nạp ' + (parsedJsonStatus().items?.length || 0) + ' Điểm Ngữ Pháp'"
+    (submitImport)="onSubmitImportJson()"
+    (cancel)="onClose()"
+  >
+    <!-- Custom validation preview chips slot -->
+    <div json-preview-chips class="items-preview-grid">
+      @for (it of parsedJsonStatus().items?.slice(0, 10); track $index) {
+        <div class="preview-item-chip">
+          <span class="p-topic">{{ it.topic || 'Chưa đặt tên' }}</span>
+          <span class="p-cat">{{ it.category || 'general' }}</span>
         </div>
+      }
+      @if (parsedJsonStatus().items && parsedJsonStatus().items!.length > 10) {
+        <span class="preview-more">+{{ parsedJsonStatus().items!.length - 10 }} điểm khác</span>
+      }
+    </div>
 
-        <!-- Row 2: Short Rule -->
+    <!-- Manual Form Slot -->
+    <form manual-form class="grammar-edit-form" (ngSubmit)="onSubmitManual()">
+      <!-- Row 1: Topic & Category -->
+      <div class="form-row-2">
         <div class="form-group">
-          <label class="form-label">Quy Tắc Cốt Lõi (Short Rule):</label>
-          <textarea
-            class="form-control"
-            rows="3"
-            placeholder="Tóm tắt ngắn gọn, dễ nhớ khi tra cứu nhanh..."
-            [ngModel]="shortRule()"
-            (ngModelChange)="shortRule.set($event)"
-            name="shortRule"
-          ></textarea>
-        </div>
-
-        <!-- Row 3: Structure / Formula -->
-        <div class="form-group">
-          <label class="form-label">Công Thức / Cấu Trúc (Structure):</label>
+          <label class="form-label required">Chủ đề ngữ pháp:</label>
           <input
             type="text"
-            class="form-control code-input"
-            placeholder="Ví dụ: S + have/has + V3/ed | S + V2/ed"
-            [ngModel]="structure()"
-            (ngModelChange)="structure.set($event)"
-            name="structure"
+            class="form-control"
+            placeholder="Ví dụ: Present Perfect, Used to + V, Although..."
+            [ngModel]="topic()"
+            (ngModelChange)="topic.set($event)"
+            name="topic"
+            required
           />
         </div>
 
-        <!-- Row 4: Signal Words & Search Keywords -->
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label">Dấu Hiệu Nhận Biết (cách nhau bởi dấu phẩy):</label>
-            <input
-              type="text"
-              class="form-control"
-              placeholder="already, just, yet, since, for, yesterday..."
-              [ngModel]="signalWordsStr()"
-              (ngModelChange)="signalWordsStr.set($event)"
-              name="signalWords"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Từ Khóa Tìm Kiếm (cách nhau bởi dấu phẩy):</label>
-            <input
-              type="text"
-              class="form-control"
-              placeholder="thì hoàn thành, quá khứ đơn, since, for..."
-              [ngModel]="searchKeywordsStr()"
-              (ngModelChange)="searchKeywordsStr.set($event)"
-              name="searchKeywords"
-            />
-          </div>
-        </div>
-
-        <!-- Row 5: Common Mistake -->
         <div class="form-group">
-          <label class="form-label">Lỗi Thường Gặp (Common Mistake):</label>
-          <textarea
+          <label class="form-label required">Danh mục:</label>
+          <select
+            class="form-control form-select"
+            [ngModel]="category()"
+            (ngModelChange)="category.set($event)"
+            name="category"
+            required
+          >
+            @for (cat of categories; track cat.key) {
+              <option [value]="cat.key">{{ cat.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 2: Short Rule -->
+      <div class="form-group">
+        <label class="form-label">Quy tắc cốt lõi:</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          placeholder="Tóm tắt ngắn gọn 1-2 câu về bản chất và ngữ cảnh sử dụng..."
+          [ngModel]="shortRule()"
+          (ngModelChange)="shortRule.set($event)"
+          name="shortRule"
+        ></textarea>
+      </div>
+
+      <!-- Row 3: Structure / Formula -->
+      <div class="form-group">
+        <label class="form-label">Công thức / Cấu trúc:</label>
+        <input
+          type="text"
+          class="form-control code-input"
+          placeholder="Ví dụ: S + used to + V (thói quen cũ) | S + didn't use to + V"
+          [ngModel]="structure()"
+          (ngModelChange)="structure.set($event)"
+          name="structure"
+        />
+      </div>
+
+      <!-- Row 4: Signal Words & Search Keywords -->
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label">Dấu hiệu nhận biết:</label>
+          <input
+            type="text"
             class="form-control"
-            rows="2"
-            placeholder="Cảnh báo bẫy hay sai..."
-            [ngModel]="commonMistake()"
-            (ngModelChange)="commonMistake.set($event)"
-            name="commonMistake"
-          ></textarea>
+            placeholder="Cách nhau bởi dấu phẩy: already, just, yet, since, for..."
+            [ngModel]="signalWordsStr()"
+            (ngModelChange)="signalWordsStr.set($event)"
+            name="signalWords"
+          />
         </div>
 
-        <!-- Row 6: Examples List -->
-        <div class="form-group examples-section">
-          <div class="examples-header">
-            <label class="form-label">Ví Dụ Minh Họa (Examples):</label>
-            <button type="button" class="btn-add-row" (click)="addExampleRow()">
-              <i class="fa-solid fa-plus"></i> Thêm ví dụ
-            </button>
-          </div>
+        <div class="form-group">
+          <label class="form-label">Từ khóa tìm kiếm:</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Cách nhau bởi dấu phẩy: thì hoàn thành, quá khứ, since, for..."
+            [ngModel]="searchKeywordsStr()"
+            (ngModelChange)="searchKeywordsStr.set($event)"
+            name="searchKeywords"
+          />
+        </div>
+      </div>
 
-          <div class="examples-rows-list">
-            @for (ex of examples(); track $index) {
-              <div class="example-row-card">
-                <div class="row-inputs">
-                  <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Câu ví dụ tiếng Anh (e.g. I have finished my homework.)"
-                    [ngModel]="ex.text"
-                    (ngModelChange)="updateExampleText($index, $event)"
-                    name="exText_{{ $index }}"
-                  />
-                  <input
-                    type="text"
-                    class="form-control note-input"
-                    placeholder="Ghi chú / Giải thích tại sao (optional)"
-                    [ngModel]="ex.note"
-                    (ngModelChange)="updateExampleNote($index, $event)"
-                    name="exNote_{{ $index }}"
-                  />
-                </div>
+      <!-- Row 5: Common Mistake -->
+      <div class="form-group">
+        <label class="form-label">Lỗi thường gặp:</label>
+        <textarea
+          class="form-control"
+          rows="2"
+          placeholder="Lỗi sai người học hay nhầm lẫn và cách khắc phục..."
+          [ngModel]="commonMistake()"
+          (ngModelChange)="commonMistake.set($event)"
+          name="commonMistake"
+        ></textarea>
+      </div>
+
+      <!-- Row 6: Examples List -->
+      <div class="form-group examples-section">
+        <div class="examples-header">
+          <label class="form-label">Ví dụ minh họa:</label>
+          <button type="button" class="btn-add-row" (click)="addExampleRow()">
+            <i class="fa-solid fa-plus"></i> Thêm ví dụ
+          </button>
+        </div>
+
+        <div class="examples-rows-list">
+          @for (ex of examples(); track $index) {
+            <div class="example-row-card">
+              <div class="row-inputs">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Câu ví dụ tiếng Anh (VD: I used to play badminton every Sunday.)"
+                  [ngModel]="ex.text"
+                  (ngModelChange)="updateExampleText($index, $event)"
+                  name="exText_{{ $index }}"
+                />
+                <input
+                  type="text"
+                  class="form-control note-input"
+                  placeholder="Bản dịch nghĩa tiếng Việt (VD: Tôi từng chơi cầu lông vào mỗi Chủ nhật.)"
+                  [ngModel]="ex.note"
+                  (ngModelChange)="updateExampleNote($index, $event)"
+                  name="exNote_{{ $index }}"
+                />
+              </div>
+              @if (examples().length > 1) {
                 <button
                   type="button"
                   class="btn-remove-row"
                   (click)="removeExampleRow($index)"
-                  title="Xóa ví dụ"
+                  title="Xóa ví dụ này"
                 >
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
-            }
-          </div>
-        </div>
-      </form>
-    }
-
-    <!-- TAB 2: ENHANCED BATCH JSON IMPORT -->
-    @if (activeTab() === 'import_json') {
-      <div class="import-json-container">
-        <!-- Step 1: Prompt Generator -->
-        <div class="prompt-builder-card">
-          <div class="step-badge">
-            <span class="step-num">1</span>
-            <span class="step-title">Chọn chủ đề & Sao chép Prompt gửi cho ChatGPT / Claude</span>
-          </div>
-
-          <div class="presets-row">
-            <span class="presets-label">Chủ đề mẫu:</span>
-            <div class="presets-chips">
-              @for (preset of promptPresets; track preset.key) {
-                <button
-                  type="button"
-                  class="preset-chip"
-                  [class.active]="selectedPreset() === preset.key"
-                  (click)="selectPreset(preset.key)"
-                >
-                  {{ preset.label }}
+                  <i class="fa-solid fa-trash-can"></i>
                 </button>
               }
             </div>
-          </div>
-
-          <div class="prompt-box">
-            <pre class="prompt-code">{{ generatedPrompt() }}</pre>
-            <div class="prompt-actions-bar">
-              <button
-                type="button"
-                class="btn-copy-prompt"
-                [class.copied]="copiedPrompt()"
-                (click)="copyPromptToClipboard()"
-              >
-                @if (copiedPrompt()) {
-                  <i class="fa-solid fa-check"></i>
-                  <span>Đã sao chép vào Clipboard!</span>
-                } @else {
-                  <i class="fa-solid fa-copy"></i>
-                  <span>Sao Chép Prompt Nhanh</span>
-                }
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 2: Paste JSON from AI -->
-        <div class="json-input-card">
-          <div class="step-badge">
-            <span class="step-num">2</span>
-            <span class="step-title">Dán JSON nhận được từ AI vào đây</span>
-          </div>
-
-          <div class="input-toolbar">
-            <div class="toolbar-left">
-              <button type="button" class="btn-tool" (click)="insertSampleJson()">
-                <i class="fa-solid fa-lightbulb"></i> Dán Dữ Liệu Mẫu
-              </button>
-            </div>
-            @if (importJsonContent()) {
-              <button type="button" class="btn-tool danger" (click)="clearImportText()">
-                <i class="fa-solid fa-trash-can"></i> Xóa
-              </button>
-            }
-          </div>
-
-          <!-- Direct JSON Textarea -->
-          <div class="textarea-wrapper">
-            <textarea
-              class="form-control json-textarea"
-              rows="8"
-              placeholder="Dán JSON array từ AI vào đây..."
-              [ngModel]="importJsonContent()"
-              (ngModelChange)="importJsonContent.set($event)"
-            ></textarea>
-          </div>
-
-          <!-- Real-Time Validation Feedback & Preview -->
-          @if (parsedJsonStatus(); as val) {
-            @if (val.status === 'valid') {
-              <div class="validation-status-box valid">
-                <div class="status-header">
-                  <div class="status-title">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Cú pháp JSON hợp lệ! Sẵn sàng nạp <strong>{{ val.items?.length }}</strong> điểm ngữ pháp:</span>
-                  </div>
-                </div>
-                <div class="items-preview-grid">
-                  @for (it of val.items?.slice(0, 8); track $index) {
-                    <div class="preview-item-chip">
-                      <span class="p-topic">{{ it.topic || 'Chưa đặt tên' }}</span>
-                      <span class="p-cat">{{ it.category || 'general' }}</span>
-                    </div>
-                  }
-                  @if (val.items && val.items.length > 8) {
-                    <span class="preview-more">+{{ val.items.length - 8 }} điểm ngữ pháp khác</span>
-                  }
-                </div>
-              </div>
-            } @else if (val.status === 'invalid') {
-              <div class="validation-status-box invalid">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <div class="error-detail">
-                  <strong>JSON chưa đúng định dạng:</strong>
-                  <span>{{ val.errorMessage }}</span>
-                </div>
-              </div>
-            }
           }
         </div>
       </div>
-    }
-  </div>
+    </form>
 
-  <div footer class="edit-modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="onClose()">
-      Hủy bỏ
-    </button>
-    @if (activeTab() === 'manual') {
+    <!-- Manual Footer Slot -->
+    <div manual-footer class="edit-modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="onClose()">
+        Hủy bỏ
+      </button>
       <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="onSubmitManual()">
         @if (saving()) {
           <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
@@ -299,20 +197,6 @@
           <i class="fa-solid fa-floppy-disk"></i> {{ isEditMode() ? 'Lưu Thay Đổi' : 'Tạo Điểm Ngữ Pháp' }}
         }
       </button>
-    } @else {
-      <button
-        type="button"
-        class="btn btn-primary btn-import-submit"
-        [disabled]="saving() || parsedJsonStatus().status !== 'valid'"
-        (click)="onSubmitImportJson()"
-      >
-        @if (saving()) {
-          <i class="fa-solid fa-spinner fa-spin"></i> Đang nạp dữ liệu...
-        } @else {
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          <span>Nạp {{ parsedJsonStatus().items?.length || 0 }} Điểm Ngữ Pháp</span>
-        }
-      </button>
-    }
-  </div>
+    </div>
+  </app-ai-import-workspace>
 </app-modal>

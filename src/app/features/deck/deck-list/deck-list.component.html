@@ -1,46 +1,57 @@
 <div class="deck-list-page">
-  <!-- Top Hero Header -->
-  <div class="page-header glass-panel">
-    <div class="header-left">
-      <div class="header-icon-box">
-        <i class="fa-solid fa-layer-group"></i>
-      </div>
-      <div>
-        <h1>Quản Lý Bộ Thẻ Từ Vựng</h1>
-        <p class="subtitle">
-          Hệ thống ghi nhớ ngắt quãng (SRS) kết hợp ngân hàng bài tập 4 Level AI •
-          <span class="highlight-count">{{ decks().length }} bộ thẻ</span> ({{ totalCardsAcrossDecks() }} từ)
-        </p>
-      </div>
-    </div>
+  <!-- Top Hero Header (Shared Component) -->
+  <app-page-header
+    title="Quản Lý Bộ Thẻ Từ Vựng"
+    [subtitle]="'Hệ thống ghi nhớ ngắt quãng (SRS) theo chủ đề • ' + decks().length + ' bộ thẻ (' + totalCardsAcrossDecks() + ' từ)'"
+    icon="fa-solid fa-layer-group"
+    theme="deck"
+  >
+    <button class="btn btn-secondary" (click)="openVocabModal()">
+      <i class="fa-solid fa-plus"></i> Thêm Từ Vựng Vào Kho
+    </button>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="fa-solid fa-folder-plus"></i> Tạo Bộ Thẻ Mới
+    </button>
+  </app-page-header>
 
-    <div class="header-actions">
-      <button class="btn btn-secondary" (click)="openVocabModal()">
-        <i class="fa-solid fa-plus"></i> Thêm Từ Vựng Mới
-      </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">
-        <i class="fa-solid fa-folder-plus"></i> Tạo Bộ Thẻ Mới
-      </button>
-    </div>
-  </div>
-
-  <!-- Search & Stats Filter Bar -->
+  <!-- Search, Sort & View Mode Filter Toolbar -->
   @if (decks().length > 0 && !loading()) {
-    <div class="filter-toolbar glass-panel">
-      <div class="search-cell">
-        <app-form-input
-          [(value)]="searchQuery"
-          placeholder="Tìm kiếm bộ thẻ theo tên hoặc mô tả..."
-          icon="fa-solid fa-magnifying-glass"
-        ></app-form-input>
-      </div>
-      <div class="decks-count-summary">
-        <span class="count-pill">
-          Hiển thị <strong>{{ filteredDecks().length }}</strong> / {{ decks().length }} bộ thẻ
-        </span>
-      </div>
-    </div>
+    <app-data-filter-bar
+      [(searchQuery)]="searchQuery"
+      searchPlaceholder="Tìm kiếm bộ thẻ theo tên hoặc mô tả..."
+      [showSelectAll]="paginatedDecks().length > 0"
+      [isAllSelected]="isAllSelected()"
+      [selectedCount]="selectedCount()"
+      selectAllLabel="Chọn tất cả"
+      (selectAll)="onSelectAll()"
+      [(sortBy)]="sortBy"
+      [sortOptions]="deckSortOptions"
+      [(viewMode)]="viewMode"
+      (viewModeChange)="onViewModeChange($event)"
+      [showViewMode]="true"
+      [totalCount]="decks().length"
+      [filteredCount]="totalFilteredDecks()"
+      itemLabel="bộ thẻ"
+      (clear)="searchQuery.set('')"
+    ></app-data-filter-bar>
   }
+
+  <!-- Bulk Actions Bar (Sticky bottom / top) -->
+  <app-bulk-actions-bar
+    [selectedCount]="selectedCount()"
+    [totalCount]="paginatedDecks().length"
+    [itemLabel]="'bộ thẻ'"
+    [showEdit]="true"
+    [showDelete]="true"
+    [showSelectAll]="true"
+    [isAllSelected]="isAllSelected()"
+    [customActions]="bulkCustomActions"
+    (selectAll)="onSelectAll()"
+    (clearSelection)="clearSelection()"
+    (edit)="onBulkEdit()"
+    (delete)="onBulkDelete()"
+    (customActionClick)="onBulkCustomAction($event)"
+  ></app-bulk-actions-bar>
 
   <!-- Decks Content -->
   @if (loading()) {
@@ -55,7 +66,7 @@
         <i class="fa-solid fa-folder-open"></i>
       </div>
       <h3>Bạn chưa có bộ thẻ nào</h3>
-      <p>Tạo bộ thẻ đầu tiên để gom nhóm từ vựng theo chủ đề (TOEIC, Manga, Giao tiếp) và mở khóa bài tập 4 Level nhé!</p>
+      <p>Tạo bộ thẻ đầu tiên để gom nhóm từ vựng theo chủ đề (TOEIC, Manga, Giao tiếp) và mở khóa bài tập SRS nhé!</p>
       <div class="empty-actions">
         <button class="btn btn-primary" (click)="openCreateModal()">
           <i class="fa-solid fa-folder-plus"></i> Tạo Bộ Thẻ Ngay
@@ -65,7 +76,7 @@
         </button>
       </div>
     </div>
-  } @else if (filteredDecks().length === 0) {
+  } @else if (sortedAndFilteredDecks().length === 0) {
     <div class="empty-state glass-panel">
       <div class="empty-icon-wrap">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -75,150 +86,348 @@
       <button class="btn btn-secondary" (click)="searchQuery.set('')">Xóa tìm kiếm</button>
     </div>
   } @else {
-    <div class="decks-grid">
-      @for (deck of filteredDecks(); track deck.id) {
-        <div class="deck-card glass-panel" (click)="goToDeck(deck.id)">
-          <!-- Top Card Header -->
-          <div class="deck-card-top">
-            <div class="deck-icon-badge">
-              <i class="fa-solid fa-book-bookmark"></i>
+    <!-- GRID VIEW -->
+    @if (viewMode() === 'grid') {
+      <div class="decks-grid">
+        @for (deck of paginatedDecks(); track deck.id; let i = $index) {
+          @let theme = getDeckTheme(deck, i);
+          <div
+            class="deck-card glass-panel"
+            [class.selected-deck]="selectedDeckIds().has(deck.id)"
+            [style.background]="getDeckBackgroundStyle(deck, i)"
+            [style.border-color]="selectedDeckIds().has(deck.id) ? '#6366f1' : theme.border"
+            (click)="goToDeck(deck.id)"
+          >
+            <!-- Background Decorative Watermark Icon (If not image bg) -->
+            @if (!deck.background || !isImageUrl(deck.background)) {
+              <div class="deck-watermark-icon">
+                @if (deck.icon && !isImageUrl(deck.icon)) {
+                  <i [class]="deck.icon"></i>
+                } @else {
+                  <i [class]="theme.icon"></i>
+                }
+              </div>
+            }
+
+            <!-- Top Card Header: Checkbox + Icon -->
+            <div class="deck-card-top">
+              <div class="top-left-row" (click)="$event.stopPropagation()">
+                <app-selection-checkbox
+                  [checked]="selectedDeckIds().has(deck.id)"
+                  (changed)="toggleSelectDeck(deck.id)"
+                ></app-selection-checkbox>
+
+                <div class="deck-icon-badge" [style.background]="theme.border" [style.color]="'#fff'">
+                  @if (deck.icon && isImageUrl(deck.icon)) {
+                    <img [src]="deck.icon" class="deck-icon-custom-img" alt="Icon" />
+                  } @else {
+                    <i [class]="deck.icon || theme.icon"></i>
+                  }
+                </div>
+              </div>
             </div>
+
+            <!-- Title & Card Count -->
             <div class="deck-title-area">
-              <h3 class="deck-title">{{ deck.name }}</h3>
+              <h3 class="deck-title" title="{{ deck.name }}">{{ deck.name }}</h3>
               <span class="card-count-badge">
                 <i class="fa-solid fa-spell-check"></i> {{ deck.totalCards || deck.stats?.totalCards || 0 }} thẻ từ
               </span>
             </div>
-            <button
-              class="btn-icon delete-btn"
-              (click)="confirmDeleteDeck(deck, $event)"
-              title="Xóa bộ thẻ"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
+
+            <!-- Description -->
+            <p class="deck-desc" [class.empty]="!deck.description">
+              {{ deck.description || 'Bộ thẻ từ vựng ôn tập ngắt quãng thông minh' }}
+            </p>
+
+            <!-- Card Footer Actions -->
+            <div class="deck-card-footer" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm study-cta-btn"
+                (click)="startPractice(deck, $event)"
+                [disabled]="(deck.totalCards || deck.stats?.totalCards || 0) === 0"
+                title="Luyện tập bộ thẻ 4 Level"
+              >
+                <i class="fa-solid fa-bolt"></i> Luyện tập
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="openVocabModal(deck, $event)"
+                title="Thêm từ vựng trực tiếp vào bộ thẻ này"
+              >
+                <i class="fa-solid fa-plus"></i> Nạp từ
+              </button>
+            </div>
           </div>
-
-          <!-- Description -->
-          <p class="deck-desc" [class.empty]="!deck.description">
-            {{ deck.description || 'Bộ thẻ từ vựng ôn tập ngắt quãng thông minh' }}
-          </p>
-
-          <!-- Card Footer Actions -->
-          <div class="deck-card-footer" (click)="$event.stopPropagation()">
-            <button
-              class="btn btn-primary btn-sm study-cta-btn"
-              (click)="startPractice(deck, $event)"
-              [disabled]="(deck.totalCards || deck.stats?.totalCards || 0) === 0"
-              title="Luyện tập bộ thẻ 4 Level"
-            >
-              <i class="fa-solid fa-bolt"></i> Luyện tập
-            </button>
-
-            <button
-              class="btn btn-secondary btn-sm"
-              (click)="openVocabModal(deck)"
-              title="Thêm từ vựng trực tiếp vào bộ thẻ này"
-            >
-              <i class="fa-solid fa-plus"></i> Thêm từ
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-  }
-</div>
-
-<!-- Modal Create New Deck -->
-@if (isCreateModalOpen()) {
-  <div class="modal-backdrop" (click)="closeCreateModal()">
-    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title-group">
-          <i class="fa-solid fa-folder-plus highlight"></i>
-          <h3>Tạo bộ thẻ từ vựng mới</h3>
-        </div>
-        <button class="close-btn" (click)="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+        }
       </div>
+    }
 
-      <form (submit)="createDeck()">
-        <div class="form-group">
-          <app-form-input
-            label="Tên bộ thẻ"
-            [required]="true"
-            placeholder="VD: TOEIC 800+ Vocabulary, Manga Idioms..."
-            [(value)]="newDeckName"
-            [disabled]="creating()"
-            icon="fa-solid fa-folder"
-          ></app-form-input>
+    <!-- LIST VIEW -->
+    @if (viewMode() === 'list') {
+      <div class="decks-list">
+        @for (deck of paginatedDecks(); track deck.id; let i = $index) {
+          @let theme = getDeckTheme(deck, i);
+          <div
+            class="deck-list-row glass-panel"
+            [class.selected-deck]="selectedDeckIds().has(deck.id)"
+            [style.background]="getDeckBackgroundStyle(deck, i)"
+            [style.border-color]="selectedDeckIds().has(deck.id) ? '#6366f1' : theme.border"
+            (click)="goToDeck(deck.id)"
+          >
+            <!-- Checkbox -->
+            <div class="list-checkbox" (click)="$event.stopPropagation()">
+              <app-selection-checkbox
+                [checked]="selectedDeckIds().has(deck.id)"
+                (changed)="toggleSelectDeck(deck.id)"
+              ></app-selection-checkbox>
+            </div>
+
+            <!-- Icon -->
+            <div class="deck-icon-badge list-icon" [style.background]="theme.border" [style.color]="'#fff'">
+              @if (deck.icon && isImageUrl(deck.icon)) {
+                <img [src]="deck.icon" class="deck-icon-custom-img" alt="Icon" />
+              } @else {
+                <i [class]="deck.icon || theme.icon"></i>
+              }
+            </div>
+
+            <!-- Main info -->
+            <div class="list-main-info">
+              <div class="list-title-row">
+                <h3 class="list-deck-title">{{ deck.name }}</h3>
+                <span class="card-count-badge">
+                  <i class="fa-solid fa-spell-check"></i> {{ deck.totalCards || deck.stats?.totalCards || 0 }} thẻ từ
+                </span>
+              </div>
+              <p class="list-desc">{{ deck.description || 'Bộ thẻ từ vựng ôn tập ngắt quãng thông minh' }}</p>
+            </div>
+
+            <!-- Row Actions -->
+            <div class="list-actions" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                (click)="startPractice(deck, $event)"
+                [disabled]="(deck.totalCards || deck.stats?.totalCards || 0) === 0"
+              >
+                <i class="fa-solid fa-bolt"></i> Luyện tập
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="openVocabModal(deck, $event)"
+              >
+                <i class="fa-solid fa-plus"></i> Nạp từ
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Pagination -->
+    @if (totalFilteredDecks() > pageSize()) {
+      <div class="pagination-wrap">
+        <app-paginator
+          [currentPage]="currentPage()"
+          [totalItems]="totalFilteredDecks()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[8, 12, 16, 24]"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></app-paginator>
+      </div>
+    }
+  }
+
+  <!-- ================= CREATE / EDIT MODAL ================= -->
+  @if (isCreateModalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="header-left">
+            <div class="icon-circle">
+              <i [class]="editingDeck() ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-folder-plus'"></i>
+            </div>
+            <div>
+              <h3>{{ editingDeck() ? 'Chỉnh Sửa Bộ Thẻ' : 'Tạo Bộ Thẻ Mới' }}</h3>
+              <p class="subtitle">{{ editingDeck() ? 'Cập nhật tên, mô tả, ảnh icon và ảnh bìa bộ thẻ' : 'Nhập thông tin để tạo bộ thẻ từ vựng mới' }}</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" (click)="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
-        <div class="form-group">
-          <app-form-input
-            label="Mô tả bộ thẻ"
-            type="textarea"
-            [rows]="3"
-            placeholder="Mô tả mục tiêu, lộ trình học của bộ thẻ này..."
-            [(value)]="newDeckDesc"
-            [disabled]="creating()"
-          ></app-form-input>
+        <div class="modal-body">
+          <!-- Live Preview Banner -->
+          <div
+            class="modal-live-preview"
+            [style.background]="getLivePreviewBackground()"
+          >
+            <div class="preview-icon-badge">
+              @if (selectedIconImage() || (iconUrlInput.trim() && isImageUrl(iconUrlInput.trim()))) {
+                <img [src]="selectedIconImage() || iconUrlInput.trim()" class="preview-custom-icon-img" alt="Icon" />
+              } @else {
+                <i [class]="selectedIcon()"></i>
+              }
+            </div>
+            <div class="preview-text-area">
+              <span class="preview-title">{{ deckNameInput.trim() || 'Tên bộ thẻ xem trước' }}</span>
+              <span class="preview-desc">{{ deckDescInput.trim() || 'Mô tả bộ thẻ xem trước...' }}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Tên bộ thẻ:</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="VD: 600 Từ Vựng TOEIC Căn Bản, Manga Vocab..."
+              [(ngModel)]="deckNameInput"
+              (keyup.enter)="saveDeck()"
+              autofocus
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mô tả (tùy chọn):</label>
+            <textarea
+              class="form-control"
+              rows="2"
+              placeholder="Ghi chú mục tiêu hoặc chủ đề của bộ thẻ này..."
+              [(ngModel)]="deckDescInput"
+            ></textarea>
+          </div>
+
+          <!-- Custom Icon Import (File Upload or Image URL) -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-image"></i> Tải Ảnh Icon (Tùy chọn):
+            </label>
+            <div class="custom-media-row">
+              <label class="btn-upload-file">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Chọn tệp ảnh icon
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onIconFileChange($event)"
+                  style="display: none;"
+                />
+              </label>
+              <input
+                type="text"
+                class="form-control flex-1"
+                placeholder="Hoặc dán URL ảnh icon (https://...)..."
+                [(ngModel)]="iconUrlInput"
+              />
+              @if (selectedIconImage() || iconUrlInput) {
+                <button type="button" class="btn-clear-media" (click)="clearCustomIcon()" title="Xóa ảnh icon tùy chỉnh">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Custom Background Cover Import (File Upload or Image URL) -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-panorama"></i> Tải Ảnh Bìa Background (Tùy chọn):
+            </label>
+            <div class="custom-media-row">
+              <label class="btn-upload-file">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Chọn tệp ảnh nền
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onBackgroundFileChange($event)"
+                  style="display: none;"
+                />
+              </label>
+              <input
+                type="text"
+                class="form-control flex-1"
+                placeholder="Hoặc dán URL ảnh nền (https://...)..."
+                [(ngModel)]="bgUrlInput"
+              />
+              @if (selectedBackgroundImage() || bgUrlInput) {
+                <button type="button" class="btn-clear-media" (click)="clearCustomBackground()" title="Xóa ảnh nền tùy chỉnh">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Fallback Preset Icon Picker -->
+          @if (!selectedIconImage() && !iconUrlInput) {
+            <div class="form-group">
+              <label class="form-label text-muted-label">Hoặc chọn nhanh biểu tượng mẫu:</label>
+              <div class="icon-picker-grid">
+                @for (icon of AVAILABLE_ICONS; track icon) {
+                  <button
+                    type="button"
+                    class="btn-pick-icon"
+                    [class.active]="selectedIcon() === icon"
+                    (click)="selectedIcon.set(icon)"
+                  >
+                    <i [class]="icon"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Fallback Preset Gradient Picker -->
+          @if (!selectedBackgroundImage() && !bgUrlInput) {
+            <div class="form-group">
+              <label class="form-label text-muted-label">Hoặc chọn nhanh màu nền gradient mẫu:</label>
+              <div class="gradient-picker-grid">
+                @for (theme of DECK_THEMES; track theme.gradient) {
+                  <button
+                    type="button"
+                    class="btn-pick-gradient"
+                    [class.active]="selectedGradient() === theme.gradient"
+                    [style.background]="theme.gradient"
+                    [style.border-color]="theme.border"
+                    (click)="selectedGradient.set(theme.gradient)"
+                    title="Chọn tông màu này"
+                  >
+                    @if (selectedGradient() === theme.gradient) {
+                      <i class="fa-solid fa-check check-icon"></i>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
         </div>
 
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="closeCreateModal()" [disabled]="creating()">Hủy</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!newDeckName.trim() || creating()">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="creating()">Hủy</button>
+          <button type="button" class="btn btn-primary" (click)="saveDeck()" [disabled]="creating() || !deckNameInput.trim()">
             @if (creating()) {
-              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tạo...
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
             } @else {
-              <i class="fa-solid fa-plus"></i> Tạo bộ thẻ
+              <i class="fa-solid fa-check"></i> {{ editingDeck() ? 'Cập nhật' : 'Tạo bộ thẻ' }}
             }
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-}
-
-<!-- Modal Delete Deck Confirmation -->
-@if (deckToDelete()) {
-  <div class="modal-backdrop" (click)="cancelDelete()">
-    <div class="modal-card glass-panel delete-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="header-title-group">
-          <i class="fa-solid fa-triangle-exclamation danger-icon"></i>
-          <h3>Xác nhận xóa bộ thẻ</h3>
-        </div>
-        <button class="close-btn" (click)="cancelDelete()" [disabled]="isDeleting()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="modal-body">
-        <p>
-          Bạn có chắc chắn muốn xóa bộ thẻ <strong>"{{ deckToDelete()?.name }}"</strong> không?
-        </p>
-        <p class="warning-text">
-          <i class="fa-solid fa-circle-info"></i> Các thẻ từ vựng trong bộ thẻ sẽ được chuyển về trạng thái Chưa phân bộ thẻ.
-        </p>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting()">Hủy</button>
-        <button type="button" class="btn btn-danger" (click)="executeDelete()" [disabled]="isDeleting()">
-          @if (isDeleting()) {
-            <i class="fa-solid fa-spinner fa-spin"></i> Đang xóa...
-          } @else {
-            <i class="fa-solid fa-trash"></i> Xóa bộ thẻ
-          }
-        </button>
       </div>
     </div>
-  </div>
-}
+  }
 
-<!-- Shared Modal Thêm Từ Vựng (VocabImportModal) -->
-<app-vocab-import-modal
-  [isOpen]="isVocabModalOpen()"
-  [targetDeckId]="selectedTargetDeck()?.id"
-  [targetDeckName]="selectedTargetDeck()?.name"
-  [availableDecks]="decks()"
-  (closeModal)="isVocabModalOpen.set(false)"
-  (vocabAdded)="onVocabAdded()"
-></app-vocab-import-modal>
+  <!-- ================= VOCAB IMPORT MODAL ================= -->
+  <app-vocab-import-modal
+    [isOpen]="isVocabModalOpen()"
+    [targetDeckId]="selectedTargetDeck()?.id"
+    [targetDeckName]="selectedTargetDeck()?.name"
+    [availableDecks]="decks()"
+    (closeModal)="isVocabModalOpen.set(false)"
+    (vocabAdded)="onVocabAdded()"
+  ></app-vocab-import-modal>
+
+</div>

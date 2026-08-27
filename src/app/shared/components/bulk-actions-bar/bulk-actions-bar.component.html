@@ -1,0 +1,88 @@
+@if (hasSelection()) {
+  <div class="bulk-actions-bar-floating" (click)="$event.stopPropagation()">
+    <div class="bar-inner glass-panel">
+      <!-- ── Left Section: Selection Badge & Info ── -->
+      <div class="bar-left">
+        <div class="count-badge">
+          <i class="fa-solid fa-check-circle"></i>
+          <span>Đã chọn <strong>{{ selectedCount() }}</strong> {{ itemLabel() }}</span>
+        </div>
+
+        @if (showSelectAll()) {
+          @if (!isAllSelected()) {
+            <button type="button" class="btn-text-action" (click)="onSelectAll()">
+              <i class="fa-regular fa-square-check"></i>
+              <span>Chọn tất cả ({{ totalCount() }})</span>
+            </button>
+          } @else {
+            <button type="button" class="btn-text-action" (click)="onClearSelection()">
+              <i class="fa-regular fa-square"></i>
+              <span>Bỏ chọn tất cả</span>
+            </button>
+          }
+        }
+      </div>
+
+      <div class="bar-divider"></div>
+
+      <!-- ── Right Section: Action Buttons ── -->
+      <div class="bar-right">
+        <!-- Edit Button (Active only when 1 item is selected) -->
+        @if (showEdit()) {
+          <button
+            type="button"
+            class="btn-bulk-action edit"
+            [disabled]="!canEdit()"
+            [title]="canEdit() ? 'Chỉnh sửa mục đã chọn' : 'Chỉ có thể chỉnh sửa khi chọn đúng 1 mục'"
+            (click)="onEdit()"
+          >
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Chỉnh sửa</span>
+          </button>
+        }
+
+        <!-- Custom Actions List -->
+        @for (act of customActions(); track act.id) {
+          <button
+            type="button"
+            class="btn-bulk-action"
+            [ngClass]="'variant-' + (act.variant || 'secondary')"
+            [disabled]="act.disabled"
+            (click)="onCustomAction(act.id)"
+          >
+            @if (act.icon) {
+              <i [class]="act.icon"></i>
+            }
+            <span>{{ act.label }}</span>
+          </button>
+        }
+
+        <!-- Custom Projected Content -->
+        <ng-content></ng-content>
+
+        <!-- Delete Button (Danger) -->
+        @if (showDelete()) {
+          <button
+            type="button"
+            class="btn-bulk-action danger"
+            (click)="onDelete()"
+            title="Xóa các mục đã chọn"
+          >
+            <i class="fa-solid fa-trash"></i>
+            <span>Xóa ({{ selectedCount() }})</span>
+          </button>
+        }
+
+        <!-- Deselect / Close Button -->
+        <button
+          type="button"
+          class="btn-close-selection"
+          (click)="onClearSelection()"
+          title="Hủy chọn tất cả"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+}

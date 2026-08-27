@@ -19,6 +19,14 @@ export interface ExampleSentence {
   source?: string;
 }
 
+export interface WordUsage {
+  category?: string;        // 'time', 'place', 'direction', 'cause_reason', 'contrast', etc.
+  structure?: string;       // Cấu trúc / cách dùng (e.g. "since + mốc thời gian" hoặc "since + S + V")
+  meaning?: string;         // Nghĩa tiếng Việt theo cách dùng này
+  note?: string;            // Lưu ý / mẹo / bẫy thi
+  examples?: ExampleSentence[];
+}
+
 export interface Card {
   id: string;
   deckId?: string;
@@ -32,8 +40,9 @@ export interface Card {
   definitionEn?: string;
   usageNote?: string;
   topic?: string;
-  examples?: ExampleSentence[];
   relations?: WordRelation[];
+  usages?: WordUsage[];
+  comparisonGroup?: string;
   // SRS & Mastery fields
   stage?: number;           // 0–5
   masteryLevel?: number;    // 1–4

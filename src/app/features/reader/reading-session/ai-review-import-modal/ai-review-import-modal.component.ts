@@ -1,14 +1,15 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '@shared/components/modal/modal.component';
+import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 import { ImportReviewItemsPayload } from '../../models';
 import { ToastService } from '@core/services/toast.service';
 
 @Component({
   selector: 'app-ai-review-import-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent],
+  imports: [CommonModule, FormsModule, ModalComponent, AiImportWorkspaceComponent],
   templateUrl: './ai-review-import-modal.component.html',
   styleUrls: ['./ai-review-import-modal.component.scss']
 })
@@ -31,10 +32,80 @@ export class AiReviewImportModalComponent {
   readonly importData = output<ImportReviewItemsPayload>();
 
   activeTab = signal<'prompt' | 'import'>('prompt');
+  readonly workspaceStep = computed<'prompt' | 'paste' | 'preview'>(() => {
+    return this.activeTab() === 'prompt' ? 'prompt' : 'paste';
+  });
+
   copied = signal<boolean>(false);
   rawJsonInput = '';
   parseError = signal<string>('');
   isImporting = signal<boolean>(false);
+
+  constructor() {
+    effect(() => {
+      if (this.isOpen()) {
+        this.activeTab.set('prompt');
+        this.rawJsonInput = '';
+        this.clearError();
+        this.isImporting.set(false);
+      }
+    });
+  }
+
+  readonly steps = ['1. Sao Chép Prompt & PDF', '2. Dán & Import JSON'];
+
+  readonly guideSteps = [
+    'Bấm nút "Sao chép Prompt" bên dưới.',
+    'Mở ChatGPT hoặc Claude.',
+    'Đính kèm file PDF đề thi này vào ô chat và dán prompt vừa copy.',
+    'AI sẽ đọc trực tiếp đề trong PDF và trả về JSON phân tích chuẩn xác.'
+  ];
+
+  readonly metaBadges = computed<AiMetaBadge[]>(() => [
+    { icon: 'fa-solid fa-file-pdf', label: this.testName() || 'Đề thi TOEIC', variant: 'primary' },
+    { icon: 'fa-solid fa-circle-question', label: `${this.questionsToReview().length} câu cần phân tích`, variant: 'warning' }
+  ]);
+
+  readonly sampleReviewJson = JSON.stringify({
+    items: [
+      {
+        question_number: 101,
+        part: 5,
+        error_type: "vocab",
+        error_subtype: "nhầm từ đồng âm gần nghĩa",
+        passage_excerpt: "The committee decided to postpone the conference...",
+        question_text: "The committee decided to _____ the conference due to bad weather.",
+        options: {
+          A: "postpone",
+          B: "cancel",
+          C: "delay",
+          D: "prolong"
+        },
+        explanation: "Chọn postpone vì mang nghĩa hoãn lại sang ngày khác do thời tiết.",
+        tip: "Phân biệt postpone (hoãn sang ngày khác) và cancel (hủy bỏ hẳn).",
+        key_vocab: [
+          { word: "postpone", meaning_vi: "hoãn lại" }
+        ]
+      }
+    ]
+  }, null, 2);
+
+  readonly jsonValidationStatus = computed<AiValidationStatus | null>(() => {
+    const err = this.parseError();
+    if (err) {
+      return { status: 'invalid', errorMessage: err };
+    }
+    const raw = this.rawJsonInput.trim();
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim());
+      const items = Array.isArray(parsed) ? parsed : parsed.items;
+      if (Array.isArray(items)) {
+        return { status: 'valid', itemCount: items.length };
+      }
+    } catch {}
+    return null;
+  });
 
   readonly generatedPrompt = computed(() => {
     const list = this.questionsToReview();
@@ -145,6 +216,7 @@ Chỉ trả về JSON hợp lệ.`;
   }
 
   onClose() {
+    this.activeTab.set('prompt');
     this.rawJsonInput = '';
     this.clearError();
     this.isImporting.set(false);
