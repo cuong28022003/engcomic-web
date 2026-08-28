@@ -1,348 +1,563 @@
-<div class="word-detail" *ngIf="!loading(); else loadingTpl">
-  <ng-container *ngIf="card() as c">
-
-    <!-- ── Breadcrumb + Actions ── -->
-    <app-breadcrumb
-      [items]="breadcrumbItems()"
-      backUrl="/vocab"
-      backLabel="Kho Từ Vựng"
-    >
-      <div actions class="top-actions">
-        <button class="btn btn-primary btn-sm" (click)="startPractice()">
-          <i class="fa-solid fa-bolt"></i> Luyện tập
-        </button>
-      </div>
-    </app-breadcrumb>
-
-    <!-- ── Hero Card ── -->
-    <div class="hero-card glass-panel">
-      <div class="hero-top">
-        <div class="hero-word">{{ c.word || c.front }}</div>
-        <div class="hero-badges">
-          <span
-            class="badge badge-genre clickable-topic"
-            *ngIf="c.topic"
-            (click)="filterByTopic(c.topic)"
-            title="Lọc các từ theo chủ đề '{{ c.topic }}'"
-          >
-            <i class="fa-solid fa-tag"></i> {{ c.topic }}
-          </span>
-          <span class="badge badge-primary">{{ getStageLabel(c.stage) }}</span>
-        </div>
-      </div>
-
-      <!-- ── Natural US & UK Pronunciation ── -->
-      <div class="hero-meta">
-        <div class="pronunciation-group">
-          <!-- US Accent -->
-          <button
-            class="accent-audio-btn us-btn"
-            (click)="playAccent('us')"
-            [class.playing]="playingAccent() === 'us'"
-            title="Nghe phát âm chuẩn Anh - Mỹ (US)"
-          >
-            <span class="flag">🇺🇸</span>
-            <span class="accent-name">US</span>
-            <span class="accent-ipa" *ngIf="usIpa">{{ usIpa }}</span>
-            <i class="fa-solid" [class.fa-volume-high]="playingAccent() !== 'us'" [class.fa-waveform-lines]="playingAccent() === 'us'"></i>
-          </button>
-
-          <!-- UK Accent -->
-          <button
-            class="accent-audio-btn uk-btn"
-            (click)="playAccent('uk')"
-            [class.playing]="playingAccent() === 'uk'"
-            title="Nghe phát âm chuẩn Anh - Anh (UK)"
-          >
-            <span class="flag">🇬🇧</span>
-            <span class="accent-name">UK</span>
-            <span class="accent-ipa" *ngIf="ukIpa">{{ ukIpa }}</span>
-            <i class="fa-solid" [class.fa-volume-high]="playingAccent() !== 'uk'" [class.fa-waveform-lines]="playingAccent() === 'uk'"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="hero-meaning">{{ c.meaning || c.back }}</div>
-
-      <div class="hero-definition" *ngIf="c.definitionEn">
-        <i class="fa-solid fa-quote-left quote-icon"></i>
-        {{ c.definitionEn }}
-      </div>
-
-      <div class="hero-usage" *ngIf="c.usageNote">
-        <i class="fa-solid fa-lightbulb"></i>
-        <span>{{ c.usageNote }}</span>
-      </div>
+<div class="word-detail-container">
+  @if (loading()) {
+    <div class="loading-wrap">
+      <app-loading message="Đang tải dữ liệu từ vựng..."></app-loading>
     </div>
+  } @else {
+    @if (card(); as c) {
+      <!-- ── 1. Top Breadcrumb & Quick Actions ── -->
+      <app-breadcrumb
+        [items]="breadcrumbItems()"
+        backUrl="/vocab"
+        backLabel="Kho Từ Vựng"
+      >
+        <div actions class="top-action-buttons">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="copyWord()" title="Sao chép từ vựng">
+            <i class="fa-regular fa-copy"></i>
+            <span>Sao chép</span>
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="startPractice()">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Luyện tập</span>
+          </button>
+        </div>
+      </app-breadcrumb>
 
-    <!-- ── Usages & Examples ── -->
-    @if (c.usages && c.usages.length > 0) {
-      <div class="section glass-panel">
-        <div class="section-header">
-          <h2><i class="fa-solid fa-layer-group highlight"></i> Cấu trúc & Cách dùng ({{ c.usages.length }})</h2>
+      <!-- ── 2. Hero Flashcard Showcase ── -->
+      <div class="hero-vocab-card glass-panel">
+        <!-- Dòng 1: Card Meta Header (POS, Topic, Status, Stage) -->
+        <div class="card-meta-header">
+          <div class="meta-left">
+            @if (c.partOfSpeech) {
+              <span class="pos-badge" [ngClass]="getPosClass(c.partOfSpeech)" [title]="getPosFullLabel(c.partOfSpeech)">
+                <i class="fa-solid fa-feather-pointed"></i>
+                <span>{{ getPosFullLabel(c.partOfSpeech) }}</span>
+              </span>
+            }
+
+            @if (c.topic) {
+              <span
+                class="topic-chip"
+                (click)="filterByTopic(c.topic)"
+                title="Lọc các từ thuộc chủ đề '{{ c.topic }}'"
+              >
+                <i class="fa-solid fa-tag"></i>
+                <span>{{ c.topic }}</span>
+              </span>
+            }
+          </div>
+
+          <div class="meta-right">
+            <span class="status-pill" [ngClass]="getStatusClass(c.status)">
+              {{ getStatusLabel(c.status) }}
+            </span>
+
+            <div class="stage-mini-pill" [title]="'Tiến trình ghi nhớ: ' + getStageLabel(c.stage) + ' (Cấp ' + (c.stage ?? 0) + '/5)'">
+              <span class="stage-text">Lv.{{ c.stage ?? 0 }}</span>
+              <div class="stage-dots">
+                @for (step of [1, 2, 3, 4, 5]; track step) {
+                  <span class="dot" [class.active]="(c.stage ?? 0) >= step"></span>
+                }
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="usages-detailed-list">
-          @for (u of c.usages; track $index; let uIdx = $index) {
-            <div class="usage-detail-card">
-              <!-- Usage Top Header -->
-              <div class="usage-header-row">
-                <div class="usage-title-left">
-                  @if (getCategoryMeta(u.category); as catMeta) {
-                    <span
-                      class="usage-category-badge"
-                      [style.borderColor]="catMeta.color + '60'"
-                      [style.background]="catMeta.color + '20'"
-                      [style.color]="catMeta.color"
-                    >
-                      <i [class]="catMeta.icon"></i> {{ catMeta.label }}
-                    </span>
-                  }
+        <!-- Dòng 2: Main Word Title & Dual Audio Pronunciations -->
+        <div class="word-hero-section">
+          <div class="word-title-row">
+            <h1 class="main-word-title">{{ c.word || c.front }}</h1>
+            <button type="button" class="btn-copy-mini" (click)="copyWord()" title="Sao chép từ này">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
 
-                  <div class="usage-formula-pill">
-                    <span class="usage-structure-text">{{ u.structure || 'Cấu trúc' }}</span>
+          <!-- Dual Natural Accent Pronunciation Bar -->
+          <div class="dual-pronunciation-bar">
+            <!-- US Accent -->
+            <button
+              type="button"
+              class="accent-audio-card us-accent"
+              (click)="playAccent('us')"
+              [class.playing]="playingAccent() === 'us'"
+              title="Nghe phát âm chuẩn Anh - Mỹ (US)"
+            >
+              <span class="flag">🇺🇸</span>
+              <div class="accent-info">
+                <span class="accent-title">US</span>
+                @if (usIpa) {
+                  <span class="accent-ipa">{{ usIpa }}</span>
+                }
+              </div>
+              <div class="audio-wave-icon">
+                <i class="fa-solid" [class.fa-volume-high]="playingAccent() !== 'us'" [class.fa-waveform-lines]="playingAccent() === 'us'"></i>
+              </div>
+            </button>
+
+            <!-- UK Accent -->
+            <button
+              type="button"
+              class="accent-audio-card uk-accent"
+              (click)="playAccent('uk')"
+              [class.playing]="playingAccent() === 'uk'"
+              title="Nghe phát âm chuẩn Anh - Anh (UK)"
+            >
+              <span class="flag">🇬🇧</span>
+              <div class="accent-info">
+                <span class="accent-title">UK</span>
+                @if (ukIpa) {
+                  <span class="accent-ipa">{{ ukIpa }}</span>
+                }
+              </div>
+              <div class="audio-wave-icon">
+                <i class="fa-solid" [class.fa-volume-high]="playingAccent() !== 'uk'" [class.fa-waveform-lines]="playingAccent() === 'uk'"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dòng 3: Vietnamese Meaning (Xuống dòng riêng biệt) -->
+        <div class="meaning-banner">
+          <div class="meaning-label">
+            <i class="fa-solid fa-language"></i>
+            <span>Nghĩa tiếng Việt:</span>
+          </div>
+          <p class="meaning-text">{{ c.meaning || c.back }}</p>
+        </div>
+
+        <!-- Dòng 4: English Definition (Xuống dòng riêng) -->
+        @if (c.definitionEn) {
+          <div class="english-definition-box">
+            <i class="fa-solid fa-quote-left quote-icon"></i>
+            <div class="definition-body">
+              <span class="definition-label">Định nghĩa tiếng Anh:</span>
+              <p class="definition-text">{{ c.definitionEn }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Dòng 5: Memory Tip / Usage Note (Xuống dòng riêng) -->
+        @if (c.usageNote || c.memoryTip) {
+          <div class="memory-tip-card">
+            <div class="tip-icon-wrap">
+              <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <div class="tip-content">
+              <span class="tip-title">Mẹo Ghi Nhớ & Lưu Ý:</span>
+              <p class="tip-text">{{ c.usageNote || c.memoryTip }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Dòng 6: SRS Quick Stats Ribbon (Xuống dòng riêng) -->
+        <div class="srs-stats-ribbon">
+          <div class="stat-item">
+            <i class="fa-regular fa-clock"></i>
+            <span class="stat-name">Lần ôn tiếp theo:</span>
+            <span class="stat-value" [class.overdue]="isOverdue(c.nextReview, c.status)">
+              {{ formatNextReview(c.nextReview, c.status) }}
+            </span>
+          </div>
+
+          <div class="stat-item">
+            <i class="fa-solid fa-repeat"></i>
+            <span class="stat-name">Số lần ôn:</span>
+            <span class="stat-value">{{ c.repetition ?? c.reviewCount ?? 0 }} lần</span>
+          </div>
+
+          <div class="stat-item">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span class="stat-name">Khoảng cách:</span>
+            <span class="stat-value">{{ c.interval ?? 0 }} ngày</span>
+          </div>
+
+          @if (c.wrongCount && c.wrongCount > 0) {
+            <div class="stat-item item-danger">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span class="stat-name">Lỗi sai:</span>
+              <span class="stat-value danger-text">{{ c.wrongCount }} lần</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── 3. Usages & Context Structures with Horizontal Category Glass Panel ── -->
+      @if (c.usages && c.usages.length > 0) {
+        <div class="content-section glass-panel">
+          <div class="section-header-bar">
+            <div class="section-title-wrap">
+              <i class="fa-solid fa-layer-group text-primary"></i>
+              <h2>Cấu Trúc & Ngữ Cảnh Sử Dụng</h2>
+            </div>
+            <span class="section-counter-badge">{{ c.usages.length }} cách dùng</span>
+          </div>
+
+          <!-- Horizontal Category Glass Panel (Pills Bar) -->
+          @if (usageCategories().length > 1) {
+            <app-glass-panel padding="xs" radius="sm">
+              <div class="usage-category-pills-bar">
+                <button
+                  type="button"
+                  class="cat-pill-btn"
+                  [class.active]="selectedUsageCategory() === 'all'"
+                  (click)="selectUsageCategory('all')"
+                >
+                  <i class="fa-solid fa-border-all"></i>
+                  <span class="cat-pill-text">Tất cả thể loại</span>
+                  <span class="cat-pill-count">{{ c.usages.length }}</span>
+                </button>
+
+                @for (cat of usageCategories(); track cat.key) {
+                  <button
+                    type="button"
+                    class="cat-pill-btn"
+                    [class.active]="selectedUsageCategory() === cat.key"
+                    [style.--cat-accent]="cat.color"
+                    (click)="selectUsageCategory(cat.key)"
+                  >
+                    <i [class]="cat.icon" [style.color]="cat.color"></i>
+                    <span class="cat-pill-text">{{ cat.label }}</span>
+                    <span class="cat-pill-count">{{ cat.count }}</span>
+                  </button>
+                }
+              </div>
+            </app-glass-panel>
+          }
+
+          <!-- Usages Bento Cards Stack -->
+          <div class="usages-cards-stack">
+            @for (u of activeUsages(); track $index; let uIdx = $index) {
+              <div class="usage-bento-card">
+                <!-- Dòng 1: Tag nhóm thể loại & Nghĩa ngữ cảnh -->
+                <div class="usage-bento-top">
+                  <div class="usage-tag-group">
+                    <span class="usage-idx-badge">{{ uIdx + 1 }}</span>
+                    @if (getCategoryMeta(u.category); as catMeta) {
+                      <span
+                        class="category-tag-pill"
+                        [style.borderColor]="catMeta.color + '50'"
+                        [style.background]="catMeta.color + '15'"
+                        [style.color]="catMeta.color"
+                      >
+                        <i [class]="catMeta.icon"></i>
+                        <span>{{ catMeta.label }}</span>
+                      </span>
+                    }
+                  </div>
+
+                  @if (u.meaning) {
+                    <div class="usage-context-meaning">
+                      <span class="meaning-prefix">Nghĩa ngữ cảnh:</span>
+                      <span class="meaning-val">{{ u.meaning }}</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Dòng 2: Cấu trúc / Công thức (Xuống dòng riêng biệt) -->
+                @if (u.structure) {
+                  <div class="usage-formula-box">
+                    <div class="formula-label">
+                      <i class="fa-solid fa-code"></i>
+                      <span>Cấu trúc:</span>
+                    </div>
+                    <code class="formula-code">{{ u.structure }}</code>
                     <button
                       type="button"
                       class="btn-copy-formula"
-                      (click)="copyStructure(u.structure)"
+                      (click)="copyStructure(u.structure, $event)"
                       title="Sao chép cấu trúc này"
                     >
                       <i class="fa-regular fa-copy"></i>
                     </button>
                   </div>
-                </div>
+                }
 
-                @if (u.meaning) {
-                  <div class="usage-meaning-box">
-                    <span class="meaning-label">Nghĩa:</span>
-                    <span class="usage-meaning-text">{{ u.meaning }}</span>
+                <!-- Dòng 3: Lưu ý đề thi (Xuống dòng riêng biệt) -->
+                @if (u.note) {
+                  <div class="usage-exam-note">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div class="note-body">
+                      <strong>Lưu ý đề thi:</strong>
+                      <span>{{ u.note }}</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Dòng 4: Danh sách ví dụ minh họa (Xuống dòng riêng biệt) -->
+                @if (u.examples && u.examples.length > 0) {
+                  <div class="usage-examples-block">
+                    <div class="examples-header-label">
+                      <i class="fa-solid fa-comment-dots"></i>
+                      <span>Ví dụ minh họa:</span>
+                    </div>
+
+                    <div class="examples-rows-list">
+                      @for (ex of u.examples; track $index) {
+                        <div class="example-row-card">
+                          <div class="example-main-line">
+                            <span class="bullet-dot">•</span>
+                            <span class="example-en-text">{{ ex.text }}</span>
+                            <button
+                              type="button"
+                              class="btn-speak-icon"
+                              (click)="playExampleAudio(ex.text, $event)"
+                              [class.speaking]="playingExampleText() === ex.text"
+                              title="Nghe phát âm ví dụ (US)"
+                            >
+                              <i
+                                class="fa-solid"
+                                [class.fa-volume-high]="playingExampleText() !== ex.text"
+                                [class.fa-waveform-lines]="playingExampleText() === ex.text"
+                              ></i>
+                            </button>
+                          </div>
+
+                          @if (ex.translation) {
+                            <div class="example-vi-trans">{{ ex.translation }}</div>
+                          }
+
+                          @if (ex.formality) {
+                            <span class="formality-badge" [ngClass]="getFormalityClass(ex.formality)">
+                              {{ getFormalityLabel(ex.formality) }}
+                            </span>
+                          }
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
               </div>
+            }
+          </div>
+        </div>
+      }
 
-              <!-- TOEIC Note / Trap Callout -->
-              @if (u.note) {
-                <div class="usage-note-banner">
-                  <div class="note-icon-wrap">
-                    <i class="fa-solid fa-lightbulb"></i>
+      <!-- ── 4. Word Relations Network ── -->
+      @if (c.relations && c.relations.length > 0) {
+        <div class="content-section glass-panel">
+          <div class="section-header-bar">
+            <div class="section-title-wrap">
+              <i class="fa-solid fa-diagram-project text-secondary"></i>
+              <h2>Mạng Lưới Từ Vựng Liên Quan</h2>
+            </div>
+
+            <!-- Segmented Tab Navigation -->
+            <div class="relation-segmented-tabs">
+              <button
+                type="button"
+                class="seg-tab-btn"
+                [class.active]="activeRelTab() === 'family'"
+                (click)="activeRelTab.set('family')"
+              >
+                <i class="fa-solid fa-tree"></i>
+                <span>Họ từ</span>
+                <span class="tab-count">{{ familyRelations.length }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="seg-tab-btn"
+                [class.active]="activeRelTab() === 'collocation'"
+                (click)="activeRelTab.set('collocation')"
+              >
+                <i class="fa-solid fa-link"></i>
+                <span>Cụm từ</span>
+                <span class="tab-count">{{ collocationRelations.length }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="seg-tab-btn"
+                [class.active]="activeRelTab() === 'synonym'"
+                (click)="activeRelTab.set('synonym')"
+              >
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Đồng nghĩa</span>
+                <span class="tab-count">{{ synonymRelations.length }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab 1: Family Words -->
+          @if (activeRelTab() === 'family') {
+            <div class="relations-grid">
+              @for (rel of familyRelations; track getRelationWord(rel)) {
+                <div class="relation-item-card">
+                  <div class="rel-word-wrap">
+                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
+                    @if (rel.pos) {
+                      <span class="rel-pos-tag">{{ getPosLabel(rel.pos) }}</span>
+                    }
                   </div>
-                  <div class="note-content">
-                    <strong>Lưu ý / Mẹo thi:</strong>
-                    <span>{{ u.note }}</span>
+
+                  <div class="rel-action-wrap">
+                    @if (rel.relatedCardId) {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-learned"
+                        (click)="navigateToRelated(rel.relatedCardId)"
+                        title="Đã có trong kho thẻ — Nhấn để mở"
+                      >
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Đã học</span>
+                      </button>
+                    } @else if (isWordInCollector(rel)) {
+                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
+                        <i class="fa-solid fa-inbox"></i>
+                        <span>Trong Collector</span>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-add"
+                        [disabled]="addingPending().has(getRelationWord(rel))"
+                        (click)="addToPending(rel)"
+                        title="Thêm vào Word Collector để nạp từ"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
+                      </button>
+                    }
                   </div>
                 </div>
               }
 
-              <!-- Nested Examples -->
-              @if (u.examples && u.examples.length > 0) {
-                <div class="usage-examples-sublist">
-                  <div class="examples-sublabel">
-                    <i class="fa-solid fa-comment-dots"></i>
-                    <span>Ví dụ minh họa ({{ u.examples.length }}):</span>
+              @if (familyRelations.length === 0) {
+                <div class="empty-relation-box">
+                  <i class="fa-solid fa-tree"></i>
+                  <p>Không có họ từ nào được ghi nhận cho từ này.</p>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Tab 2: Collocations -->
+          @if (activeRelTab() === 'collocation') {
+            <div class="relations-grid">
+              @for (rel of collocationRelations; track getRelationWord(rel)) {
+                <div class="relation-item-card">
+                  <div class="rel-word-wrap">
+                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
                   </div>
 
-                  <div class="examples-cards-grid">
-                    @for (ex of u.examples; track $index) {
-                      <div class="example-card-item">
-                        <div class="example-top-line">
-                          <button
-                            type="button"
-                            class="btn-speak-example"
-                            (click)="playExampleAudio(ex.text)"
-                            [class.speaking]="playingExampleText() === ex.text"
-                            title="Nghe phát âm câu ví dụ này"
-                          >
-                            <i
-                              class="fa-solid"
-                              [class.fa-volume-high]="playingExampleText() !== ex.text"
-                              [class.fa-waveform-lines]="playingExampleText() === ex.text"
-                            ></i>
-                          </button>
-                          <p class="example-en-text">{{ ex.text }}</p>
-                        </div>
-                        @if (ex.translation) {
-                          <p class="example-vi-trans">{{ ex.translation }}</p>
-                        }
-                      </div>
+                  <div class="rel-action-wrap">
+                    @if (rel.relatedCardId) {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-learned"
+                        (click)="navigateToRelated(rel.relatedCardId)"
+                        title="Đã có trong kho thẻ — Nhấn để mở"
+                      >
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Đã học</span>
+                      </button>
+                    } @else if (isWordInCollector(rel)) {
+                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
+                        <i class="fa-solid fa-inbox"></i>
+                        <span>Trong Collector</span>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-add"
+                        [disabled]="addingPending().has(getRelationWord(rel))"
+                        (click)="addToPending(rel)"
+                        title="Thêm vào Word Collector để nạp từ"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
+                      </button>
                     }
                   </div>
+                </div>
+              }
+
+              @if (collocationRelations.length === 0) {
+                <div class="empty-relation-box">
+                  <i class="fa-solid fa-link"></i>
+                  <p>Không có cụm từ đi kèm nào được ghi nhận cho từ này.</p>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Tab 3: Synonyms -->
+          @if (activeRelTab() === 'synonym') {
+            <div class="relations-grid">
+              @for (rel of synonymRelations; track getRelationWord(rel)) {
+                <div class="relation-item-card">
+                  <div class="rel-word-wrap">
+                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
+                  </div>
+
+                  <div class="rel-action-wrap">
+                    @if (rel.relatedCardId) {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-learned"
+                        (click)="navigateToRelated(rel.relatedCardId)"
+                        title="Đã có trong kho thẻ — Nhấn để mở"
+                      >
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Đã học</span>
+                      </button>
+                    } @else if (isWordInCollector(rel)) {
+                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
+                        <i class="fa-solid fa-inbox"></i>
+                        <span>Trong Collector</span>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-rel-state btn-add"
+                        [disabled]="addingPending().has(getRelationWord(rel))"
+                        (click)="addToPending(rel)"
+                        title="Thêm vào Word Collector để nạp từ"
+                      >
+                        <i class="fa-solid fa-plus"></i>
+                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (synonymRelations.length === 0) {
+                <div class="empty-relation-box">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                  <p>Không có từ đồng nghĩa nào được ghi nhận cho từ này.</p>
                 </div>
               }
             </div>
           }
         </div>
-      </div>
+      }
+
+      <!-- ── 5. Reverse Relations ── -->
+      @if (reverseRelations().length > 0) {
+        <div class="content-section glass-panel">
+          <div class="section-header-bar">
+            <div class="section-title-wrap">
+              <i class="fa-solid fa-arrows-turn-to-dots text-accent"></i>
+              <h2>Xuất Hiện Trong Thẻ Khác</h2>
+            </div>
+            <span class="section-counter-badge">{{ reverseRelations().length }} thẻ</span>
+          </div>
+
+          <div class="reverse-chips-wrap">
+            @for (r of reverseRelations(); track r.id) {
+              <a
+                class="reverse-card-link"
+                [routerLink]="['/vocab/word', r.id]"
+                (click)="navigateToRelated(r.id)"
+              >
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>{{ r.word || r.front }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
     }
-
-    <!-- ── Relations ── -->
-    <div class="section glass-panel" *ngIf="c.relations && c.relations.length > 0">
-      <div class="section-header">
-        <h2><i class="fa-solid fa-diagram-project highlight"></i> Mạng lưới từ liên quan</h2>
-        <div class="relation-tabs">
-          <button [class.active]="activeRelTab() === 'family'"
-                  (click)="activeRelTab.set('family')">
-            Họ từ <span class="tab-count">{{ familyRelations.length }}</span>
-          </button>
-          <button [class.active]="activeRelTab() === 'collocation'"
-                  (click)="activeRelTab.set('collocation')">
-            Cụm từ <span class="tab-count">{{ collocationRelations.length }}</span>
-          </button>
-          <button [class.active]="activeRelTab() === 'synonym'"
-                  (click)="activeRelTab.set('synonym')">
-            Đồng nghĩa <span class="tab-count">{{ synonymRelations.length }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Family Tab -->
-      <div class="relation-grid" *ngIf="activeRelTab() === 'family'">
-        <div class="relation-chip" *ngFor="let rel of familyRelations">
-          <div class="rel-main">
-            <span class="rel-text">{{ getRelationWord(rel) }}</span>
-            <span class="rel-pos" *ngIf="rel.pos">{{ getPosLabel(rel.pos) }}</span>
-          </div>
-
-          <!-- State 1: In Database (Learned) -->
-          <button
-            class="rel-btn-learned"
-            *ngIf="rel.relatedCardId"
-            (click)="navigateToRelated(rel.relatedCardId)"
-            title="Đã có trong kho thẻ — Nhấn để mở chi tiết"
-          >
-            <i class="fa-solid fa-circle-check"></i> Đã học
-          </button>
-
-          <!-- State 2: Already in Word Collector -->
-          <span
-            class="rel-btn-in-collector"
-            *ngIf="!rel.relatedCardId && isWordInCollector(rel)"
-            title="Đã nằm trong danh sách Word Collector chờ tạo thẻ"
-          >
-            <i class="fa-solid fa-inbox"></i> Trong Collector
-          </span>
-
-          <!-- State 3: Not in DB and Not in Collector -->
-          <button
-            class="rel-btn-add"
-            *ngIf="!rel.relatedCardId && !isWordInCollector(rel)"
-            [disabled]="addingPending().has(getRelationWord(rel))"
-            (click)="addToPending(rel)"
-            title="Thêm vào Word Collector để tạo thẻ từ"
-          >
-            <i class="fa-solid fa-plus"></i>
-            {{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Thêm' }}
-          </button>
-        </div>
-        <div class="empty-tab" *ngIf="familyRelations.length === 0">Không có họ từ</div>
-      </div>
-
-      <!-- Collocations Tab -->
-      <div class="relation-grid" *ngIf="activeRelTab() === 'collocation'">
-        <div class="relation-chip" *ngFor="let rel of collocationRelations">
-          <div class="rel-main">
-            <span class="rel-text">{{ getRelationWord(rel) }}</span>
-          </div>
-
-          <!-- State 1: In Database (Learned) -->
-          <button
-            class="rel-btn-learned"
-            *ngIf="rel.relatedCardId"
-            (click)="navigateToRelated(rel.relatedCardId)"
-            title="Đã có trong kho thẻ — Nhấn để mở chi tiết"
-          >
-            <i class="fa-solid fa-circle-check"></i> Đã học
-          </button>
-
-          <!-- State 2: Already in Word Collector -->
-          <span
-            class="rel-btn-in-collector"
-            *ngIf="!rel.relatedCardId && isWordInCollector(rel)"
-            title="Đã nằm trong danh sách Word Collector chờ tạo thẻ"
-          >
-            <i class="fa-solid fa-inbox"></i> Trong Collector
-          </span>
-
-          <!-- State 3: Not in DB and Not in Collector -->
-          <button
-            class="rel-btn-add"
-            *ngIf="!rel.relatedCardId && !isWordInCollector(rel)"
-            [disabled]="addingPending().has(getRelationWord(rel))"
-            (click)="addToPending(rel)"
-            title="Thêm vào Word Collector để tạo thẻ từ"
-          >
-            <i class="fa-solid fa-plus"></i>
-            {{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Thêm' }}
-          </button>
-        </div>
-        <div class="empty-tab" *ngIf="collocationRelations.length === 0">Không có cụm từ</div>
-      </div>
-
-      <!-- Synonyms Tab -->
-      <div class="relation-grid" *ngIf="activeRelTab() === 'synonym'">
-        <div class="relation-chip" *ngFor="let rel of synonymRelations">
-          <div class="rel-main">
-            <span class="rel-text">{{ getRelationWord(rel) }}</span>
-          </div>
-
-          <!-- State 1: In Database (Learned) -->
-          <button
-            class="rel-btn-learned"
-            *ngIf="rel.relatedCardId"
-            (click)="navigateToRelated(rel.relatedCardId)"
-            title="Đã có trong kho thẻ — Nhấn để mở chi tiết"
-          >
-            <i class="fa-solid fa-circle-check"></i> Đã học
-          </button>
-
-          <!-- State 2: Already in Word Collector -->
-          <span
-            class="rel-btn-in-collector"
-            *ngIf="!rel.relatedCardId && isWordInCollector(rel)"
-            title="Đã nằm trong danh sách Word Collector chờ tạo thẻ"
-          >
-            <i class="fa-solid fa-inbox"></i> Trong Collector
-          </span>
-
-          <!-- State 3: Not in DB and Not in Collector -->
-          <button
-            class="rel-btn-add"
-            *ngIf="!rel.relatedCardId && !isWordInCollector(rel)"
-            [disabled]="addingPending().has(getRelationWord(rel))"
-            (click)="addToPending(rel)"
-            title="Thêm vào Word Collector để tạo thẻ từ"
-          >
-            <i class="fa-solid fa-plus"></i>
-            {{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Thêm' }}
-          </button>
-        </div>
-        <div class="empty-tab" *ngIf="synonymRelations.length === 0">Không có từ đồng nghĩa</div>
-      </div>
-    </div>
-
-    <!-- ── Reverse Relations ── -->
-    <div class="section glass-panel" *ngIf="reverseRelations().length > 0">
-      <div class="section-header">
-        <h2><i class="fa-solid fa-arrows-turn-to-dots highlight"></i> Xuất hiện trong thẻ khác</h2>
-      </div>
-      <div class="reverse-list">
-        <a
-          class="reverse-chip"
-          *ngFor="let r of reverseRelations()"
-          (click)="navigateToRelated(r.id)"
-          [routerLink]="['/vocab/word', r.id]"
-        >
-          <i class="fa-solid fa-link"></i>
-          {{ r.word || r.front }}
-        </a>
-      </div>
-    </div>
-
-  </ng-container>
+  }
 </div>
-
-<ng-template #loadingTpl>
-  <div class="loading-state">
-    <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
-    <p>Đang tải từ vựng...</p>
-  </div>
-</ng-template>

@@ -93,10 +93,6 @@ export class GrammarCardModalComponent {
     return list;
   });
 
-  readonly examTipsList = computed<string[]>(() => {
-    return this.grammarPoint()?.examTips || [];
-  });
-
   readonly comparisonsList = computed<GrammarComparison[]>(() => {
     return this.grammarPoint()?.comparisons || [];
   });

@@ -183,7 +183,7 @@ MỤC TIÊU CỐT LÕI: Giúp người học HIỂU SÂU BẢN CHẤT, NẮM RÕ
 
 NGUYÊN TẮC THIẾT KẾ BẮT BUỘC:
 👉 1. PHÂN CHIA RÕ RÀNG CÁC CÁCH DÙNG (USAGES):
-Mỗi điểm ngữ pháp lớn (ví dụ: Present Perfect, Inversion, Conditionals, Gerunds...) có thể có từ 2 đến 4 CÁCH DÙNG CHI TIẾT (mảng "usages").
+Mỗi điểm ngữ pháp lớn (ví dụ: Present Perfect, Inversion, Conditionals, Gerunds...) có từ 2 đến 4 CÁCH DÙNG CHI TIẾT (mảng "usages").
 Mỗi cách dùng ("usage") phải có:
 - "title": Tên cách dùng rõ ràng (VD: "1. Diễn tả trải nghiệm, kinh nghiệm sống").
 - "structure": Công thức cụ thể của riêng cách dùng này (VD: "S + have/has + (never/ever) + V3/ed").
@@ -196,8 +196,7 @@ Mỗi cách dùng ("usage") phải có:
   + "note": Giải thích ngữ cảnh vì sao dùng cấu trúc này.
 
 👉 2. TRÁNH BẪY ĐỀ THI & LỖI SAI KINH ĐIỂN:
-- "common_mistakes": Danh sách 1-3 lỗi sai hoặc bẫy phổ biến nhất mà thí sinh hay mắc phải.
-- "exam_tips": Danh sách 1-2 mẹo nhận diện nhanh trong 3 giây khi làm bài thi trắc nghiệm (TOEIC/IELTS).
+- "common_mistakes": Danh sách 1-3 lỗi sai hoặc bẫy đề thi phổ biến nhất mà thí sinh hay mắc phải (kèm cách sửa đúng).
 
 👉 3. SO SÁNH PHÂN BIỆT (COMPARISONS):
 - "comparisons": Mảng đối chiếu phân biệt với điểm ngữ pháp dễ gây nhầm lẫn (Ví dụ: So sánh Hiện tại hoàn thành vs Quá khứ đơn, Used to vs Be used to, Because of vs In spite of...).
@@ -236,16 +235,15 @@ Nhóm category phù hợp: [${preset.category}].
           {
             "text": "Have you ever visited London?",
             "translation": "Bạn đã từng đến Luân Đôn bao giờ chưa?",
-            "highlight": "Have you ever visited"
+            "highlight": "Have you ever visited",
+            "note": "Hỏi về kinh nghiệm sống."
           }
         ]
       }
     ],
     "common_mistakes": [
-      "Dùng thì Quá khứ đơn với 'since/for' (Sai: I lived here since 2020 -> Đúng: I have lived here since 2020)."
-    ],
-    "exam_tips": [
-      "Trong bài thi TOEIC Part 5, nếu thấy 'since + mốc thời gian' -> 90% chọn thì Hiện tại hoàn thành."
+      "Dùng thì Quá khứ đơn với 'since/for' (Sai: I lived here since 2020 -> Đúng: I have lived here since 2020).",
+      "Trong bài thi TOEIC Part 5, nếu thấy 'since + mốc thời gian' -> ưu tiên chọn thì Hiện tại hoàn thành."
     ],
     "comparisons": [
       {
@@ -261,7 +259,7 @@ Nhóm category phù hợp: [${preset.category}].
 
 YÊU CẦU ĐẦU RA:
 1. Trả về DUY NHẤT một JSON array thuần hợp lệ (KHÔNG kèm lời dẫn, KHÔNG bọc thêm giải thích ngoài JSON).
-2. Chuẩn hóa đầy đủ các trường và câu ví dụ kèm bản dịch tiếng Việt.`;
+2. Chuẩn hóa đầy đủ các trường summary, usages, common_mistakes, comparisons và câu ví dụ kèm bản dịch tiếng Việt.`;
   });
 
   // Real-time JSON parser & validator
@@ -321,14 +319,16 @@ YÊU CẦU ĐẦU RA:
             {
               text: "I used to play badminton every Sunday morning when I was in high school.",
               translation: "Tôi từng chơi cầu lông vào mỗi sáng Chủ nhật khi còn học cấp ba.",
-              highlight: "used to play"
+              highlight: "used to play",
+              note: "Thói quen trong quá khứ."
             }
           ]
         },
         {
           title: "2. Phủ định và nghi vấn với used to",
           structure: "S + didn't use to + V | Did + S + use to + V?",
-          explanation: "Lưu ý bỏ chữ 'd' ở used khi đã mượn trợ động từ did/didn't.",
+          explanation: "Lưu ý bỏ 'd' trong 'use to' khi đã có trợ động từ did/didn't.",
+          signal_words: ["didn't use to", "did you use to"],
           examples: [
             {
               text: "He didn't use to like coffee, but now he drinks two cups a day.",

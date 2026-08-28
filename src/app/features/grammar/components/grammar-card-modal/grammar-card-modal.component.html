@@ -45,7 +45,7 @@
       </div>
 
       <!-- ── 2. CLEAN TABS (IF MULTIPLE SECTIONS EXIST) ── -->
-      @if (allPitfalls().length > 0 || examTipsList().length > 0 || comparisonsList().length > 0) {
+      @if (allPitfalls().length > 0 || comparisonsList().length > 0) {
         <div class="modal-tabs-nav">
           <button
             type="button"
@@ -60,7 +60,7 @@
             }
           </button>
 
-          @if (allPitfalls().length > 0 || examTipsList().length > 0) {
+          @if (allPitfalls().length > 0) {
             <button
               type="button"
               class="modal-tab-btn"
@@ -68,8 +68,8 @@
               (click)="setActiveTab('pitfalls')"
             >
               <i class="fa-solid fa-triangle-exclamation"></i>
-              <span>Bẫy Đề Thi & Mẹo</span>
-              <span class="tab-count-pill warning-pill">{{ allPitfalls().length + examTipsList().length }}</span>
+              <span>Bẫy Đề Thi & Lưu Ý</span>
+              <span class="tab-count-pill warning-pill">{{ allPitfalls().length }}</span>
             </button>
           }
 
@@ -226,7 +226,7 @@
         }
 
         <!-- ══════════════════════════════════════════════════════════════ -->
-        <!-- ── TAB: PITFALLS & EXAM TIPS ──────────────────────────────── -->
+        <!-- ── TAB: PITFALLS & COMMON MISTAKES ────────────────────────── -->
         <!-- ══════════════════════════════════════════════════════════════ -->
         @if (activeTab() === 'pitfalls') {
           <div class="tab-pane-pitfalls">
@@ -238,27 +238,16 @@
                       <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                     <div class="pitfall-body">
-                      <span class="pitfall-tag">Lưu ý tránh bẫy</span>
+                      <span class="pitfall-tag">Lưu ý tránh bẫy & lỗi sai</span>
                       <p class="pitfall-desc">{{ mistake }}</p>
                     </div>
                   </div>
                 }
               </div>
-            }
-
-            @if (examTipsList().length > 0) {
-              <div class="tips-list">
-                @for (tip of examTipsList(); track $index) {
-                  <div class="tip-card">
-                    <div class="tip-icon">
-                      <i class="fa-solid fa-lightbulb"></i>
-                    </div>
-                    <div class="tip-body">
-                      <span class="tip-tag">Mẹo làm bài thi</span>
-                      <p class="tip-desc">{{ tip }}</p>
-                    </div>
-                  </div>
-                }
+            } @else {
+              <div class="empty-state-compact">
+                <i class="fa-solid fa-circle-check"></i>
+                <p>Không có lưu ý bẫy thi đặc biệt nào cho điểm ngữ pháp này.</p>
               </div>
             }
           </div>
