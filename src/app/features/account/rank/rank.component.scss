@@ -1,0 +1,756 @@
+.rank-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+// ── 1. Hero Current Tier Card ──────────────────────────────────────────
+.current-tier-hero {
+  background: rgba(18, 22, 38, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+.hero-main-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.tier-emblem-wrap {
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+
+  .emblem-icon {
+    font-size: 2.5rem;
+    color: #fff;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+  }
+
+  .emblem-shine {
+    position: absolute;
+    inset: 0;
+    border-radius: 22px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+  }
+}
+
+.tier-info-wrap {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .tier-badge-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .rank-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+
+    .rank-status-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+  }
+
+  .user-display-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0;
+    line-height: 1.2;
+  }
+}
+
+.stats-pills-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+
+  .stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+
+    strong {
+      color: #fff;
+    }
+
+    &.xp-pill {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      i { color: #818cf8; }
+    }
+
+    &.diamond-pill {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #7dd3fc;
+      i { color: #38bdf8; }
+    }
+
+    &.streak-pill {
+      background: rgba(249, 115, 22, 0.12);
+      border-color: rgba(249, 115, 22, 0.3);
+      color: #fed7aa;
+      i { color: #f97316; }
+    }
+  }
+}
+
+.hero-cta-wrap {
+  .btn-earn-xp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(249, 115, 22, 0.35);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(249, 115, 22, 0.5);
+    }
+  }
+}
+
+// ── Tier XP Progress Section ──────────────────────────────────────────
+.tier-progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  .progress-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.86rem;
+
+    .prog-label {
+      color: #94a3b8;
+      strong { color: #f8fafc; }
+    }
+
+    .prog-numbers {
+      color: #cbd5e1;
+      font-weight: 700;
+      display: flex;
+      gap: 6px;
+
+      .prog-pct {
+        color: #f59e0b;
+      }
+
+      .prog-max {
+        color: #facc15;
+        font-weight: 800;
+      }
+    }
+  }
+
+  .progress-bar-track {
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.5s ease-out;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+    }
+  }
+
+  .prog-hint {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    i {
+      color: #38bdf8;
+    }
+
+    strong {
+      color: #fed7aa;
+    }
+  }
+}
+
+// ── 2. Navigation Tabs ────────────────────────────────────────────────
+.rank-tabs-nav {
+  background: rgba(18, 22, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 6px;
+  display: flex;
+  gap: 8px;
+
+  .rank-tab-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 1rem;
+    }
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.active {
+      background: linear-gradient(135deg, rgba(255, 51, 119, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+      border: 1px solid rgba(255, 51, 119, 0.4);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(255, 51, 119, 0.25);
+    }
+  }
+}
+
+// ── 3. Tab 1: 7 Ranks Ladder Grid ─────────────────────────────────────
+.ranks-ladder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.tier-ladder-card {
+  background: rgba(18, 22, 38, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.25s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  &.is-current {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.06);
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+  }
+
+  &.is-achieved {
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  &.is-locked {
+    opacity: 0.75;
+  }
+}
+
+.ladder-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .tier-icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+  }
+
+  .tier-title-box {
+    flex: 1;
+
+    .tier-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+
+    .tier-xp-range {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+
+      i { color: #f59e0b; }
+    }
+  }
+
+  .tier-status-pill {
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+
+      &.badge-current {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid #f59e0b;
+        color: #fef08a;
+      }
+
+      &.badge-passed {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #86efac;
+      }
+
+      &.badge-locked {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #64748b;
+      }
+    }
+  }
+}
+
+.ladder-benefits-list {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+
+  .benefits-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    i { color: #a855f7; }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.35;
+
+      .check-bullet {
+        color: #22c55e;
+        font-size: 0.72rem;
+        margin-top: 3px;
+      }
+    }
+  }
+}
+
+.ladder-card-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+
+  .reward-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+
+    .reward-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .reward-val {
+      color: #38bdf8;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  }
+}
+
+// ── 4. Tab 2: Achievements Grid ───────────────────────────────────────
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.achievement-card {
+  background: rgba(18, 22, 38, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+
+  &.is-completed:not(.is-claimed) {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.05);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+  }
+
+  &.is-claimed {
+    opacity: 0.75;
+  }
+
+  .ach-left {
+    .ach-icon-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      flex-shrink: 0;
+    }
+  }
+
+  .ach-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .ach-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+
+      .ach-title {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0;
+      }
+
+      .ach-rewards-tags {
+        display: flex;
+        gap: 4px;
+
+        span {
+          font-size: 0.68rem;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 999px;
+        }
+
+        .tag-xp {
+          background: rgba(99, 102, 241, 0.2);
+          color: #a5b4fc;
+        }
+
+        .tag-dia {
+          background: rgba(56, 189, 248, 0.2);
+          color: #7dd3fc;
+        }
+      }
+    }
+
+    .ach-desc {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .ach-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+
+      .ach-bar-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 3px;
+        overflow: hidden;
+
+        .ach-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #f97316 0%, #eab308 100%);
+          border-radius: 3px;
+          transition: width 0.3s ease;
+        }
+      }
+
+      .ach-count {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #cbd5e1;
+      }
+    }
+  }
+
+  .ach-action {
+    .btn-ach {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+
+      &.btn-claimable {
+        background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        animation: pulseClaim 1.8s infinite ease-in-out;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(245, 158, 11, 0.6);
+        }
+      }
+
+      &.btn-claimed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #86efac;
+        cursor: default;
+      }
+
+      &.btn-in-progress {
+        background: rgba(255, 255, 255, 0.05);
+        color: #64748b;
+        cursor: default;
+      }
+    }
+  }
+}
+
+// ── 5. Tab 3: Season & Privileges ─────────────────────────────────────
+.season-view-container {
+  background: rgba(18, 22, 38, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 32px;
+
+  .season-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+
+    .season-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      font-size: 0.86rem;
+      font-weight: 600;
+
+      i { color: #ef4444; }
+      strong { color: #fff; }
+    }
+
+    .season-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #fff;
+      margin: 0;
+      background: linear-gradient(135deg, #fff 0%, #fed7aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .season-desc {
+      font-size: 0.92rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin: 0;
+    }
+  }
+
+  .season-perks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+
+    .perk-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+
+      .perk-icon-wrap {
+        font-size: 2.2rem;
+
+        .gold-perk { color: #facc15; filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.6)); }
+        .silver-perk { color: #94a3b8; filter: drop-shadow(0 0 10px rgba(148, 163, 184, 0.6)); }
+        .bronze-perk { color: #cd7f32; filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.6)); }
+      }
+
+      h4 {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #f8fafc;
+        margin: 0;
+      }
+
+      p {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 0;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .season-cta-center {
+    margin-top: 12px;
+
+    .btn-view-leaderboard {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 26px rgba(168, 85, 247, 0.6);
+      }
+    }
+  }
+}
+
+@keyframes pulseClaim {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+  }
+}

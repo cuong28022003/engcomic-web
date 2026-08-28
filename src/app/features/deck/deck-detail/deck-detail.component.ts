@@ -52,9 +52,21 @@ export class DeckDetailComponent implements OnInit {
   cards = signal<Card[]>([]);
   loading = signal<boolean>(true);
   searchQuery = signal<string>('');
-  filterTab = signal<'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'>('all');
+  filterStatus = signal<string>('all');
+  filterLevel = signal<string>('all');
+  readonly isStarActive = signal<boolean>(false);
   viewMode = signal<'grid' | 'list'>((localStorage.getItem('deck_detail_view_mode') as 'grid' | 'list') || 'grid');
   notFound = signal<boolean>(false);
+
+  filterTab = computed<'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'>(() => {
+    if (this.filterStatus() === 'ready') return 'ready';
+    if (this.filterStatus() === 'pending') return 'pending';
+    if (this.filterLevel() === '1') return 'l1';
+    if (this.filterLevel() === '2') return 'l2';
+    if (this.filterLevel() === '3') return 'l3';
+    if (this.filterLevel() === '4') return 'l4';
+    return 'all';
+  });
 
   // Selection state for Bulk Actions
   selectedCardIds = signal<Set<string>>(new Set());
@@ -102,23 +114,31 @@ export class DeckDetailComponent implements OnInit {
     return { l1, l2, l3, l4, total: list.length };
   });
 
-  // Filtered cards by search query & filter tab
+  // Filtered cards by search query, status, level & star
   filteredCards = computed<Card[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    const tab = this.filterTab();
+    const status = this.filterStatus();
+    const level = this.filterLevel();
+    const star = this.isStarActive();
     let list = this.cards();
 
-    if (tab === 'ready') {
+    if (star) {
+      list = list.filter(c => c.isFavorite || c.favorite);
+    }
+
+    if (status === 'ready') {
       list = list.filter(c => !!c.exercisePackage);
-    } else if (tab === 'pending') {
+    } else if (status === 'pending') {
       list = list.filter(c => !c.exercisePackage);
-    } else if (tab === 'l1') {
+    }
+
+    if (level === '1') {
       list = list.filter(c => (c.masteryLevel || 1) === 1);
-    } else if (tab === 'l2') {
+    } else if (level === '2') {
       list = list.filter(c => (c.masteryLevel || 1) === 2);
-    } else if (tab === 'l3') {
+    } else if (level === '3') {
       list = list.filter(c => (c.masteryLevel || 1) === 3);
-    } else if (tab === 'l4') {
+    } else if (level === '4') {
       list = list.filter(c => (c.masteryLevel || 1) >= 4);
     }
 
@@ -129,6 +149,47 @@ export class DeckDetailComponent implements OnInit {
       (c.ipa && c.ipa.toLowerCase().includes(q))
     );
   });
+
+  isFilterActive = computed<boolean>(() => {
+    return this.filterStatus() !== 'all' || this.filterLevel() !== 'all' || this.isStarActive() || !!this.searchQuery().trim();
+  });
+
+  setFilterTab(tab: 'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'): void {
+    if (tab === 'all') {
+      this.filterStatus.set('all');
+      this.filterLevel.set('all');
+    } else if (tab === 'ready' || tab === 'pending') {
+      this.filterStatus.set(tab);
+      this.filterLevel.set('all');
+    } else if (tab.startsWith('l')) {
+      this.filterStatus.set('all');
+      this.filterLevel.set(tab.replace('l', ''));
+    }
+    this.clearSelection();
+  }
+
+  onFilterStatusChange(status: string): void {
+    this.filterStatus.set(status);
+    this.clearSelection();
+  }
+
+  onFilterLevelChange(level: string): void {
+    this.filterLevel.set(level);
+    this.clearSelection();
+  }
+
+  onStarFilterChange(active: boolean): void {
+    this.isStarActive.set(active);
+    this.clearSelection();
+  }
+
+  clearAllFilters(): void {
+    this.searchQuery.set('');
+    this.filterStatus.set('all');
+    this.filterLevel.set('all');
+    this.isStarActive.set(false);
+    this.clearSelection();
+  }
 
   selectedCount = computed(() => this.selectedCardIds().size);
 
@@ -193,10 +254,7 @@ export class DeckDetailComponent implements OnInit {
     });
   }
 
-  setFilterTab(tab: 'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'): void {
-    this.filterTab.set(tab);
-    this.clearSelection();
-  }
+
 
   onViewModeChange(mode: 'grid' | 'list'): void {
     this.viewMode.set(mode);
@@ -380,10 +438,15 @@ export class DeckDetailComponent implements OnInit {
 
   toggleFavorite(card: Card, event: MouseEvent): void {
     event.stopPropagation();
-    const newFav = !(card.favorite || card.isFavorite);
-    this.cardApi.updateCard(card.id, { favorite: newFav } as Partial<Card>).subscribe({
+    this.cardApi.toggleFavorite(card.id).subscribe({
       next: (updated: Card) => {
-        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: updated.favorite ?? newFav, isFavorite: updated.isFavorite ?? newFav } : c));
+        const isFav = updated.isFavorite ?? updated.favorite ?? !(card.isFavorite || card.favorite);
+        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: isFav, isFavorite: isFav } : c));
+        if (isFav) {
+          this.toast.success(`Đã lưu "${card.word || card.front}" vào danh sách yêu thích!`);
+        } else {
+          this.toast.info(`Đã bỏ lưu "${card.word || card.front}".`);
+        }
       },
       error: () => {
         this.toast.error('Không thể cập nhật yêu thích');

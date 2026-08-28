@@ -30,6 +30,12 @@ export class DataFilterBarComponent {
   readonly showSearch = input<boolean>(true);
   readonly searchIcon = input<string>('fa-solid fa-magnifying-glass');
 
+  // ── Star / Saved Favorite Filter ─────────────────────────────────
+  readonly showStarFilter = input<boolean>(false);
+  readonly isStarActive = model<boolean>(false);
+  readonly starFilterLabel = input<string>('Đã lưu');
+  readonly starFilterCount = input<number | undefined>(undefined);
+
   // ── Sort Model & Options ─────────────────────────────────────────
   readonly sortBy = model<string>('');
   readonly sortOptions = input<SortOption[]>([]);
@@ -52,6 +58,7 @@ export class DataFilterBarComponent {
 
   // ── Outputs ──────────────────────────────────────────────────────
   readonly searchChange = output<string>();
+  readonly starChange = output<boolean>();
   readonly sortChange = output<string>();
   readonly viewModeChange = output<'grid' | 'list'>();
   readonly selectAll = output<void>();
@@ -60,7 +67,7 @@ export class DataFilterBarComponent {
 
   // ── Computed Helpers ─────────────────────────────────────────────
   readonly hasActiveFilters = computed<boolean>(() => {
-    return !!this.searchQuery().trim() || this.isFilterActive();
+    return !!this.searchQuery().trim() || this.isFilterActive() || this.isStarActive();
   });
 
   readonly countSummaryText = computed<string>(() => {
@@ -92,6 +99,12 @@ export class DataFilterBarComponent {
     this.selectAll.emit();
   }
 
+  toggleStarFilter(): void {
+    const next = !this.isStarActive();
+    this.isStarActive.set(next);
+    this.starChange.emit(next);
+  }
+
   onSearchInput(val: string): void {
     this.searchQuery.set(val);
     this.searchChange.emit(val);
@@ -115,6 +128,10 @@ export class DataFilterBarComponent {
   onClearAll(): void {
     this.searchQuery.set('');
     this.searchChange.emit('');
+    if (this.isStarActive()) {
+      this.isStarActive.set(false);
+      this.starChange.emit(false);
+    }
     this.clear.emit();
   }
 }

@@ -1,0 +1,104 @@
+<app-modal
+  [isOpen]="isOpen()"
+  title="Chuỗi Ngày Học Tập"
+  size="md"
+  (closed)="onClose()"
+>
+  <div class="streak-modal-body">
+    <!-- 1. Big Flame Hero Display -->
+    <div class="streak-hero-section">
+      <div class="flame-glow-circle" [class.flame-active]="isStudiedToday()">
+        <i class="fa-solid fa-fire big-flame-icon"></i>
+      </div>
+
+      <div class="streak-counter-wrap">
+        <div class="streak-number">{{ streakCount() }}</div>
+        <div class="streak-unit">Ngày liên tiếp</div>
+      </div>
+
+      <div class="streak-status-pill" [class.status-completed]="isStudiedToday()">
+        @if (isStudiedToday()) {
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Hôm nay bạn đã hoàn thành mục tiêu học tập!</span>
+        } @else {
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Hôm nay chưa học! Học ngay để giữ chuỗi ngọn lửa 🔥</span>
+        }
+      </div>
+    </div>
+
+    <!-- 2. Weekly 7-Day Calendar Streak -->
+    <div class="weekly-streak-card glass-panel">
+      <div class="card-header-row">
+        <span class="card-title"><i class="fa-regular fa-calendar-check"></i> Tuần này</span>
+        <span class="card-meta">Kỷ lục: <strong>{{ longestStreak() }} ngày</strong></span>
+      </div>
+
+      <div class="days-row">
+        @for (d of weekDays(); track d.dayLabel) {
+          <div
+            class="day-col"
+            [class.is-today]="d.isToday"
+            [class.is-completed]="d.isCompleted"
+            [class.is-past]="d.isPast"
+          >
+            <span class="day-label">{{ d.dayLabel }}</span>
+            <div class="day-icon-circle">
+              @if (d.isCompleted) {
+                <i class="fa-solid fa-fire fire-mini"></i>
+              } @else if (d.isToday) {
+                <span class="today-dot"></span>
+              } @else {
+                <i class="fa-regular fa-circle empty-dot"></i>
+              }
+            </div>
+            <span class="day-date">{{ d.dateStr }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- 3. Milestone Rewards Progress -->
+    <div class="milestone-card glass-panel">
+      <div class="milestone-header">
+        <div class="m-left">
+          <i class="fa-solid fa-gift gift-icon"></i>
+          <div>
+            <div class="m-title">Mục tiêu chuỗi {{ nextMilestone().target }} ngày</div>
+            <div class="m-reward">Thưởng: {{ nextMilestone().reward }}</div>
+          </div>
+        </div>
+        <span class="m-percent">{{ nextMilestone().progress }}%</span>
+      </div>
+
+      <div class="m-progress-bar-bg">
+        <div class="m-progress-fill" [style.width.%]="nextMilestone().progress"></div>
+      </div>
+    </div>
+
+    <!-- 4. Footer CTA Buttons -->
+    <div class="streak-actions-row">
+      @if (!isStudiedToday()) {
+        <button
+          type="button"
+          class="btn-action btn-checkin"
+          [disabled]="checkingIn()"
+          (click)="onCheckIn()"
+          title="Bấm để điểm danh ngay"
+        >
+          <i class="fa-solid fa-hand-sparkles"></i>
+          <span>{{ checkingIn() ? 'Đang điểm danh...' : 'Điểm Danh Nhanh (+15 XP)' }}</span>
+        </button>
+      }
+
+      <button
+        type="button"
+        class="btn-action btn-practice-now"
+        (click)="goToPractice()"
+      >
+        <i class="fa-solid fa-bolt"></i>
+        <span>Luyện Tập Từ Vựng Ngay</span>
+      </button>
+    </div>
+  </div>
+</app-modal>

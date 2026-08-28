@@ -174,6 +174,9 @@
         [selectedCount]="selectedCount()"
         selectAllLabel="Chọn tất cả"
         (selectAll)="toggleSelectAll()"
+        [showStarFilter]="true"
+        [(isStarActive)]="isStarActive"
+        (starChange)="onStarFilterChange($event)"
         [showSort]="false"
         [showViewMode]="true"
         [(viewMode)]="viewMode"
@@ -181,63 +184,36 @@
         [totalCount]="cards().length"
         [filteredCount]="filteredCards().length"
         itemLabel="từ vựng"
-        [isFilterActive]="filterTab() !== 'all'"
-        (clear)="searchQuery.set(''); setFilterTab('all')"
+        [isFilterActive]="isFilterActive()"
+        (clear)="clearAllFilters()"
       >
-        <!-- Filter Tabs Row as Projected Content -->
-        <div class="filter-tabs-row">
-          <button
-            class="tab-chip"
-            [class.active]="filterTab() === 'all'"
-            (click)="setFilterTab('all')"
-          >
-            Tất cả ({{ cards().length }})
-          </button>
-          <button
-            class="tab-chip ready"
-            [class.active]="filterTab() === 'ready'"
-            (click)="setFilterTab('ready')"
-          >
-            <i class="fa-solid fa-check"></i> Sẵn sàng ({{ readyCards().length }})
-          </button>
+        <!-- Status Filter Dropdown -->
+        <select
+          class="filter-select status-select"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="onFilterStatusChange($event)"
+          title="Lọc theo trạng thái bài tập"
+        >
+          <option value="all">Tất cả trạng thái ({{ cards().length }})</option>
+          <option value="ready">Sẵn sàng học ({{ readyCards().length }})</option>
           @if (pendingCards().length > 0) {
-            <button
-              class="tab-chip pending"
-              [class.active]="filterTab() === 'pending'"
-              (click)="setFilterTab('pending')"
-            >
-              <i class="fa-regular fa-clock"></i> Chờ AI ({{ pendingCards().length }})
-            </button>
+            <option value="pending">Chờ tạo bài tập AI ({{ pendingCards().length }})</option>
           }
-          <button
-            class="tab-chip"
-            [class.active]="filterTab() === 'l1'"
-            (click)="setFilterTab('l1')"
-          >
-            L1 ({{ levelStats().l1 }})
-          </button>
-          <button
-            class="tab-chip"
-            [class.active]="filterTab() === 'l2'"
-            (click)="setFilterTab('l2')"
-          >
-            L2 ({{ levelStats().l2 }})
-          </button>
-          <button
-            class="tab-chip"
-            [class.active]="filterTab() === 'l3'"
-            (click)="setFilterTab('l3')"
-          >
-            L3 ({{ levelStats().l3 }})
-          </button>
-          <button
-            class="tab-chip"
-            [class.active]="filterTab() === 'l4'"
-            (click)="setFilterTab('l4')"
-          >
-            L4 ⭐ ({{ levelStats().l4 }})
-          </button>
-        </div>
+        </select>
+
+        <!-- Mastery Level Filter Dropdown -->
+        <select
+          class="filter-select level-select"
+          [ngModel]="filterLevel()"
+          (ngModelChange)="onFilterLevelChange($event)"
+          title="Lọc theo cấp độ thành thạo 4-Level"
+        >
+          <option value="all">Tất cả cấp độ (L1 - L4)</option>
+          <option value="1">Level 1: Nhận biết ({{ levelStats().l1 }})</option>
+          <option value="2">Level 2: Ngữ cảnh ({{ levelStats().l2 }})</option>
+          <option value="3">Level 3: Tái hiện ({{ levelStats().l3 }})</option>
+          <option value="4">Level 4: Thực tế ({{ levelStats().l4 }})</option>
+        </select>
       </app-data-filter-bar>
 
       <!-- Cards Grid / List -->

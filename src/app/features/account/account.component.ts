@@ -37,6 +37,9 @@ import { CurrentUser, UserStats } from '@models/index';
           <a routerLink="/deck" class="side-link">
             <i class="fa-solid fa-layer-group"></i> Quản lý bộ thẻ SRS
           </a>
+          <a [routerLink]="['/user', userId, 'rank']" routerLinkActive="active" class="side-link">
+            <i class="fa-solid fa-trophy"></i> Cấp bậc & Thành tích
+          </a>
           <a [routerLink]="['/user', userId, 'collection']" routerLinkActive="active" class="side-link">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Bộ sưu tập Gacha
           </a>

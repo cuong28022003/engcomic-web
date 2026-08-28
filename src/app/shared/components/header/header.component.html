@@ -27,19 +27,6 @@
       </a>
     </nav>
 
-    <!-- Search Bar -->
-    <div class="search-box">
-      <input
-        type="text"
-        placeholder="Tìm kiếm từ vựng, tài liệu..."
-        [(ngModel)]="searchKeyword"
-        (keyup.enter)="onSearch()"
-      />
-      <button (click)="onSearch()" aria-label="Search" class="search-btn">
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
-    </div>
-
     <!-- User Actions / Profile & Language Switcher -->
     <div class="user-section">
       <!-- Language Switcher Dropdown -->
@@ -70,16 +57,21 @@
       </div>
 
       @if (currentUser) {
-        <!-- Streak counter -->
-        <div class="stat-badge streak-badge" title="Chuỗi ngày học tập">
-          <i class="fa-solid fa-fire fire-icon"></i>
-          <span>{{ userStats?.streakDays || 1 }} ngày</span>
-        </div>
+        <!-- Streak counter (Interactive Badge opens Streak Modal) -->
+        <button
+          type="button"
+          class="stat-badge streak-badge"
+          (click)="openStreakModal()"
+          [title]="'Xem chi tiết chuỗi học tập (' + ((userStats?.currentStreak ?? userStats?.streakDays ?? 0) + ' ngày)')"
+        >
+          <i class="fa-solid fa-fire fire-icon" [class.studied]="userStats?.studiedToday"></i>
+          <span>{{ userStats?.currentStreak ?? userStats?.streakDays ?? 0 }} ngày</span>
+        </button>
 
         <!-- Diamonds counter -->
         <div class="stat-badge diamond-badge" title="Điểm thưởng">
           <i class="fa-solid fa-gem gem-icon"></i>
-          <span>{{ userStats?.diamonds || 0 }}</span>
+          <span>{{ userStats?.diamond ?? userStats?.diamonds ?? 0 }}</span>
         </div>
 
         <!-- Avatar & Menu Dropdown -->
@@ -164,6 +156,15 @@
       </div>
     </div>
   </div>
+}
+
+<!-- Global Streak Modal -->
+@if (showStreakModal()) {
+  <app-streak-modal
+    [isOpen]="showStreakModal()"
+    [stats]="userStats"
+    (close)="closeStreakModal()"
+  ></app-streak-modal>
 }
 
 <!-- Global Quick Grammar Search Modal (Accessible via Ctrl+G from anywhere) -->

@@ -8,13 +8,22 @@ export interface Rank {
 }
 
 export interface UserStats {
+  id?: string;
   userId: string;
   xp: number;
   diamonds: number;
+  diamond?: number;
   streakDays: number;
+  currentStreak?: number;
+  longestStreak?: number;
+  lastStudyDate?: string;
+  studiedToday?: boolean;
+  isReceivedSeasonReward?: boolean;
   lastLoginDate?: string;
   isPremium?: boolean;
   premiumExpiry?: string;
+  premiumExpiredAt?: string;
+  rankName?: string;
   rank?: Rank;
 }
 

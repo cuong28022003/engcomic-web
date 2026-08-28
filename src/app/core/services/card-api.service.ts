@@ -41,6 +41,10 @@ export class CardApiService extends ApiBaseService {
     return this.post<void>(`${this.BASE}/review`, data);
   }
 
+  toggleFavorite(id: string): Observable<Card> {
+    return this.put<Card>(`${this.BASE}/${id}/toggle-favorite`, {});
+  }
+
   // ─── Vocab Vault methods ─────────────────────────────────────────────
 
   /** POST /api/card/batch-import — import JSON từ AI */

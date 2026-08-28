@@ -1,0 +1,296 @@
+<div class="rank-page-container">
+  <!-- 1. Hero Current Tier Card -->
+  <div class="current-tier-hero glass-panel">
+    <div class="hero-main-row">
+      <!-- Tier Emblem / Badge -->
+      <div class="tier-emblem-wrap" [style.background]="currentTier().gradient">
+        <i [class]="currentTier().icon + ' emblem-icon'"></i>
+        <div class="emblem-shine"></div>
+      </div>
+
+      <!-- User Tier Info -->
+      <div class="tier-info-wrap">
+        <div class="tier-badge-label">
+          <span class="rank-name">{{ currentTier().name }}</span>
+          <span class="rank-status-tag">Cấp Bậc Hiện Tại</span>
+        </div>
+
+        <h2 class="user-display-title">
+          {{ currentUser()?.username || 'Chiến Binh' }}
+        </h2>
+
+        <!-- Stats Chips Row -->
+        <div class="stats-pills-row">
+          <div class="stat-pill xp-pill" title="Tổng điểm kinh nghiệm">
+            <i class="fa-solid fa-bolt"></i>
+            <span><strong>{{ userXp() }}</strong> XP</span>
+          </div>
+
+          <div class="stat-pill diamond-pill" title="Kho Kim Cương">
+            <i class="fa-solid fa-gem"></i>
+            <span><strong>{{ userDiamonds() }}</strong> Kim Cương</span>
+          </div>
+
+          <div class="stat-pill streak-pill" title="Chuỗi học tập hiện tại">
+            <i class="fa-solid fa-fire"></i>
+            <span>Chuỗi <strong>{{ userStreak() }}</strong> Ngày (Kỷ lục: {{ longestStreak() }})</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action -->
+      <div class="hero-cta-wrap">
+        <button type="button" class="btn-earn-xp" (click)="goToPractice()">
+          <i class="fa-solid fa-play"></i>
+          <span>Luyện Tập Kiếm XP</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tier XP Progress Bar -->
+    <div class="tier-progress-section">
+      <div class="progress-meta-row">
+        <div class="prog-label">
+          Tiến trình thăng hạng
+          @if (nextTier()) {
+            lên <strong>{{ nextTier()?.name }}</strong>
+          } @else {
+            <strong>(Đã đạt Cấp Bậc Tối Thượng)</strong>
+          }
+        </div>
+        <div class="prog-numbers">
+          @if (nextTier()) {
+            <span>{{ userXp() }} / {{ nextTier()?.minXp }} XP</span>
+            <span class="prog-pct">({{ tierProgressPercent() }}%)</span>
+          } @else {
+            <span class="prog-max">MAX LEVEL 👑</span>
+          }
+        </div>
+      </div>
+
+      <div class="progress-bar-track">
+        <div
+          class="progress-bar-fill"
+          [style.width.%]="tierProgressPercent()"
+          [style.background]="currentTier().gradient"
+        ></div>
+      </div>
+
+      @if (nextTier()) {
+        <p class="prog-hint">
+          <i class="fa-solid fa-circle-info"></i>
+          Chỉ cần tích lũy thêm <strong>{{ xpNeededForNextTier() }} XP</strong> nữa để mở khóa
+          <strong>{{ nextTier()?.name }}</strong> và nhận ngay
+          <strong>+{{ nextTier()?.rewardDiamonds }} 💎</strong>!
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- 2. Sub Navigation Tabs -->
+  <div class="rank-tabs-nav glass-panel">
+    <button
+      type="button"
+      class="rank-tab-btn"
+      [class.active]="activeTab() === 'ranks'"
+      (click)="setActiveTab('ranks')"
+    >
+      <i class="fa-solid fa-layer-group"></i>
+      <span>7 Cấp Bậc Danh Vọng</span>
+    </button>
+
+    <button
+      type="button"
+      class="rank-tab-btn"
+      [class.active]="activeTab() === 'achievements'"
+      (click)="setActiveTab('achievements')"
+    >
+      <i class="fa-solid fa-trophy"></i>
+      <span>Nhiệm Vụ & Thành Tích ({{ completedAchievementsCount() }}/{{ achievements().length }})</span>
+    </button>
+
+    <button
+      type="button"
+      class="rank-tab-btn"
+      [class.active]="activeTab() === 'season'"
+      (click)="setActiveTab('season')"
+    >
+      <i class="fa-solid fa-gift"></i>
+      <span>Đặc Quyền & Mùa Giải</span>
+    </button>
+  </div>
+
+  <!-- 3. Tab Contents -->
+
+  <!-- TAB 1: 7 RANKS LADDER -->
+  @if (activeTab() === 'ranks') {
+    <div class="ranks-ladder-grid">
+      @for (tier of ranks(); track tier.name; let idx = $index) {
+        <div
+          class="tier-ladder-card glass-panel"
+          [class.is-current]="idx === currentRankIndex()"
+          [class.is-achieved]="idx < currentRankIndex()"
+          [class.is-locked]="idx > currentRankIndex()"
+        >
+          <!-- Card Top Header -->
+          <div class="ladder-card-top">
+            <div class="tier-icon-circle" [style.background]="tier.gradient">
+              <i [class]="tier.icon"></i>
+            </div>
+
+            <div class="tier-title-box">
+              <h3 class="tier-name" [style.color]="tier.color">{{ tier.name }}</h3>
+              <span class="tier-xp-range">
+                <i class="fa-solid fa-bolt"></i>
+                @if (idx === ranks().length - 1) {
+                  Từ {{ tier.minXp }} XP trở lên
+                } @else {
+                  {{ tier.minXp }} - {{ tier.maxXp }} XP
+                }
+              </span>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="tier-status-pill">
+              @if (idx === currentRankIndex()) {
+                <span class="status-badge badge-current"><i class="fa-solid fa-circle-dot"></i> Đang Ở Mức Này</span>
+              } @else if (idx < currentRankIndex()) {
+                <span class="status-badge badge-passed"><i class="fa-solid fa-check"></i> Đã Vượt Qua</span>
+              } @else {
+                <span class="status-badge badge-locked"><i class="fa-solid fa-lock"></i> Chưa Mở Khóa</span>
+              }
+            </div>
+          </div>
+
+          <!-- Benefits List -->
+          <div class="ladder-benefits-list">
+            <div class="benefits-title">
+              <i class="fa-solid fa-star-half-stroke"></i> Đặc quyền thăng hạng:
+            </div>
+            <ul>
+              @for (b of tier.benefits; track b) {
+                <li>
+                  <i class="fa-solid fa-check check-bullet"></i>
+                  <span>{{ b }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- Card Footer Reward -->
+          <div class="ladder-card-footer">
+            <div class="reward-box">
+              <span class="reward-label">Thưởng Thăng Hạng:</span>
+              <span class="reward-val"><i class="fa-solid fa-gem"></i> +{{ tier.rewardDiamonds }} Kim Cương</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TAB 2: ACHIEVEMENTS & MISSIONS -->
+  @if (activeTab() === 'achievements') {
+    <div class="achievements-grid">
+      @for (ach of achievements(); track ach.id) {
+        <div
+          class="achievement-card glass-panel"
+          [class.is-completed]="ach.currentVal >= ach.targetVal"
+          [class.is-claimed]="ach.isClaimed"
+        >
+          <div class="ach-left">
+            <div class="ach-icon-circle" [style.background]="ach.iconBg">
+              <i [class]="ach.icon"></i>
+            </div>
+          </div>
+
+          <div class="ach-body">
+            <div class="ach-header-row">
+              <h4 class="ach-title">{{ ach.title }}</h4>
+              <div class="ach-rewards-tags">
+                <span class="tag-xp">+{{ ach.rewardXp }} XP</span>
+                <span class="tag-dia">+{{ ach.rewardDiamond }} 💎</span>
+              </div>
+            </div>
+
+            <p class="ach-desc">{{ ach.desc }}</p>
+
+            <div class="ach-progress-row">
+              <div class="ach-bar-track">
+                <div
+                  class="ach-bar-fill"
+                  [style.width.%]="(ach.currentVal / ach.targetVal) * 100"
+                ></div>
+              </div>
+              <span class="ach-count">{{ ach.currentVal }}/{{ ach.targetVal }}</span>
+            </div>
+          </div>
+
+          <div class="ach-action">
+            @if (ach.isClaimed) {
+              <button type="button" class="btn-ach btn-claimed" disabled>
+                <i class="fa-solid fa-check-double"></i> Đã Nhận
+              </button>
+            } @else if (ach.currentVal >= ach.targetVal) {
+              <button
+                type="button"
+                class="btn-ach btn-claimable"
+                (click)="claimAchievement(ach, $event)"
+              >
+                <i class="fa-solid fa-gift"></i> Nhận Quà
+              </button>
+            } @else {
+              <button type="button" class="btn-ach btn-in-progress" disabled>
+                <i class="fa-solid fa-hourglass-half"></i> Chưa Đạt
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- TAB 3: SEASON & PRIVILEGES -->
+  @if (activeTab() === 'season') {
+    <div class="season-view-container glass-panel">
+      <div class="season-banner">
+        <div class="season-badge-pill">
+          <i class="fa-solid fa-fire"></i> Mùa Giải Xếp Hạng Hiện Tại: <strong>Season Alpha</strong>
+        </div>
+        <h3 class="season-title">Đua Top Bảng Vàng & Rinh Quà Độc Quyền</h3>
+        <p class="season-desc">
+          Mỗi mùa giải kéo dài trong 30 ngày. Điểm kinh nghiệm XP và Chuỗi ngày học tập của bạn sẽ
+          quyết định vị trí trong Bảng Xếp Hạng Toàn Server. Kết thúc mùa giải, Top 100 học viên xuất
+          sắc nhất sẽ nhận được Kim Cương, Danh Hiệu Huyền Thoại và Khung Avatar giới hạn!
+        </p>
+
+        <div class="season-perks-grid">
+          <div class="perk-card">
+            <div class="perk-icon-wrap"><i class="fa-solid fa-trophy gold-perk"></i></div>
+            <h4>Top 1 - 3 Server</h4>
+            <p>+1,000 💎, Danh hiệu Thần Thoại & Nhân vật Gacha 5 sao SSR</p>
+          </div>
+
+          <div class="perk-card">
+            <div class="perk-icon-wrap"><i class="fa-solid fa-medal silver-perk"></i></div>
+            <h4>Top 4 - 20 Server</h4>
+            <p>+500 💎, Danh hiệu Bậc Thầy & Khung Avatar Kim Cương</p>
+          </div>
+
+          <div class="perk-card">
+            <div class="perk-icon-wrap"><i class="fa-solid fa-award bronze-perk"></i></div>
+            <h4>Top 21 - 100 Server</h4>
+            <p>+200 💎 & Khung Avatar Vàng Danh Dự</p>
+          </div>
+        </div>
+
+        <div class="season-cta-center">
+          <a routerLink="/leaderboard" class="btn-view-leaderboard">
+            <i class="fa-solid fa-ranking-star"></i>
+            <span>Xem Bảng Xếp Hạng Ngay</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+</div>

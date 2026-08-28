@@ -163,6 +163,7 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   filterStatus = '';
   filterTopic = '';
   filterPos = '';
+  readonly isStarActive = signal<boolean>(false);
   activeCategoryFilter = signal<string | null>(null);
 
   // Filtered Topics inside Modal
@@ -277,6 +278,7 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
       ...(this.filterStatus && { status: this.filterStatus }),
       ...(this.filterTopic && { topic: this.filterTopic }),
       ...(this.filterPos && { partOfSpeech: this.filterPos }),
+      ...(this.isStarActive() && { isFavorite: true }),
       ...(this.activeCategoryFilter() && { usageCategory: this.activeCategoryFilter()! }),
     };
 
@@ -313,6 +315,11 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     this.loadDashboard(0);
   }
 
+  onStarFilterChange(active: boolean) {
+    this.isStarActive.set(active);
+    this.loadDashboard(0);
+  }
+
   // ─── Topic Selector Modal Handlers ────────────────────────────
 
   openTopicModal(): void {
@@ -346,6 +353,7 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     this.filterStatus = '';
     this.filterTopic = '';
     this.filterPos = '';
+    this.isStarActive.set(false);
     this.activeCategoryFilter.set(null);
     this.loadDashboard(0);
   }
@@ -640,10 +648,18 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
 
   toggleFavorite(card: Card, event: Event): void {
     event.stopPropagation();
-    const newFav = !(card.favorite || card.isFavorite);
-    this.cardApi.updateCard(card.id, { favorite: newFav } as Partial<Card>).subscribe({
+    this.cardApi.toggleFavorite(card.id).subscribe({
       next: (updated: Card) => {
-        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: updated.favorite ?? newFav, isFavorite: updated.isFavorite ?? newFav } : c));
+        const isFav = updated.isFavorite ?? updated.favorite ?? !(card.isFavorite || card.favorite);
+        this.cards.update(list => list.map(c => c.id === card.id ? { ...c, favorite: isFav, isFavorite: isFav } : c));
+        if (isFav) {
+          this.toast.success(`Đã lưu "${card.word || card.front}" vào danh sách yêu thích!`);
+        } else {
+          this.toast.info(`Đã bỏ lưu "${card.word || card.front}".`);
+          if (this.isStarActive()) {
+            this.loadDashboard(this.currentPage());
+          }
+        }
       },
       error: () => {
         this.toast.error('Không thể cập nhật yêu thích');

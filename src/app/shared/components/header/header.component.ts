@@ -10,6 +10,7 @@ import { TranslationService, LanguageCode } from '@core/services/translation.ser
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { CurrentUser, UserStats } from '@models/index';
 import { ComicGenres } from '../../constants/genres';
+import { StreakModalComponent } from '../streak-modal/streak-modal.component';
 import { GrammarSearchModalComponent } from '../../../features/grammar/components/grammar-search-modal/grammar-search-modal.component';
 import { GrammarCardModalComponent } from '../../../features/grammar/components/grammar-card-modal/grammar-card-modal.component';
 import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
@@ -22,6 +23,7 @@ import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
     RouterModule,
     FormsModule,
     TranslatePipe,
+    StreakModalComponent,
     GrammarSearchModalComponent,
     GrammarCardModalComponent
   ],
@@ -37,11 +39,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   currentUser: CurrentUser | null = null;
   userStats: UserStats | null = null;
-  searchKeyword = '';
   isProfileMenuOpen = false;
   isLangMenuOpen = false;
   isCategoryModalOpen = false;
   genres = ComicGenres;
+
+  // Streak Modal State
+  readonly showStreakModal = signal<boolean>(false);
 
   // Grammar Modals
   readonly showGrammarSearchModal = signal<boolean>(false);
@@ -109,12 +113,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearch(): void {
-    if (this.searchKeyword.trim()) {
-      this.router.navigate(['/search'], {
-        queryParams: { keyword: this.searchKeyword.trim() },
-      });
-    }
+  openStreakModal(): void {
+    this.showStreakModal.set(true);
+  }
+
+  closeStreakModal(): void {
+    this.showStreakModal.set(false);
   }
 
   toggleProfileMenu(): void {

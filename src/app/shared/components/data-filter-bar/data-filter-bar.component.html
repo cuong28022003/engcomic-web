@@ -1,5 +1,5 @@
 <div class="data-filter-bar glass-panel">
-  <!-- 1. Left Group: Select All Cell & Search Box -->
+  <!-- 1. Left Group: Select All Cell & Search Box & Star Button -->
   <div class="filter-left-group">
     <!-- Optional Select All Cell -->
     @if (showSelectAll()) {
@@ -37,6 +37,20 @@
           </button>
         }
       </div>
+    }
+
+    <!-- Star / Saved Favorite Filter Button (Icon-only compact button) -->
+    @if (showStarFilter()) {
+      <button
+        type="button"
+        class="btn-star-filter"
+        [class.active]="isStarActive()"
+        (click)="toggleStarFilter()"
+        [title]="isStarActive() ? 'Đang lọc: Thẻ đã lưu (Bấm để hiển thị tất cả thẻ)' : 'Lọc chỉ hiển thị các thẻ đã lưu (yêu thích)'"
+        aria-label="Lọc thẻ đã lưu"
+      >
+        <i class="fa-star" [class.fa-solid]="isStarActive()" [class.fa-regular]="!isStarActive()"></i>
+      </button>
     }
   </div>
 

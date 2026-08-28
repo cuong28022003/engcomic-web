@@ -130,6 +130,56 @@
   flex-wrap: wrap;
 }
 
+// ── Star / Saved Favorite Filter Button (Icon-Only Compact 36x36) ─────
+.btn-star-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  flex-shrink: 0;
+
+  i {
+    transition: all 0.2s ease;
+  }
+
+  &:hover {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.4);
+    color: #fbbf24;
+    transform: translateY(-1px);
+
+    i {
+      transform: scale(1.2);
+    }
+  }
+
+  &.active {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.18) 100%);
+    border-color: #fbbf24;
+    color: #fbbf24;
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.3);
+
+    i {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
+    }
+  }
+
+  &:active {
+    transform: scale(0.93);
+  }
+}
+
 .projected-filters-slot {
   display: flex;
   align-items: center;
