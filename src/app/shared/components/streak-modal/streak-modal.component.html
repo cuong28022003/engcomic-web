@@ -78,26 +78,13 @@
 
     <!-- 4. Footer CTA Buttons -->
     <div class="streak-actions-row">
-      @if (!isStudiedToday()) {
-        <button
-          type="button"
-          class="btn-action btn-checkin"
-          [disabled]="checkingIn()"
-          (click)="onCheckIn()"
-          title="Bấm để điểm danh ngay"
-        >
-          <i class="fa-solid fa-hand-sparkles"></i>
-          <span>{{ checkingIn() ? 'Đang điểm danh...' : 'Điểm Danh Nhanh (+15 XP)' }}</span>
-        </button>
-      }
-
       <button
         type="button"
         class="btn-action btn-practice-now"
         (click)="goToPractice()"
       >
         <i class="fa-solid fa-bolt"></i>
-        <span>Luyện Tập Từ Vựng Ngay</span>
+        <span>{{ isStudiedToday() ? 'Tiếp Tục Luyện Tập Từ Vựng' : 'Luyện Tập Để Duy Trì Chuỗi Ngay ⚡' }}</span>
       </button>
     </div>
   </div>

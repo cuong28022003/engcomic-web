@@ -13,6 +13,7 @@ import { TestTimerService } from '../services/test-timer.service';
 import { TestSessionService } from '../services/test-session.service';
 import { GradedQuestion, SubmitSessionPayload, SubmitSessionResponse, TestDetail, TimeTargetConfig, ToeicAttempt } from '../models';
 
+import { PartStrategyPopoverComponent } from './part-strategy-popover/part-strategy-popover.component';
 import { ToastService } from '@core/services/toast.service';
 
 @Component({
@@ -23,6 +24,7 @@ import { ToastService } from '@core/services/toast.service';
     RouterModule, 
     PdfViewerComponent, 
     AnswerSheetComponent, 
+    PartStrategyPopoverComponent,
     PreTestConfigModalComponent,
     ResumeAttemptModalComponent,
     AttemptHistoryModalComponent,

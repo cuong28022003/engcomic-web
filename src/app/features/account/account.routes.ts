@@ -35,6 +35,12 @@ export const ACCOUNT_ROUTES: Routes = [
           import('./rank/rank.component').then((m) => m.RankComponent),
       },
       {
+        path: 'showcase',
+        data: { route: 'SHOWCASE', title: 'Tủ Đồ & Danh Hiệu' },
+        loadComponent: () =>
+          import('./showcase/showcase.component').then((m) => m.ShowcaseComponent),
+      },
+      {
         path: 'topup-history',
         data: { route: ROUTE.TOPUP_HISTORY, title: 'Lịch Sử Hoạt Động' },
         loadComponent: () =>

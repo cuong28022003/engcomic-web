@@ -1,0 +1,108 @@
+<div
+  class="strategy-popover-wrapper"
+  (mouseenter)="openPopover()"
+  (mouseleave)="scheduleClose(350)"
+>
+  <!-- Strategy Info Trigger Button -->
+  <button
+    type="button"
+    class="strategy-trigger-btn"
+    [class.active]="isOpen()"
+    (click)="toggleOpen()"
+    title="Xem chiến thuật & mẹo làm bài cho từng Part TOEIC Reading"
+  >
+    <i class="fa-solid fa-lightbulb icon-bulb"></i>
+    <span class="btn-text">Chiến thuật làm bài</span>
+    <i class="fa-solid fa-chevron-down icon-arrow"></i>
+  </button>
+
+  <!-- Floating Hover Card / Popover -->
+  @if (isOpen()) {
+    <div
+      class="strategy-floating-card glass-panel"
+      (mouseenter)="cancelClose()"
+      (mouseleave)="scheduleClose(350)"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Card Header with Part Selector Tabs -->
+      <div class="card-header">
+        <div class="header-title">
+          <i class="fa-solid fa-chess-knight title-icon"></i>
+          <span>Chiến Thuật TOEIC Reading</span>
+        </div>
+
+        <div class="part-selector-tabs">
+          @for (s of strategies(); track s.part) {
+            <button
+              type="button"
+              class="part-tab-chip"
+              [class.active]="selectedPart() === s.part"
+              [style.--active-color]="s.color"
+              (click)="selectPart(s.part)"
+            >
+              Part {{ s.part }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Strategy Content Area -->
+      @if (currentStrategy(); as strat) {
+        <div class="strategy-content">
+          <!-- Part Hero Meta -->
+          <div class="part-hero-meta" [style.background]="strat.gradient">
+            <div class="hero-left">
+              <h4 class="part-title">Part {{ strat.part }}: {{ strat.name }}</h4>
+              <span class="part-range">{{ strat.questionRange }}</span>
+            </div>
+            <div class="hero-timing">
+              <div class="time-badge">
+                <i class="fa-solid fa-stopwatch"></i>
+                <span>{{ strat.recommendedTime }}</span>
+              </div>
+              <span class="time-sub">{{ strat.timePerQuestion }}</span>
+            </div>
+          </div>
+
+          <!-- Core Tactics List -->
+          <div class="tactics-section">
+            <div class="section-heading">
+              <i class="fa-solid fa-crosshairs"></i>
+              <span>Các bước giải quyết trọng tâm:</span>
+            </div>
+            <ul class="tactics-list">
+              @for (tactic of strat.coreTactics; track tactic) {
+                <li>
+                  <i class="fa-solid fa-check-circle bullet-icon" [style.color]="strat.color"></i>
+                  <span>{{ tactic }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- Common Traps to Avoid -->
+          <div class="traps-section">
+            <div class="section-heading trap-heading">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Cảnh báo bẫy thi thường gặp:</span>
+            </div>
+            <ul class="traps-list">
+              @for (trap of strat.commonTraps; track trap) {
+                <li>
+                  <i class="fa-solid fa-ban trap-bullet"></i>
+                  <span>{{ trap }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <!-- Pro Tip Footer Note -->
+          <div class="protip-box">
+            <i class="fa-solid fa-bolt tip-icon"></i>
+            <span class="tip-text">{{ strat.proTips }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

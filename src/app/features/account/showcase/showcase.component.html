@@ -1,0 +1,273 @@
+<div class="showcase-page-container">
+  @if (loading()) {
+    <app-loading [message]="'Đang tải Tủ Đồ & Bộ Sưu Tập Danh Dự...'"></app-loading>
+  } @else {
+    <!-- 1. Top Hero Profile Live Preview -->
+    <div class="hero-preview-section glass-panel">
+      <div class="hero-backdrop-glow"></div>
+
+      <div class="preview-layout">
+        <!-- Live Avatar Frame Preview -->
+        <div class="avatar-preview-box">
+          <app-avatar-frame
+            [avatarUrl]="userAvatarUrl()"
+            [frameId]="previewFrameId()"
+            size="xl"
+            [showGlow]="true"
+          ></app-avatar-frame>
+        </div>
+
+        <!-- User Identity Info & Title Preview -->
+        <div class="user-identity-box">
+          <div class="user-name-row">
+            <h2 class="user-display-name">{{ currentUser()?.username || 'Chiến Binh Học Thuật' }}</h2>
+            <span class="user-email-meta">{{ currentUser()?.email || '' }}</span>
+          </div>
+
+          <!-- Dynamic Equipped Title Pill -->
+          @if (previewTitleObj(); as t) {
+            <div class="title-preview-pill" [ngClass]="['rarity-' + t.rarity]">
+              <i class="fa-solid fa-medal medal-icon"></i>
+              <span class="title-text">{{ t.titleText }}</span>
+            </div>
+          }
+
+          <div class="stats-mini-summary">
+            <div class="mini-stat">
+              <span class="lbl">Cấp Bậc</span>
+              <strong class="val rank-val">{{ stats()?.rankName || 'ĐỒNG' }}</strong>
+            </div>
+            <div class="mini-stat">
+              <span class="lbl">Kinh Nghiệm</span>
+              <strong class="val xp-val">{{ stats()?.xp || 0 }} XP</strong>
+            </div>
+            <div class="mini-stat">
+              <span class="lbl">Chuỗi Streak</span>
+              <strong class="val streak-val">🔥 {{ stats()?.currentStreak || 0 }} ngày</strong>
+            </div>
+            <div class="mini-stat">
+              <span class="lbl">Kim Cương</span>
+              <strong class="val diamond-val">💎 {{ stats()?.diamond || stats()?.diamonds || 0 }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Navigation Tabs -->
+    <div class="showcase-nav-tabs">
+      <button
+        type="button"
+        class="tab-item-btn"
+        [class.active]="activeTab() === 'frames'"
+        (click)="setTab('frames')"
+      >
+        <i class="fa-solid fa-circle-notch"></i>
+        <span>Khung Viền Hào Quang ({{ allFrames().length }})</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-item-btn"
+        [class.active]="activeTab() === 'titles'"
+        (click)="setTab('titles')"
+      >
+        <i class="fa-solid fa-tag"></i>
+        <span>Danh Hiệu Danh Dự ({{ allTitles().length }})</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-item-btn"
+        [class.active]="activeTab() === 'season'"
+        (click)="setTab('season')"
+      >
+        <i class="fa-solid fa-trophy"></i>
+        <span>Con Đường Mùa Giải (Season Alpha)</span>
+      </button>
+    </div>
+
+    <!-- 3. Tab Contents -->
+
+    <!-- TAB 1: AVATAR FRAMES SHOWCASE -->
+    @if (activeTab() === 'frames') {
+      <div class="frames-grid-section">
+        <div class="section-hint">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>Bấm vào khung để xem trước (preview), bấm <strong>Trang Bị</strong> để hiển thị lên toàn bộ hệ thống.</span>
+        </div>
+
+        <div class="frames-cards-grid">
+          @for (frame of allFrames(); track frame.id) {
+            <div
+              class="frame-card glass-panel"
+              [class.is-previewing]="previewFrameId() === frame.id"
+              [class.is-equipped]="currentEquippedFrame() === frame.id"
+              [class.is-locked]="!frame.isUnlocked"
+              (click)="selectPreviewFrame(frame.id)"
+            >
+              <!-- Rarity Pill -->
+              <span class="rarity-badge" [ngClass]="['badge-' + frame.rarity]">
+                {{ frame.rarity | uppercase }}
+              </span>
+
+              <!-- Frame Preview Avatar -->
+              <div class="frame-demo-center">
+                <app-avatar-frame
+                  [avatarUrl]="userAvatarUrl()"
+                  [frameId]="frame.id"
+                  size="lg"
+                  [showGlow]="frame.isUnlocked"
+                ></app-avatar-frame>
+              </div>
+
+              <!-- Frame Details -->
+              <div class="frame-info">
+                <h4 class="frame-name">{{ frame.name }}</h4>
+                <p class="frame-desc">{{ frame.description }}</p>
+
+                <div class="frame-condition-box">
+                  <i class="fa-solid" [ngClass]="frame.isUnlocked ? 'fa-circle-check text-success' : 'fa-lock text-muted'"></i>
+                  <span>{{ frame.unlockCondition }}</span>
+                </div>
+              </div>
+
+              <!-- Action Button -->
+              <div class="frame-card-footer">
+                @if (currentEquippedFrame() === frame.id) {
+                  <button type="button" class="btn-frame-action btn-active" disabled>
+                    <i class="fa-solid fa-check"></i> Đang Sử Dụng
+                  </button>
+                } @else if (frame.isUnlocked) {
+                  <button
+                    type="button"
+                    class="btn-frame-action btn-equip"
+                    [disabled]="equipping()"
+                    (click)="equipCurrentFrame(frame); $event.stopPropagation()"
+                  >
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Trang Bị Ngay
+                  </button>
+                } @else {
+                  <button type="button" class="btn-frame-action btn-locked" disabled>
+                    <i class="fa-solid fa-lock"></i> Chưa Mở Khóa
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 2: HONOR TITLES SHOWCASE -->
+    @if (activeTab() === 'titles') {
+      <div class="titles-grid-section">
+        <div class="section-hint">
+          <i class="fa-solid fa-award"></i>
+          <span>Danh hiệu được gắn liền với tên của bạn trong bình luận, hồ sơ cá nhân và bảng xếp hạng.</span>
+        </div>
+
+        <div class="titles-cards-grid">
+          @for (title of allTitles(); track title.id) {
+            <div
+              class="title-card glass-panel"
+              [class.is-previewing]="previewTitleId() === title.id"
+              [class.is-equipped]="currentEquippedTitle() === title.id"
+              [class.is-locked]="!title.isUnlocked"
+              (click)="selectPreviewTitle(title.id)"
+            >
+              <!-- Title Display -->
+              <div class="title-hero-display" [ngClass]="['rarity-' + title.rarity]">
+                <span class="title-text-large">{{ title.titleText }}</span>
+              </div>
+
+              <div class="title-details">
+                <span class="rarity-tag" [ngClass]="['tag-' + title.rarity]">{{ title.rarity | uppercase }}</span>
+                <p class="title-desc">{{ title.description }}</p>
+
+                <div class="title-condition">
+                  <i class="fa-solid" [ngClass]="title.isUnlocked ? 'fa-circle-check text-success' : 'fa-lock text-muted'"></i>
+                  <span>{{ title.unlockCondition }}</span>
+                </div>
+              </div>
+
+              <div class="title-card-footer">
+                @if (currentEquippedTitle() === title.id) {
+                  <button type="button" class="btn-title-action btn-active" disabled>
+                    <i class="fa-solid fa-check"></i> Đang Vinh Danh
+                  </button>
+                } @else if (title.isUnlocked) {
+                  <button
+                    type="button"
+                    class="btn-title-action btn-equip"
+                    [disabled]="equipping()"
+                    (click)="equipCurrentTitle(title); $event.stopPropagation()"
+                  >
+                    <i class="fa-solid fa-crown"></i> Vinh Danh Ngay
+                  </button>
+                } @else {
+                  <button type="button" class="btn-title-action btn-locked" disabled>
+                    <i class="fa-solid fa-lock"></i> Chưa Đạt Điều Kiện
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB 3: HONOR SEASON ROADMAP (PASS) -->
+    @if (activeTab() === 'season') {
+      <div class="season-roadmap-section glass-panel">
+        <div class="season-header-banner">
+          <div class="banner-left">
+            <span class="season-pill"><i class="fa-solid fa-star"></i> MÙA GIẢI HIỆN TẠI</span>
+            <h3 class="season-title">Mùa 1: Khởi Nguyên Ánh Sáng (Season Alpha)</h3>
+            <p class="season-desc">
+              Tích lũy XP học tập từ vựng, ngữ pháp và TOEIC để mở khóa trọn bộ 50 mốc phần thưởng độc quyền Mùa 1 hoàn toàn miễn phí!
+            </p>
+          </div>
+          <div class="banner-right">
+            <div class="season-days-left">
+              <i class="fa-solid fa-hourglass-half"></i>
+              <span>Còn lại: <strong>48 ngày</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Milestones Progression List -->
+        <div class="milestones-timeline">
+          @for (m of seasonMilestones(); track m.level) {
+            <div class="milestone-item" [class.is-claimed]="m.isClaimed">
+              <div class="level-indicator-col">
+                <span class="lvl-circle">Lv.{{ m.level }}</span>
+                <div class="connector-line"></div>
+              </div>
+
+              <div class="milestone-card-content glass-panel">
+                <div class="m-left">
+                  <div class="reward-icon-box" [class.unlocked]="m.isClaimed">
+                    <i class="fa-solid {{ m.rewardIcon }}"></i>
+                  </div>
+                  <div>
+                    <h5 class="reward-name">{{ m.rewardName }}</h5>
+                    <span class="reward-req">Yêu cầu: {{ m.xpRequired }} XP</span>
+                  </div>
+                </div>
+
+                <div class="m-status-col">
+                  @if (m.isClaimed) {
+                    <span class="badge-claimed"><i class="fa-solid fa-circle-check"></i> Đã Mở Khóa</span>
+                  } @else {
+                    <span class="badge-progress">{{ stats()?.xp || 0 }} / {{ m.xpRequired }} XP</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

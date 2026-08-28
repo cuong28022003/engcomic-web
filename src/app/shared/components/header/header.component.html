@@ -77,12 +77,12 @@
         <!-- Avatar & Menu Dropdown -->
         <div class="profile-dropdown-wrapper">
           <button class="profile-btn" (click)="toggleProfileMenu()">
-            <img
-              [src]="currentUser.avatarUrl || 'assets/image/avt.png'"
-              alt="Avatar"
-              class="user-avatar"
-              (error)="onAvatarError($event)"
-            />
+            <app-avatar-frame
+              [avatarUrl]="currentUser.avatarUrl || 'assets/image/avt.png'"
+              [frameId]="userStats?.equippedAvatarFrame || 'frame_default'"
+              size="sm"
+              [showGlow]="true"
+            ></app-avatar-frame>
             <span class="user-name">{{ currentUser.username }}</span>
             <i class="fa-solid fa-angle-down"></i>
           </button>
@@ -92,13 +92,18 @@
               <div class="menu-header">
                 <p class="name">{{ currentUser.username }}</p>
                 <p class="email">{{ currentUser.email }}</p>
-                @if (userStats?.rank) {
+                @if (userStats?.equippedTitle) {
+                  <span class="badge badge-primary" style="margin-bottom: 4px;">{{ userStats?.equippedTitle }}</span>
+                } @else if (userStats?.rank) {
                   <span class="badge badge-primary">{{ userStats?.rank?.name }}</span>
                 }
               </div>
               <hr class="menu-divider" />
               <a [routerLink]="['/user', currentUser.userId, 'profile']" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-user"></i> Hồ sơ cá nhân
+              </a>
+              <a [routerLink]="['/user', currentUser.userId, 'showcase']" (click)="closeProfileMenu()" class="menu-item">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Tủ đồ & Danh hiệu
               </a>
               <a routerLink="/deck" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-layer-group"></i> Quản lý thẻ từ vựng

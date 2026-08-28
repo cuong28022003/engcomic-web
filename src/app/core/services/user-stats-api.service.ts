@@ -11,7 +11,7 @@ export interface RecordActivityResponse {
 
 @Injectable({ providedIn: 'root' })
 export class UserStatsApiService extends ApiBaseService {
-  private readonly BASE = '/userstats';
+  private readonly BASE = '/learning-stats';
 
   getMyStats(): Observable<UserStats> {
     return this.get<UserStats>(`${this.BASE}/me`);
@@ -25,8 +25,8 @@ export class UserStatsApiService extends ApiBaseService {
     return this.post<RecordActivityResponse>(`${this.BASE}/record-activity`, payload || {});
   }
 
-  checkIn(xp = 10): Observable<RecordActivityResponse> {
-    return this.recordActivity({ xp, activityType: 'checkin' });
+  equipItem(payload: { itemType: 'title' | 'frame'; itemId: string }): Observable<{ stats: UserStats; success: boolean; message: string }> {
+    return this.post<{ stats: UserStats; success: boolean; message: string }>(`${this.BASE}/equip`, payload);
   }
 
   addXp(payload: { userId: string; xp: number }): Observable<UserStats> {

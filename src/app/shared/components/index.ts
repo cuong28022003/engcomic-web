@@ -31,3 +31,5 @@ export * from './page-header/page-header.component';
 export * from './nav-sidebar/nav-sidebar.component';
 export * from './glass-panel/glass-panel.component';
 export * from './ai-import-workspace/ai-import-workspace.component';
+export * from './avatar-frame/avatar-frame.component';
+export * from './streak-modal/streak-modal.component';

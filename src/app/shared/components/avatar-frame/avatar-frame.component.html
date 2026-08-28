@@ -1,0 +1,27 @@
+<div
+  class="avatar-frame-container"
+  [ngClass]="[frameClass(), 'size-' + size()]"
+  [class.has-glow]="showGlow()"
+>
+  <!-- Outer Rotating / Pulsing Aura Ring -->
+  <div class="aura-glow-ring"></div>
+
+  <!-- Decorative Corner Jewels / Flame Ornaments -->
+  <div class="frame-ornament top-ornament"></div>
+  <div class="frame-ornament bottom-ornament"></div>
+
+  <!-- Inner Image Wrapper -->
+  <div class="avatar-img-wrapper">
+    <img
+      [src]="safeAvatarUrl()"
+      alt="User Avatar"
+      class="avatar-core-img"
+      loading="lazy"
+    />
+  </div>
+
+  <!-- Top Badge Icon for Mythic / Season frames -->
+  <div class="crown-badge">
+    <i class="fa-solid fa-crown"></i>
+  </div>
+</div>

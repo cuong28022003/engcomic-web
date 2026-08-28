@@ -25,6 +25,12 @@ export interface UserStats {
   premiumExpiredAt?: string;
   rankName?: string;
   rank?: Rank;
+  equippedTitle?: string;
+  equippedAvatarFrame?: string;
+  unlockedTitles?: string[];
+  unlockedAvatarFrames?: string[];
+  seasonPassLevel?: number;
+  seasonPassXp?: number;
 }
 
 export interface LeaderboardEntry {

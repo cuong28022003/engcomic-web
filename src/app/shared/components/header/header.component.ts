@@ -15,6 +15,8 @@ import { GrammarSearchModalComponent } from '../../../features/grammar/component
 import { GrammarCardModalComponent } from '../../../features/grammar/components/grammar-card-modal/grammar-card-modal.component';
 import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
 
+import { AvatarFrameComponent } from '../avatar-frame/avatar-frame.component';
+
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -23,6 +25,7 @@ import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
     RouterModule,
     FormsModule,
     TranslatePipe,
+    AvatarFrameComponent,
     StreakModalComponent,
     GrammarSearchModalComponent,
     GrammarCardModalComponent

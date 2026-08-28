@@ -8,17 +8,26 @@
   box-sizing: border-box;
 }
 
+app-breadcrumb {
+  position: relative;
+  z-index: 100;
+}
+
 .session-header-actions {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 100;
 }
 
 .topbar-actions-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+  z-index: 100;
 }
 
 .topbar-left {

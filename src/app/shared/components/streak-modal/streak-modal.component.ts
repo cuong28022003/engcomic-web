@@ -108,23 +108,6 @@ export class StreakModalComponent {
     }
   });
 
-  onCheckIn(): void {
-    if (this.checkingIn()) return;
-    this.checkingIn.set(true);
-
-    this.userStatsApi.checkIn(15).subscribe({
-      next: (res) => {
-        this.checkingIn.set(false);
-        this.userState.setUserStats(res.stats);
-        this.toast.success(res.message || 'Điểm danh hàng ngày thành công (+15 XP)!');
-      },
-      error: () => {
-        this.checkingIn.set(false);
-        this.toast.error('Không thể hoàn tất điểm danh lúc này.');
-      }
-    });
-  }
-
   goToPractice(): void {
     this.close.emit();
     this.router.navigate(['/vocab/practice']);
