@@ -27,10 +27,12 @@
   </div>
 
   <!-- PDF Document View Area -->
-  <div class="viewer-canvas-area">
+  <div class="viewer-canvas-area" #viewerCanvasArea>
     @if (resolvedPdfUrl) {
       <ngx-extended-pdf-viewer
         [src]="resolvedPdfUrl"
+        [(page)]="currentPage"
+        (pageChange)="onPageChange($event)"
         [textLayer]="true"
         [handTool]="false"
         [showToolbar]="false"

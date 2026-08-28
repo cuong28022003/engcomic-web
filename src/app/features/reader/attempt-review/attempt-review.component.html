@@ -58,7 +58,7 @@
         [class.mobile-hidden]="activeMobileTab() !== 'pdf'"
       >
         @if (test()?.pdfUrl; as pdfUrl) {
-          <app-pdf-viewer [pdfUrl]="pdfUrl"></app-pdf-viewer>
+          <app-pdf-viewer [pdfUrl]="pdfUrl" [testId]="test()?.id"></app-pdf-viewer>
         }
       </section>
 

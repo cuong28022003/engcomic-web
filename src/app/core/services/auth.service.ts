@@ -166,6 +166,10 @@ export class AuthService {
     return this.http.post(`${this.BASE}/forgetpassword`, { email });
   }
 
+  changePassword(oldPassword: string, newPassword: string): Observable<unknown> {
+    return this.http.post(`${this.BASE}/change-password`, { oldPassword, newPassword });
+  }
+
   reActive(email: string): Observable<unknown> {
     return this.http.post(`${this.BASE}/reactive`, { email });
   }

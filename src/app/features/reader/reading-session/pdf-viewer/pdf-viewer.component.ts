@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, Input, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnInit, OnChanges, SimpleChanges, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxExtendedPdfViewerModule, pdfDefaultOptions } from 'ngx-extended-pdf-viewer';
 import { WordLookupPopupComponent } from './word-lookup-popup/word-lookup-popup.component';
@@ -14,10 +14,12 @@ pdfDefaultOptions.assetsFolder = 'assets';
   templateUrl: './pdf-viewer.component.html',
   styleUrls: ['./pdf-viewer.component.scss']
 })
-export class PdfViewerComponent implements OnInit {
+export class PdfViewerComponent implements OnInit, OnChanges {
   @Input() pdfUrl: string | null | undefined = '';
+  @Input() testId: string | null | undefined = '';
 
   @ViewChild('pdfContainer') pdfContainerRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('viewerCanvasArea') canvasAreaRef?: ElementRef<HTMLDivElement>;
 
   // Preset zoom levels in percentage: 60%, 75%, 90%, 100%, 115%, 130%, 150%, 175%, 200%
   readonly zoomLevels = [60, 75, 90, 100, 115, 130, 150, 175, 200];
@@ -29,10 +31,43 @@ export class PdfViewerComponent implements OnInit {
   readonly loadErrorMessage = signal<string>('');
 
   readonly selectedText = signal<string>('');
-  readonly popupPosition = signal<{ top: number; left: number } | null>(null);
+  readonly popupPosition = signal<{ top: number; left: number; placement?: 'top' | 'bottom' } | null>(null);
+
+  readonly currentPage = signal<number>(1);
+
+  get storageKey(): string {
+    if (this.testId && this.testId.trim().length > 0) {
+      return `toeic_pdf_page_${this.testId.trim()}`;
+    }
+    if (this.pdfUrl && this.pdfUrl.trim().length > 0) {
+      return `toeic_pdf_page_url_${encodeURIComponent(this.pdfUrl.trim().slice(-40))}`;
+    }
+    return 'toeic_pdf_last_page';
+  }
 
   ngOnInit(): void {
     pdfDefaultOptions.assetsFolder = 'assets';
+    this.restoreSavedPage();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['testId'] || changes['pdfUrl']) {
+      this.restoreSavedPage();
+    }
+  }
+
+  private restoreSavedPage(): void {
+    try {
+      const saved = localStorage.getItem(this.storageKey);
+      if (saved) {
+        const pageNum = parseInt(saved, 10);
+        if (!isNaN(pageNum) && pageNum >= 1) {
+          this.currentPage.set(pageNum);
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
   }
 
   get resolvedPdfUrl(): string {
@@ -65,6 +100,32 @@ export class PdfViewerComponent implements OnInit {
   onPdfLoaded(): void {
     this.isLoaded.set(true);
     this.hasLoadError.set(false);
+
+    try {
+      const saved = localStorage.getItem(this.storageKey);
+      if (saved) {
+        const pageNum = parseInt(saved, 10);
+        if (!isNaN(pageNum) && pageNum >= 1) {
+          this.currentPage.set(pageNum);
+          setTimeout(() => {
+            this.currentPage.set(pageNum);
+          }, 150);
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  onPageChange(page: number | undefined | null): void {
+    if (page && page >= 1) {
+      this.currentPage.set(page);
+      try {
+        localStorage.setItem(this.storageKey, String(page));
+      } catch {
+        // Ignore localStorage quota errors
+      }
+    }
   }
 
   onPdfLoadingFailed(error: any): void {
@@ -113,31 +174,49 @@ export class PdfViewerComponent implements OnInit {
       try {
         const range = selection!.getRangeAt(0);
         const rect = range.getBoundingClientRect();
-        const container = this.pdfContainerRef?.nativeElement;
+        const canvasArea = this.canvasAreaRef?.nativeElement || this.pdfContainerRef?.nativeElement;
 
-        if (container && rect.width > 0 && rect.height > 0) {
-          const containerRect = container.getBoundingClientRect();
+        if (canvasArea && rect.width > 0 && rect.height > 0) {
+          const canvasRect = canvasArea.getBoundingClientRect();
 
-          // Check if selection intersects the viewer pane
+          // Check if selection intersects the viewer canvas area
           const isInside = (
-            rect.right >= containerRect.left &&
-            rect.left <= containerRect.right &&
-            rect.bottom >= containerRect.top &&
-            rect.top <= containerRect.bottom
+            rect.right >= canvasRect.left &&
+            rect.left <= canvasRect.right &&
+            rect.bottom >= canvasRect.top &&
+            rect.top <= canvasRect.bottom
           );
 
           if (isInside) {
-            const calculatedTop = rect.top - containerRect.top + container.scrollTop;
-            const calculatedLeft = rect.left - containerRect.left + (rect.width / 2);
+            // Calculate exact position relative to the canvas area (where popup is rendered)
+            const relTop = rect.top - canvasRect.top;
+            const relBottom = rect.bottom - canvasRect.top;
+            const relCenterLeft = rect.left - canvasRect.left + (rect.width / 2);
 
-            // Clamp coordinates to prevent clipping
-            const clampedLeft = Math.max(160, Math.min(containerRect.width - 160, calculatedLeft));
-            const clampedTop = Math.max(60, calculatedTop);
+            // Space available from top of canvas area
+            const isBottomPlacement = relTop < 220; // If less than 220px from top of canvas, place below
+
+            let calculatedTop: number;
+            let placement: 'top' | 'bottom';
+
+            if (isBottomPlacement) {
+              // Position 14px below the bottom edge of the selected text
+              calculatedTop = relBottom + 14;
+              placement = 'bottom';
+            } else {
+              // Position 14px above the top edge of the selected text
+              calculatedTop = relTop - 14;
+              placement = 'top';
+            }
+
+            // Clamp horizontal coordinates to keep popup card (320px) nicely within canvas boundaries
+            const clampedLeft = Math.max(170, Math.min(canvasRect.width - 170, relCenterLeft));
 
             this.selectedText.set(text);
             this.popupPosition.set({
-              top: clampedTop,
-              left: clampedLeft
+              top: calculatedTop,
+              left: clampedLeft,
+              placement
             });
             return;
           }

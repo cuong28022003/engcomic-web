@@ -21,7 +21,7 @@ export class WordLookupPopupComponent {
   private toast = inject(ToastService);
 
   readonly text = input<string>('');
-  readonly position = input<{ top: number; left: number } | null>(null);
+  readonly position = input<{ top: number; left: number; placement?: 'top' | 'bottom' } | null>(null);
 
   readonly close = output<void>();
 

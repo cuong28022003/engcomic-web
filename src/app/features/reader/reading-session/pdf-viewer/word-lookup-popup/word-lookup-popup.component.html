@@ -1,5 +1,7 @@
 <div 
   class="lookup-popup-card glass-panel" 
+  [class.placement-bottom]="position()?.placement === 'bottom'"
+  [class.placement-top]="position()?.placement !== 'bottom'"
   [style.top.px]="position()?.top" 
   [style.left.px]="position()?.left"
   (click)="$event.stopPropagation()"

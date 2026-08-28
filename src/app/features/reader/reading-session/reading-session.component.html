@@ -119,7 +119,7 @@
           class="pane-pdf" 
           [class.mobile-hidden]="activeMobileTab() !== 'pdf'"
         >
-          <app-pdf-viewer [pdfUrl]="t.pdfUrl"></app-pdf-viewer>
+          <app-pdf-viewer [pdfUrl]="t.pdfUrl" [testId]="t.id"></app-pdf-viewer>
         </section>
 
         <!-- Right Pane: Answer Sheet -->

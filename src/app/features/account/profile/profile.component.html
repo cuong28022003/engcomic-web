@@ -1,0 +1,184 @@
+<div class="profile-page">
+
+  <!-- ─── Cover Photo Zone ─────────────────────────────────────────────────── -->
+  <div
+    class="cover-zone"
+    [class.drag-over]="isDraggingCover()"
+    (click)="triggerCoverPicker()"
+    (dragover)="onCoverDragOver($event)"
+    (dragleave)="onCoverDragLeave()"
+    (drop)="onCoverDrop($event)"
+  >
+    <!-- Cover image or gradient placeholder -->
+    @if (coverPreview()) {
+      <img [src]="coverPreview()" alt="Ảnh bìa" class="cover-img" />
+    } @else if (coverUrl()) {
+      <img [src]="coverUrl()" alt="Ảnh bìa" class="cover-img" />
+    } @else {
+      <div class="cover-placeholder">
+        <div class="cover-gradient-overlay"></div>
+        <div class="cover-hint">
+          <i class="fa-solid fa-image"></i>
+          <span>Kéo thả hoặc nhấn để chọn ảnh bìa</span>
+        </div>
+      </div>
+    }
+
+    <!-- Overlay controls -->
+    <div class="cover-overlay">
+      @if (uploadingCover()) {
+        <div class="upload-progress-indicator">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>Đang tải ảnh...</span>
+        </div>
+      } @else {
+        <div class="cover-controls">
+          <button type="button" class="cover-btn" (click)="$event.stopPropagation(); triggerCoverPicker()" title="Thay ảnh bìa">
+            <i class="fa-solid fa-camera"></i>
+            <span>Thay ảnh bìa</span>
+          </button>
+          @if (coverPreview() || coverUrl()) {
+            <button type="button" class="cover-btn cover-btn-remove" (click)="$event.stopPropagation(); clearCoverPreview()" title="Xóa ảnh bìa">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <input
+      #coverInput
+      type="file"
+      accept="image/*"
+      class="hidden-input"
+      (change)="onCoverFileSelected($event)"
+    />
+  </div>
+
+  <!-- ─── Avatar Anchor (overlapping cover bottom) ─────────────────────────── -->
+  <div class="avatar-anchor">
+    <div class="avatar-wrap">
+      <!-- Avatar frame or plain avatar -->
+      @if (!uploadingAvatar()) {
+        <app-avatar-frame
+          [avatarUrl]="avatarPreview() || avatarUrl() || 'assets/image/avt.png'"
+          [frameId]="userStats?.equippedAvatarFrame || 'frame_default'"
+          size="xl"
+          [showGlow]="true"
+        ></app-avatar-frame>
+      } @else {
+        <div class="avatar-loading-ring">
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </div>
+      }
+
+      <!-- Camera overlay button on avatar -->
+      <button
+        type="button"
+        class="avatar-camera-btn"
+        (click)="triggerAvatarPicker()"
+        title="Thay ảnh đại diện"
+        [disabled]="uploadingAvatar()"
+      >
+        <i class="fa-solid fa-camera"></i>
+      </button>
+
+      <input
+        #avatarInput
+        type="file"
+        accept="image/*"
+        class="hidden-input"
+        (change)="onAvatarFileSelected($event)"
+      />
+    </div>
+
+    <!-- Identity info next to avatar -->
+    <div class="profile-identity">
+      <h2 class="identity-name">{{ user?.username }}</h2>
+      <p class="identity-email">{{ user?.email }}</p>
+      @if (userStats?.equippedTitle) {
+        <span class="title-badge">{{ userStats?.equippedTitle }}</span>
+      } @else if (userStats?.rank) {
+        <span class="rank-badge">{{ userStats?.rank?.name }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- ─── Stats Row ─────────────────────────────────────────────────────────── -->
+  <div class="stats-row glass-panel">
+    <div class="stat-item">
+      <i class="fa-solid fa-bolt stat-icon xp"></i>
+      <div>
+        <span class="stat-val">{{ (userStats?.xp || 0) | number }}</span>
+        <span class="stat-lbl">Điểm XP</span>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <i class="fa-solid fa-gem stat-icon diamond"></i>
+      <div>
+        <span class="stat-val">{{ (userStats?.diamond ?? userStats?.diamonds ?? 0) | number }}</span>
+        <span class="stat-lbl">Kim cương</span>
+      </div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <i class="fa-solid fa-fire stat-icon streak"></i>
+      <div>
+        <span class="stat-val">{{ userStats?.currentStreak ?? userStats?.streakDays ?? 0 }} ngày</span>
+        <span class="stat-lbl">Chuỗi học</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Form Section ──────────────────────────────────────────────────────── -->
+  <div class="form-card glass-panel">
+    <div class="form-card-header">
+      <i class="fa-solid fa-id-card header-icon"></i>
+      <div>
+        <h3 class="form-card-title">Thông Tin Tài Khoản</h3>
+        <p class="form-card-subtitle">Cập nhật ảnh đại diện, ảnh bìa và thông tin hiển thị</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="saveProfile()" class="profile-form">
+      <div class="fields-row">
+        <div class="field-group">
+          <label class="field-label">
+            <i class="fa-solid fa-user"></i> Tên đăng nhập
+          </label>
+          <input type="text" [value]="user?.username" disabled class="field-input disabled" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">
+            <i class="fa-solid fa-envelope"></i> Địa chỉ Email
+          </label>
+          <input type="email" [value]="user?.email" disabled class="field-input disabled" />
+        </div>
+      </div>
+
+      <!-- Image hints -->
+      <div class="image-status-row">
+        <div class="image-status-item" [class.ready]="!!avatarUrl()">
+          <i [class]="avatarUrl() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'"></i>
+          <span>Ảnh đại diện {{ avatarUrl() ? '— Đã sẵn sàng' : '— Chưa có' }}</span>
+        </div>
+        <div class="image-status-item" [class.ready]="!!coverUrl()">
+          <i [class]="coverUrl() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'"></i>
+          <span>Ảnh bìa {{ coverUrl() ? '— Đã sẵn sàng' : '— Chưa có' }}</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="save-btn" [disabled]="saving() || uploadingAvatar() || uploadingCover()">
+          @if (saving()) {
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang lưu...
+          } @else {
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
