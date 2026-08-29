@@ -12,13 +12,15 @@
         backLabel="Kho Từ Vựng"
       >
         <div actions class="top-action-buttons">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="copyWord()" title="Sao chép từ vựng">
-            <i class="fa-regular fa-copy"></i>
-            <span>Sao chép</span>
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" (click)="startPractice()">
-            <i class="fa-solid fa-bolt"></i>
-            <span>Luyện tập</span>
+          <button
+            type="button"
+            class="btn-fav-star"
+            [class.favorited]="c.isFavorite || c.favorite"
+            (click)="toggleFavorite()"
+            [title]="(c.isFavorite || c.favorite) ? 'Bỏ lưu từ này' : 'Lưu từ vào danh sách yêu thích'"
+          >
+            <i [class]="(c.isFavorite || c.favorite) ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+            <span>{{ (c.isFavorite || c.favorite) ? 'Đã lưu' : 'Lưu từ' }}</span>
           </button>
         </div>
       </app-breadcrumb>
@@ -67,8 +69,14 @@
         <div class="word-hero-section">
           <div class="word-title-row">
             <h1 class="main-word-title">{{ c.word || c.front }}</h1>
-            <button type="button" class="btn-copy-mini" (click)="copyWord()" title="Sao chép từ này">
-              <i class="fa-regular fa-copy"></i>
+            <button
+              type="button"
+              class="btn-fav-star-hero"
+              [class.favorited]="c.isFavorite || c.favorite"
+              (click)="toggleFavorite()"
+              [title]="(c.isFavorite || c.favorite) ? 'Bỏ lưu từ này' : 'Lưu từ vào danh sách yêu thích'"
+            >
+              <i [class]="(c.isFavorite || c.favorite) ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
             </button>
           </div>
 

@@ -15,6 +15,49 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
+
+    .btn-fav-star {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+      i {
+        font-size: 0.95rem;
+        transition: transform 0.2s ease, color 0.2s ease;
+      }
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.4);
+        color: #fbbf24;
+        transform: translateY(-1px);
+
+        i {
+          transform: scale(1.15);
+        }
+      }
+
+      &.favorited {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.15));
+        border-color: rgba(245, 158, 11, 0.6);
+        color: #fbbf24;
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+
+        i {
+          color: #fbbf24;
+          filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+        }
+      }
+    }
   }
 
   /* ══════════════════════════════════════════════════════════════════ */
@@ -231,24 +274,37 @@
           -webkit-text-fill-color: transparent;
         }
 
-        .btn-copy-mini {
-          width: 30px;
-          height: 30px;
-          border-radius: 8px;
+        .btn-fav-star-hero {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
           color: #94a3b8;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.8rem;
+          font-size: 1.05rem;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
           &:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            transform: scale(1.05);
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            transform: scale(1.1);
+          }
+
+          &.favorited {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.6);
+            color: #fbbf24;
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+
+            i {
+              color: #fbbf24;
+              filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+            }
           }
         }
       }

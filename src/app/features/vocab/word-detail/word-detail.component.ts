@@ -360,6 +360,38 @@ export class WordDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/vocab'], { queryParams: { topic } });
   }
 
+  readonly togglingFavorite = signal<boolean>(false);
+
+  toggleFavorite(): void {
+    const c = this.card();
+    if (!c?.id || this.togglingFavorite()) return;
+
+    this.togglingFavorite.set(true);
+    const newStatus = !(c.isFavorite || c.favorite);
+
+    // Optimistic update
+    this.card.update((curr) => curr ? { ...curr, favorite: newStatus, isFavorite: newStatus } : null);
+
+    this.cardApi.toggleFavorite(c.id).subscribe({
+      next: (updated) => {
+        this.togglingFavorite.set(false);
+        const isFav = updated?.isFavorite ?? updated?.favorite ?? newStatus;
+        this.card.update((curr) => curr ? { ...curr, favorite: isFav, isFavorite: isFav } : null);
+        if (isFav) {
+          this.toast.success(`Đã lưu "${c.word || c.front}" vào danh sách yêu thích! ⭐`);
+        } else {
+          this.toast.info(`Đã bỏ lưu "${c.word || c.front}" khỏi danh sách yêu thích.`);
+        }
+      },
+      error: () => {
+        this.togglingFavorite.set(false);
+        // Revert on error
+        this.card.update((curr) => curr ? { ...curr, favorite: !newStatus, isFavorite: !newStatus } : null);
+        this.toast.error('Không thể cập nhật trạng thái lưu từ.');
+      }
+    });
+  }
+
   startPractice(): void {
     this.router.navigate(['/vocab/practice']);
   }
