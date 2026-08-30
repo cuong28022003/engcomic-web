@@ -37,6 +37,14 @@
   flex-wrap: wrap;
 }
 
+.hero-avatar-frame-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px 8px;
+}
+
 .tier-emblem-wrap {
   width: 84px;
   height: 84px;
@@ -288,31 +296,36 @@
 // ── 3. Tab 1: 7 Ranks Ladder Grid ─────────────────────────────────────
 .ranks-ladder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TIER LADDER CARD – Clean layout with unified AvatarFrameComponent
+// ─────────────────────────────────────────────────────────────────────────────
 .tier-ladder-card {
   background: rgba(18, 22, 38, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 20px;
+  padding: 28px 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  transition: all 0.25s ease;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
+  backdrop-filter: blur(10px);
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transform: translateY(-10px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   }
 
   &.is-current {
     border-color: #f59e0b;
     background: rgba(245, 158, 11, 0.06);
-    box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
   }
 
   &.is-achieved {
@@ -320,75 +333,103 @@
   }
 
   &.is-locked {
-    opacity: 0.75;
+    opacity: 0.72;
   }
+
+  // ── Per-tier border & hover glow ──────────────────────────────────────
+  &.tier-bronze     { border-color: rgba(166, 99, 59, 0.3);  }
+  &.tier-silver     { border-color: rgba(209, 213, 219, 0.3); }
+  &.tier-gold       { border-color: rgba(245, 158, 11, 0.3);  }
+  &.tier-platinum   { border-color: rgba(56, 189, 248, 0.3);  }
+  &.tier-diamond    { border-color: rgba(217, 70, 239, 0.3);  }
+  &.tier-master     { border-color: rgba(244, 63, 94, 0.4);   }
+  &.tier-legend     { border-color: rgba(250, 204, 21, 0.5); background: rgba(234, 179, 8, 0.08); box-shadow: 0 0 30px rgba(234, 179, 8, 0.2); }
+
+  &.tier-bronze:hover   { box-shadow: 0 12px 35px rgba(140, 82, 48, 0.35);   border-color: #a6633b; }
+  &.tier-silver:hover   { box-shadow: 0 12px 35px rgba(209, 213, 219, 0.35); border-color: #e5e7eb; }
+  &.tier-gold:hover     { box-shadow: 0 12px 40px rgba(245, 158, 11, 0.45);  border-color: #fbbf24; }
+  &.tier-platinum:hover { box-shadow: 0 12px 40px rgba(56, 189, 248, 0.45);  border-color: #38bdf8; }
+  &.tier-diamond:hover  { box-shadow: 0 12px 45px rgba(217, 70, 239, 0.5);   border-color: #d946ef; }
+  &.tier-master:hover   { box-shadow: 0 12px 45px rgba(244, 63, 94, 0.55);   border-color: #f43f5e; }
+  &.tier-legend:hover   { box-shadow: 0 16px 55px rgba(250, 204, 21, 0.65);  border-color: #fde047; }
 }
 
-.ladder-card-top {
+// ─────────────────────────────────────────────────────────────────────────────
+// BADGE STAGE – Unified AvatarFrameComponent Container
+// ─────────────────────────────────────────────────────────────────────────────
+.badge-stage {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 0 6px;
+  overflow: visible;
+  position: relative;
+}
 
-  .tier-icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 14px;
-    display: flex;
+.badge-label-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.badge-tier-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.96rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.badge-sub-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+  text-align: center;
+}
+
+.tier-xp-range-center {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: #94a3b8;
+
+  i { color: #f59e0b; }
+}
+
+.tier-status-pill-center {
+  .status-badge {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.4rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    flex-shrink: 0;
-  }
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
 
-  .tier-title-box {
-    flex: 1;
-
-    .tier-name {
-      font-size: 1.05rem;
-      font-weight: 800;
-      margin: 0 0 4px;
+    &.badge-current {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid #f59e0b;
+      color: #fef08a;
     }
 
-    .tier-xp-range {
-      font-size: 0.78rem;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-
-      i { color: #f59e0b; }
+    &.badge-passed {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #86efac;
     }
-  }
 
-  .tier-status-pill {
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 999px;
-
-      &.badge-current {
-        background: rgba(245, 158, 11, 0.2);
-        border: 1px solid #f59e0b;
-        color: #fef08a;
-      }
-
-      &.badge-passed {
-        background: rgba(34, 197, 94, 0.15);
-        border: 1px solid rgba(34, 197, 94, 0.4);
-        color: #86efac;
-      }
-
-      &.badge-locked {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #64748b;
-      }
+    &.badge-locked {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #64748b;
     }
   }
 }
@@ -754,3 +795,6 @@
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
   }
 }
+
+// Google Font Cinzel import for badge labels
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap');

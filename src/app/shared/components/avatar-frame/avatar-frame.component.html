@@ -1,27 +1,129 @@
 <div
-  class="avatar-frame-container"
-  [ngClass]="[frameClass(), 'size-' + size()]"
+  class="rank-avatar-frame-container"
+  [ngClass]="[tierClass(), 'size-' + size()]"
   [class.has-glow]="showGlow()"
 >
-  <!-- Outer Rotating / Pulsing Aura Ring -->
-  <div class="aura-glow-ring"></div>
+  <div class="badge-wrapper">
+    <!-- Khung tròn ngoài -->
+    <div class="outer-frame"></div>
 
-  <!-- Decorative Corner Jewels / Flame Ornaments -->
-  <div class="frame-ornament top-ornament"></div>
-  <div class="frame-ornament bottom-ornament"></div>
+    <!-- Tia lấp lánh (Sparkles/Glints theo tier) -->
+    @if (tierIndex() >= 1) {
+      <div class="glint" style="top: 5px; right: 18px; animation-delay: 0.2s;"></div>
+    }
+    @if (tierIndex() >= 2) {
+      <div class="glint" style="bottom: 15px; left: 10px; animation-delay: 1.5s;"></div>
+    }
+    @if (tierIndex() >= 4) {
+      <div class="glint" style="top: -5px; left: 20px; animation-delay: 0.3s;"></div>
+      <div class="glint" style="top: 40px; right: -5px; animation-delay: 1.3s;"></div>
+    }
+    @if (tierIndex() >= 5) {
+      <div class="glint" style="bottom: 0px; left: 10px; animation-delay: 2.1s;"></div>
+    }
+    @if (tierIndex() === 6) {
+      <div class="glint" style="top: -15px; left: 35px; animation-delay: 0.1s; width:16px; height:16px;"></div>
+      <div class="glint" style="top: 20px; right: -15px; animation-delay: 0.8s;"></div>
+      <div class="glint" style="bottom: -5px; left: -10px; animation-delay: 1.4s;"></div>
+      <div class="glint" style="bottom: 20px; right: 10px; animation-delay: 2.0s; width:16px; height:16px;"></div>
+    }
 
-  <!-- Inner Image Wrapper -->
-  <div class="avatar-img-wrapper">
-    <img
-      [src]="safeAvatarUrl()"
-      alt="User Avatar"
-      class="avatar-core-img"
-      loading="lazy"
-    />
-  </div>
+    <!-- Hào quang / Pháp trận / Vòng quay -->
+    @if (tierIndex() === 2) {
+      <div class="aura-glow"></div>
+    }
+    @if (tierIndex() === 3) {
+      <div class="pulse-core"></div>
+    }
+    @if (tierIndex() === 4) {
+      <div class="prism-glow"></div>
+      <div class="star-frame"></div>
+    }
+    @if (tierIndex() === 5) {
+      <div class="magic-ring"></div>
+    }
+    @if (tierIndex() === 6) {
+      <div class="halo-ring"></div>
+      <div class="runic-array"></div>
+      <div class="solar-flare"></div>
+    }
 
-  <!-- Top Badge Icon for Mythic / Season frames -->
-  <div class="crown-badge">
-    <i class="fa-solid fa-crown"></i>
+    <!-- Vương miện cho Master & Legend -->
+    @if (tierIndex() >= 5) {
+      <div class="crown">👑</div>
+    }
+
+    <!-- Hệ thống cánh xòe đa lớp -->
+    <!-- Silver: 1 lớp cánh nhỏ thanh thoát -->
+    @if (tierIndex() === 1) {
+      <div class="wing-system">
+        <div class="wing-layer small-wing left"></div>
+        <div class="wing-layer small-wing right"></div>
+      </div>
+    }
+
+    <!-- Gold & Platinum: 2 lớp cánh -->
+    @if (tierIndex() === 2 || tierIndex() === 3) {
+      <div class="wing-system">
+        <div class="wing-layer main-wing left"></div>
+        <div class="wing-layer main-wing right"></div>
+        <div class="wing-layer inner-wing left"></div>
+        <div class="wing-layer inner-wing right"></div>
+      </div>
+    }
+
+    <!-- Diamond & Master: 3 lớp cánh -->
+    @if (tierIndex() === 4 || tierIndex() === 5) {
+      <div class="wing-system">
+        <div class="wing-layer main-wing left"></div>
+        <div class="wing-layer main-wing right"></div>
+        <div class="wing-layer mid-wing left"></div>
+        <div class="wing-layer mid-wing right"></div>
+        <div class="wing-layer inner-feather left"></div>
+        <div class="wing-layer inner-feather right"></div>
+      </div>
+    }
+
+    <!-- Legend: 4 cánh chính + cánh nhỏ đa lớp 2 cánh trên -->
+    @if (tierIndex() === 6) {
+      <div class="wing-system">
+        <div class="wing-layer main-wing top-left"></div>
+        <div class="wing-layer main-wing top-right"></div>
+        <div class="wing-layer main-wing bottom-left"></div>
+        <div class="wing-layer main-wing bottom-right"></div>
+        <div class="wing-layer mid-wing top-left"></div>
+        <div class="wing-layer mid-wing top-right"></div>
+        <div class="wing-layer inner-feather top-left"></div>
+        <div class="wing-layer inner-feather top-right"></div>
+      </div>
+    }
+
+    <!-- Khiên Lục Giác: Chứa Avatar hoặc Badge Image -->
+    <div class="badge-shield">
+      <div class="shield-pattern"></div>
+      <div class="shield-inner-border"></div>
+      <div class="sweep-light"></div>
+
+      @if (displayAvatarUrl()) {
+        <!-- Render Avatar của user -->
+        <img
+          [src]="displayAvatarUrl()"
+          alt="User Avatar"
+          class="avatar-hexagon-img"
+          loading="lazy"
+        />
+      } @else {
+        <!-- Render Badge Image của rank -->
+        <img
+          [src]="displayBadgeImgUrl()"
+          alt="Rank Badge"
+          class="badge-hexagon-img"
+          (error)="onBadgeImgError($event)"
+          loading="lazy"
+        />
+      }
+
+      <div class="gem-core"></div>
+    </div>
   </div>
 </div>

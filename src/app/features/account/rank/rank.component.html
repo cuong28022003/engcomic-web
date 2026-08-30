@@ -2,10 +2,14 @@
   <!-- 1. Hero Current Tier Card -->
   <div class="current-tier-hero glass-panel">
     <div class="hero-main-row">
-      <!-- Tier Emblem / Badge -->
-      <div class="tier-emblem-wrap" [style.background]="currentTier().gradient">
-        <i [class]="currentTier().icon + ' emblem-icon'"></i>
-        <div class="emblem-shine"></div>
+      <!-- Tier Emblem / Avatar Frame (Hexagon Frame) -->
+      <div class="hero-avatar-frame-wrap">
+        <app-avatar-frame
+          [avatarUrl]="currentUser()?.avatarUrl || ''"
+          [frameId]="getTierClass(currentRankIndex())"
+          size="lg"
+          [showGlow]="true"
+        ></app-avatar-frame>
       </div>
 
       <!-- User Tier Info -->
@@ -128,38 +132,46 @@
       @for (tier of ranks(); track tier.name; let idx = $index) {
         <div
           class="tier-ladder-card glass-panel"
+          [class]="getTierClass(idx)"
           [class.is-current]="idx === currentRankIndex()"
           [class.is-achieved]="idx < currentRankIndex()"
           [class.is-locked]="idx > currentRankIndex()"
         >
-          <!-- Card Top Header -->
-          <div class="ladder-card-top">
-            <div class="tier-icon-circle" [style.background]="tier.gradient">
-              <i [class]="tier.icon"></i>
-            </div>
+          <!-- ── Dragon Badge (Unified Single Source of Truth) ── -->
+          <div class="badge-stage">
+            <app-avatar-frame
+              [tier]="idx"
+              [badgeImgUrl]="getTierBadgeImage(idx)"
+              size="xl"
+              [showGlow]="true"
+            ></app-avatar-frame>
+          </div>
 
-            <div class="tier-title-box">
-              <h3 class="tier-name" [style.color]="tier.color">{{ tier.name }}</h3>
-              <span class="tier-xp-range">
-                <i class="fa-solid fa-bolt"></i>
-                @if (idx === ranks().length - 1) {
-                  Từ {{ tier.minXp }} XP trở lên
-                } @else {
-                  {{ tier.minXp }} - {{ tier.maxXp }} XP
-                }
-              </span>
-            </div>
+          <!-- Badge Label (below badge) -->
+          <div class="badge-label-row">
+            <span class="badge-tier-name" [style.color]="tier.color">{{ tier.name }}</span>
+            <span class="badge-sub-title">{{ getTierSubTitle(idx) }}</span>
+          </div>
 
-            <!-- Status Indicator -->
-            <div class="tier-status-pill">
-              @if (idx === currentRankIndex()) {
-                <span class="status-badge badge-current"><i class="fa-solid fa-circle-dot"></i> Đang Ở Mức Này</span>
-              } @else if (idx < currentRankIndex()) {
-                <span class="status-badge badge-passed"><i class="fa-solid fa-check"></i> Đã Vượt Qua</span>
-              } @else {
-                <span class="status-badge badge-locked"><i class="fa-solid fa-lock"></i> Chưa Mở Khóa</span>
-              }
-            </div>
+          <!-- XP Range -->
+          <div class="tier-xp-range-center">
+            <i class="fa-solid fa-bolt"></i>
+            @if (idx === ranks().length - 1) {
+              Từ {{ tier.minXp }} XP trở lên
+            } @else {
+              {{ tier.minXp }} – {{ tier.maxXp }} XP
+            }
+          </div>
+
+          <!-- Status Indicator -->
+          <div class="tier-status-pill-center">
+            @if (idx === currentRankIndex()) {
+              <span class="status-badge badge-current"><i class="fa-solid fa-circle-dot"></i> Đang Ở Mức Này</span>
+            } @else if (idx < currentRankIndex()) {
+              <span class="status-badge badge-passed"><i class="fa-solid fa-check"></i> Đã Vượt Qua</span>
+            } @else {
+              <span class="status-badge badge-locked"><i class="fa-solid fa-lock"></i> Chưa Mở Khóa</span>
+            }
           </div>
 
           <!-- Benefits List -->

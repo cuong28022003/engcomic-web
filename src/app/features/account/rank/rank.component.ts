@@ -108,10 +108,12 @@ export const PRESET_RANKS: RankTierDisplay[] = [
   }
 ];
 
+import { AvatarFrameComponent } from '../../../shared/components/avatar-frame/avatar-frame.component';
+
 @Component({
   selector: 'app-rank',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AvatarFrameComponent],
   templateUrl: './rank.component.html',
   styleUrls: ['./rank.component.scss']
 })
@@ -388,5 +390,56 @@ export class RankComponent implements OnInit {
 
   goToPractice(): void {
     this.router.navigate(['/vocab/practice']);
+  }
+
+  /** Trả về CSS class tên tier để áp dụng badge style */
+  getTierClass(idx: number): string {
+    const classes = ['tier-bronze', 'tier-silver', 'tier-gold', 'tier-platinum', 'tier-diamond', 'tier-master', 'tier-legend'];
+    return classes[idx] ?? 'tier-bronze';
+  }
+
+  /** Tên phụ Hán-Việt cho mỗi tier (hiển thị dưới badge) */
+  getTierSubTitle(idx: number): string {
+    const subtitles = [
+      'Sơ Nhiệm Long',
+      'Tiềm Long',
+      'Kim Long',
+      'Băng Sương Long',
+      'Bạch Ngân Tinh Long',
+      'U Mẫn Ma Long',
+      'Thái Hoang Thần Long'
+    ];
+    return subtitles[idx] ?? '';
+  }
+
+  /** Lấy URL ảnh huy hiệu tương ứng cho từng bậc rank */
+  getTierBadgeImage(idx: number): string {
+    const customImages = [
+      'assets/image/ranks/bronze.png',
+      'assets/image/ranks/silver.png',
+      'assets/image/ranks/gold.png',
+      'assets/image/ranks/platinum.png',
+      'assets/image/ranks/diamond.png',
+      'assets/image/ranks/master.png',
+      'assets/image/ranks/legend.png'
+    ];
+    return customImages[idx] || 'assets/image/ranks/bronze.png';
+  }
+
+  /** Fallback khi ảnh huy hiệu local chưa có */
+  onBadgeImgError(event: Event, idx: number): void {
+    const target = event.target as HTMLImageElement;
+    if (!target) return;
+    const seeds = [
+      'BronzeDragon',
+      'SilverDragon',
+      'GoldDragon',
+      'PlatinumDragon',
+      'DiamondDragon',
+      'MasterDragon',
+      'LegendDragon'
+    ];
+    const seed = seeds[idx] || 'Dragon';
+    target.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}&radius=20`;
   }
 }

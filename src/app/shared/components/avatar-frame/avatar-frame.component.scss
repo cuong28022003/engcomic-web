@@ -1,240 +1,797 @@
-.avatar-frame-container {
+// ─────────────────────────────────────────────────────────────────────────────
+// AVATAR FRAME COMPONENT - ORIENTAL DRAGON HEXAGON SHIELD AVATAR FRAME
+// ─────────────────────────────────────────────────────────────────────────────
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.rank-avatar-frame-container {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
   box-sizing: border-box;
   flex-shrink: 0;
   user-select: none;
+  overflow: visible;
+
+  // ── SIZES (Scale badge wrapper seamlessly via transform: scale) ────────────
+  &.size-sm {
+    width: 38px;
+    height: 42px;
+    .badge-wrapper {
+      transform: scale(0.32);
+      transform-origin: center center;
+    }
+  }
+
+  &.size-md {
+    width: 52px;
+    height: 56px;
+    .badge-wrapper {
+      transform: scale(0.44);
+      transform-origin: center center;
+    }
+  }
+
+  &.size-lg {
+    width: 82px;
+    height: 88px;
+    .badge-wrapper {
+      transform: scale(0.68);
+      transform-origin: center center;
+    }
+  }
+
+  &.size-xl {
+    width: 120px;
+    height: 130px;
+    .badge-wrapper {
+      transform: scale(1.0);
+      transform-origin: center center;
+    }
+  }
 }
 
-// ── Sizes ────────────────────────────────────────────────────────────
-.size-sm {
-  width: 38px;
-  height: 38px;
-  .avatar-img-wrapper { width: 32px; height: 32px; }
-  .crown-badge { display: none; }
-}
-
-.size-md {
-  width: 52px;
-  height: 52px;
-  .avatar-img-wrapper { width: 44px; height: 44px; }
-  .crown-badge { font-size: 0.65rem; top: -7px; }
-}
-
-.size-lg {
-  width: 80px;
-  height: 80px;
-  .avatar-img-wrapper { width: 68px; height: 68px; }
-  .crown-badge { font-size: 0.85rem; top: -10px; }
-}
-
-.size-xl {
+// ── BADGE CORE STRUCTURE ─────────────────────────────────────────────────────
+.badge-wrapper {
   width: 120px;
-  height: 120px;
-  .avatar-img-wrapper { width: 104px; height: 104px; }
-  .crown-badge { font-size: 1.15rem; top: -14px; }
-}
-
-// ── Inner Image ──────────────────────────────────────────────────────
-.avatar-img-wrapper {
-  border-radius: 50%;
-  overflow: hidden;
-  position: relative;
-  z-index: 2;
-  background: #111422;
+  height: 130px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -65px;
+  margin-left: -60px;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  .avatar-core-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-}
-
-.crown-badge {
-  display: none;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  color: #fbbf24;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
-}
-
-.frame-ornament {
-  display: none;
-  position: absolute;
+  // Allow pointer-events so container's hover state is triggered properly
   pointer-events: none;
-  z-index: 3;
 }
 
-// ── 1. Default Frame ─────────────────────────────────────────────────
-.frame-default {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.18);
-
-  &.has-glow {
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
-  }
+.outer-frame {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
 }
 
-// ── 2. Flame Streak (Ngọn Lửa Bất Diệt) ──────────────────────────────
-.frame-flame_streak {
-  background: linear-gradient(135deg, #f97316 0%, #ef4444 50%, #facc15 100%);
-  padding: 3px;
-
-  .aura-glow-ring {
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, #f97316, #ef4444, #eab308, #f97316);
-    filter: blur(5px);
-    opacity: 0.75;
-    animation: flamePulse 2s infinite ease-in-out;
-    z-index: 1;
-  }
-
-  &.has-glow {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.6), 0 0 35px rgba(239, 68, 68, 0.3);
-  }
+.badge-shield {
+  width: 78px;
+  height: 94px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+  overflow: hidden;
+  background: #0f172a;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-// ── 3. Mythic Legend (Thần Thoại Huyền Thoại) ────────────────────────
-.frame-mythic_legend {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-  padding: 3.5px;
-
-  .crown-badge {
-    display: block;
-    animation: crownFloat 2s infinite ease-in-out;
-  }
-
-  .aura-glow-ring {
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, #fbbf24, #f59e0b, #ec4899, #8b5cf6, #fbbf24);
-    filter: blur(6px);
-    opacity: 0.85;
-    animation: spinAura 4s linear infinite;
-    z-index: 1;
-  }
-
-  &.has-glow {
-    box-shadow: 0 0 25px rgba(251, 191, 36, 0.7), 0 0 45px rgba(236, 72, 153, 0.4);
-  }
+.shield-pattern {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 0);
+  background-size: 6px 6px;
+  z-index: 2;
+  pointer-events: none;
 }
 
-// ── 4. Season Alpha (Băng Phong Bắc Cực / S1 Exclusive) ──────────────
-.frame-season_alpha {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-  padding: 3px;
+.shield-inner-border {
+  position: absolute;
+  width: 88%;
+  height: 88%;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  z-index: 4;
+  pointer-events: none;
+}
 
-  .aura-glow-ring {
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, #38bdf8, #818cf8, #a855f7, #38bdf8);
-    filter: blur(5px);
-    opacity: 0.8;
-    animation: spinAura 6s linear infinite reverse;
-    z-index: 1;
-  }
+// ── AVATAR IMAGE & BADGE IMAGE INSIDE HEXAGON ────────────────────────────────
+.avatar-hexagon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: 1;
+  display: block;
+  transition: filter 0.4s ease, transform 0.4s ease;
+}
 
-  &.has-glow {
-    box-shadow: 0 0 22px rgba(56, 189, 248, 0.65), 0 0 40px rgba(129, 140, 248, 0.35);
+.badge-hexagon-img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  z-index: 5;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.85));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: block;
+  user-select: none;
+  pointer-events: none;
+
+  .rank-avatar-frame-container:hover & {
+    transform: scale(1.22) rotate(4deg);
   }
 }
 
-// ── 5. Gold Master (Hoàng Gia Vinh Diệu) ──────────────────────────────
-.frame-gold_master {
-  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-  padding: 3px;
+// Sparkle / Glint star shape
+.glint {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #ffffff 10%, transparent 60%);
+  clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%);
+  z-index: 8;
+  pointer-events: none;
+  animation: glintSparkle 2.5s infinite ease-in-out;
+}
 
-  .aura-glow-ring {
-    position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    background: rgba(234, 179, 8, 0.4);
-    filter: blur(4px);
-    z-index: 1;
+@keyframes glintSparkle {
+  0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(90deg); opacity: 1; filter: drop-shadow(0 0 4px #ffffff); }
+}
+
+.gem-core {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  bottom: 10px;
+  transform: rotate(45deg);
+  z-index: 6;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.crown {
+  position: absolute;
+  top: -22px;
+  font-size: 1.4rem;
+  z-index: 7;
+  filter: drop-shadow(0 0 12px currentColor);
+  animation: floatCrown 2s infinite alternate ease-in-out;
+}
+
+// ── WINGS SYSTEM ─────────────────────────────────────────────────────────────
+.wing-system {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wing-layer {
+  position: absolute;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: bottom center;
+}
+
+// Sweep light inside shield
+.sweep-light {
+  position: absolute;
+  inset: 0;
+  width: 150%;
+  height: 150%;
+  top: -25%;
+  left: -25%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 80%
+  );
+  transform: skewX(-25deg) translateX(-200%);
+  animation: sweep 3.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+  pointer-events: none;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PER-TIER THEMES (0: Bronze to 6: Legend)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 0. BRONZE
+.tier-bronze {
+  .badge-shield {
+    border: 2px solid #d98855;
+    box-shadow: inset 0 0 12px #211108;
   }
-
-  &.has-glow {
-    box-shadow: 0 0 16px rgba(234, 179, 8, 0.5);
+  .gem-core { background: #d98855; border: 1px solid #ffb088; }
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(217,136,85,0.5) 50%, transparent 80%);
+    animation-duration: 4s;
   }
 }
 
-// ── 6. Diamond Elite (Kim Cương Tinh Anh) ────────────────────────────
-.frame-diamond_elite {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  padding: 3px;
-
-  .aura-glow-ring {
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, #06b6d4, #3b82f6, #06b6d4);
-    filter: blur(5px);
-    opacity: 0.7;
-    animation: spinAura 5s linear infinite;
-    z-index: 1;
+// 1. SILVER (Cánh Bạc Nhỏ Tinh Tế)
+.tier-silver {
+  .outer-frame { border: 2px dashed rgba(229, 231, 235, 0.4); }
+  .badge-shield {
+    border: 2px solid #e5e7eb;
+    box-shadow: inset 0 0 12px #1f2937, 0 0 15px rgba(255, 255, 255, 0.2);
   }
+  .gem-core { background: #e5e7eb; border: 1px solid #ffffff; box-shadow: 0 0 8px #fff; }
 
-  &.has-glow {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
-  }
-}
-
-// ── 7. Cyber Violet (Cyberpunk Neon) ──────────────────────────────────
-.frame-cyber_violet {
-  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
-  padding: 3px;
-
-  .aura-glow-ring {
-    position: absolute;
-    inset: -5px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, #ec4899, #8b5cf6, #ec4899);
-    filter: blur(6px);
-    opacity: 0.8;
-    animation: flamePulse 1.8s infinite ease-in-out;
-    z-index: 1;
-  }
-
-  &.has-glow {
-    box-shadow: 0 0 22px rgba(236, 72, 153, 0.6), 0 0 35px rgba(139, 92, 246, 0.4);
-  }
-}
-
-// ── Animations ───────────────────────────────────────────────────────
-@keyframes spinAura {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes flamePulse {
-  0%, 100% {
-    transform: scale(0.98);
-    opacity: 0.65;
-  }
-  50% {
-    transform: scale(1.05);
+  // Cánh nhỏ bạc thanh thoát
+  .small-wing {
+    width: 32px;
+    height: 50px;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+    clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%);
+    filter: drop-shadow(0 0 8px rgba(229, 231, 235, 0.7));
+    z-index: 2;
     opacity: 0.95;
+
+    &.left { left: -16px; transform: scaleX(-1) rotate(6deg); }
+    &.right { right: -16px; transform: rotate(6deg); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.75) 50%, transparent 80%);
+    animation-duration: 2.8s;
   }
 }
 
-@keyframes crownFloat {
-  0%, 100% {
-    transform: translate(-50%, 0);
+// 2. GOLD
+.tier-gold {
+  .outer-frame { border: 2px solid #fbbf24; animation: rotateSlow 15s linear infinite; }
+  .badge-shield {
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
   }
-  50% {
-    transform: translate(-50%, -3px);
+  .gem-core { background: #fbbf24; border: 1px solid #fffbeb; box-shadow: 0 0 10px #f59e0b; }
+
+  .aura-glow {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    background: radial-gradient(circle, rgba(251,191,36,0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse 2s infinite alternate ease-in-out;
+  }
+
+  .main-wing {
+    width: 38px;
+    height: 60px;
+    background: linear-gradient(135deg, #fef08a, #f59e0b, #b45309);
+    clip-path: polygon(0 0, 100% 30%, 75% 100%, 0 80%);
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+    z-index: 2;
+    &.left { left: -20px; transform: scaleX(-1); }
+    &.right { right: -20px; }
+  }
+
+  .inner-wing {
+    width: 28px;
+    height: 46px;
+    background: linear-gradient(135deg, #ffffff, #fef08a);
+    clip-path: polygon(0 0, 100% 20%, 75% 100%, 0 70%);
+    z-index: 3;
+    opacity: 0.9;
+    &.left { left: -12px; transform: scaleX(-1) rotate(10deg); }
+    &.right { right: -12px; transform: rotate(10deg); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(253,224,71,0.65) 50%, transparent 80%);
+    animation-duration: 3s;
   }
 }
+
+// 3. PLATINUM
+.tier-platinum {
+  .outer-frame {
+    width: 120px;
+    height: 120px;
+    border: 2px dashed #38bdf8;
+    animation: rotateSlow 10s linear infinite reverse;
+  }
+  .badge-shield {
+    border: 2px solid #38bdf8;
+    box-shadow: 0 0 25px rgba(56,189,248,0.6);
+  }
+  .gem-core { background: #38bdf8; border: 1px solid #e0f2fe; box-shadow: 0 0 12px #38bdf8; }
+
+  .pulse-core {
+    position: absolute;
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    border: 2px solid #7dd3fc;
+    box-shadow: 0 0 15px #38bdf8;
+    animation: ripple 2.2s infinite ease-out;
+  }
+
+  .main-wing {
+    width: 42px;
+    height: 70px;
+    background: linear-gradient(135deg, #e0f2fe, #38bdf8, #0284c7);
+    clip-path: polygon(0 0, 100% 20%, 85% 100%, 0 80%);
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.7));
+    z-index: 2;
+    &.left { left: -24px; transform: scaleX(-1); }
+    &.right { right: -24px; }
+  }
+
+  .inner-wing {
+    width: 30px;
+    height: 52px;
+    background: linear-gradient(135deg, #ffffff, #a5f3fc);
+    clip-path: polygon(0 0, 100% 15%, 75% 100%, 0 70%);
+    z-index: 3;
+    opacity: 0.9;
+    &.left { left: -14px; transform: scaleX(-1) rotate(10deg); }
+    &.right { right: -14px; transform: rotate(10deg); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(125,211,252,0.6) 50%, transparent 80%);
+    animation-duration: 3.2s;
+  }
+}
+
+// 4. DIAMOND
+.tier-diamond {
+  .badge-shield {
+    border: 2px solid #d946ef;
+    box-shadow: 0 0 30px rgba(217,70,239,0.8);
+  }
+  .gem-core { background: #f0abfc; border: 1px solid #fdf4ff; box-shadow: 0 0 15px #d946ef; }
+
+  .star-frame {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    border: 2px solid #f0abfc;
+    box-shadow: 0 0 15px #d946ef;
+    transform: rotate(45deg);
+    animation: rotateSlow 8s linear infinite;
+  }
+
+  .prism-glow {
+    position: absolute;
+    width: 125px;
+    height: 125px;
+    background: radial-gradient(circle, rgba(240,171,252,0.5) 0%, rgba(192,132,252,0.2) 50%, transparent 70%);
+    animation: pulse 1.8s infinite alternate ease-in-out;
+  }
+
+  .main-wing {
+    width: 46px;
+    height: 75px;
+    background: linear-gradient(135deg, #fdf4ff, #c084fc, #6b21a8);
+    clip-path: polygon(0 0, 100% 15%, 85% 100%, 0 70%);
+    filter: drop-shadow(0 0 10px rgba(217, 70, 239, 0.8));
+    z-index: 2;
+    &.left { left: -26px; transform: scaleX(-1); }
+    &.right { right: -26px; }
+  }
+
+  .mid-wing {
+    width: 34px;
+    height: 56px;
+    background: linear-gradient(135deg, #ffffff, #e879f9);
+    clip-path: polygon(0 0, 100% 20%, 75% 100%, 0 75%);
+    z-index: 3;
+    opacity: 0.9;
+    &.left { left: -16px; transform: scaleX(-1) rotate(10deg); }
+    &.right { right: -16px; transform: rotate(10deg); }
+  }
+
+  .inner-feather {
+    width: 24px;
+    height: 40px;
+    background: #ffffff;
+    box-shadow: 0 0 10px #f0abfc;
+    clip-path: polygon(0 0, 100% 25%, 70% 100%, 0 75%);
+    z-index: 4;
+    &.left { left: -6px; transform: scaleX(-1) rotate(15deg); }
+    &.right { right: -6px; transform: rotate(15deg); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(240,171,252,0.65) 50%, transparent 80%);
+    animation-duration: 2.8s;
+  }
+}
+
+// 5. MASTER
+.tier-master {
+  .badge-shield {
+    border: 2px solid #f43f5e;
+    box-shadow: 0 0 35px rgba(244,63,94,0.9);
+  }
+  .gem-core { background: #fb7185; border: 1px solid #fff1f2; box-shadow: 0 0 18px #f43f5e; }
+  .crown { filter: drop-shadow(0 0 12px #f43f5e); }
+
+  .magic-ring {
+    position: absolute;
+    width: 125px;
+    height: 125px;
+    border: 2px dashed #fda4af;
+    border-radius: 50%;
+    box-shadow: 0 0 20px #f43f5e;
+    animation: rotateSlow 5s linear infinite reverse;
+  }
+
+  .main-wing {
+    width: 52px;
+    height: 85px;
+    background: linear-gradient(135deg, #ffe4e6, #f43f5e, #4c0519);
+    clip-path: polygon(0 0, 100% 10%, 90% 100%, 0 60%);
+    filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.9));
+    z-index: 2;
+    &.left { left: -30px; transform: scaleX(-1); }
+    &.right { right: -30px; }
+  }
+
+  .mid-wing {
+    width: 38px;
+    height: 60px;
+    background: linear-gradient(135deg, #ffffff, #fb7185);
+    clip-path: polygon(0 0, 100% 15%, 80% 100%, 0 70%);
+    z-index: 3;
+    opacity: 0.95;
+    &.left { left: -18px; transform: scaleX(-1) rotate(10deg); }
+    &.right { right: -18px; transform: rotate(10deg); }
+  }
+
+  .inner-feather {
+    width: 26px;
+    height: 42px;
+    background: #ffe4e6;
+    box-shadow: 0 0 12px #f43f5e;
+    clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%);
+    z-index: 4;
+    &.left { left: -8px; transform: scaleX(-1) rotate(15deg); }
+    &.right { right: -8px; transform: rotate(15deg); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(251,113,133,0.6) 50%, transparent 80%);
+    animation-duration: 2.5s;
+  }
+}
+
+// 6. LEGEND
+.tier-legend {
+  .badge-shield {
+    border: 2px solid #fde047;
+    box-shadow: 0 0 50px rgba(250,204,21,1), inset 0 0 15px #fff;
+  }
+  .gem-core {
+    background: #ffffff;
+    border: 2px solid #fde047;
+    box-shadow: 0 0 25px #fde047, 0 0 10px #fff;
+    width: 14px;
+    height: 14px;
+  }
+  .crown {
+    top: -28px;
+    font-size: 1.7rem;
+    filter: drop-shadow(0 0 15px #facc15);
+    animation-duration: 1.8s;
+  }
+
+  .halo-ring {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border: 3px double #fde047;
+    border-radius: 50%;
+    box-shadow: 0 0 25px #facc15, inset 0 0 15px #facc15;
+    animation: rotateSlow 3s linear infinite;
+  }
+
+  .runic-array {
+    position: absolute;
+    width: 155px;
+    height: 155px;
+    border: 1px dashed #fef08a;
+    border-radius: 50%;
+    animation: rotateSlow 7s linear infinite reverse;
+  }
+
+  .solar-flare {
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    background: radial-gradient(circle, rgba(250,204,21,0.7) 0%, rgba(234,179,8,0.3) 50%, transparent 75%);
+    animation: pulse 1.2s infinite alternate ease-in-out;
+  }
+
+  .main-wing {
+    width: 52px;
+    height: 85px;
+    background: linear-gradient(135deg, #ffffff 0%, #fde047 50%, #ca8a04 100%);
+    filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.9));
+    z-index: 2;
+
+    &.top-left { left: -32px; top: -16px; transform: scaleX(-1) rotate(10deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
+    &.top-right { right: -32px; top: -16px; transform: rotate(10deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
+
+    &.bottom-left, &.bottom-right {
+      width: 32px;
+      height: 52px;
+      background: linear-gradient(135deg, #ffffff 0%, #fde047 60%, #996515 100%);
+      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.8));
+    }
+    &.bottom-left { 
+      left: -20px; 
+      bottom: 2px; 
+      transform: scaleX(-1) rotate(-14deg); 
+      clip-path: polygon(0 15%, 100% 0%, 35% 100%, 0 85%); 
+    }
+    &.bottom-right { 
+      right: -20px; 
+      bottom: 2px; 
+      transform: rotate(-14deg); 
+      clip-path: polygon(0 15%, 100% 0%, 35% 100%, 0 85%); 
+    }
+  }
+
+  .mid-wing {
+    width: 36px;
+    height: 60px;
+    background: linear-gradient(135deg, #ffffff 0%, #fef08a 60%, #eab308 100%);
+    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.8));
+    z-index: 3;
+    opacity: 0.95;
+
+    &.top-left { left: -20px; top: -8px; transform: scaleX(-1) rotate(14deg); clip-path: polygon(0 0, 100% 15%, 80% 100%, 0 75%); }
+    &.top-right { right: -20px; top: -8px; transform: rotate(14deg); clip-path: polygon(0 0, 100% 15%, 80% 100%, 0 75%); }
+  }
+
+  .inner-feather {
+    width: 26px;
+    height: 44px;
+    background: linear-gradient(135deg, #ffffff, #fffbeb);
+    box-shadow: 0 0 12px #fde047;
+    filter: drop-shadow(0 0 12px #ffffff);
+    z-index: 4;
+    opacity: 0.95;
+
+    &.top-left { left: -10px; top: 0px; transform: scaleX(-1) rotate(18deg); clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%); }
+    &.top-right { right: -10px; top: 0px; transform: rotate(18deg); clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%); }
+  }
+
+  .sweep-light {
+    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.8) 50%, transparent 80%);
+    animation-duration: 1.8s;
+  }
+}
+
+// ── KEYFRAMES ────────────────────────────────────────────────────────────────
+@keyframes sweep {
+  0%   { transform: skewX(-25deg) translateX(-200%); }
+  100% { transform: skewX(-25deg) translateX(200%); }
+}
+
+@keyframes pulse {
+  0%   { transform: scale(0.92); opacity: 0.6; }
+  100% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes ripple {
+  0%   { transform: scale(0.7); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes rotateSlow {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes floatCrown {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+
+// ── HOVER EFFECTS PER TIER ────────────────────────────────────────────────────
+// Hiệu ứng hover giống huy hiệu rank: xòe cánh, bùng sáng, scale khiên
+// ─────────────────────────────────────────────────────────────────────────────
+
+// SHARED: Scale khiên khi hover
+.rank-avatar-frame-container:hover {
+  .badge-shield {
+    transform: scale(1.08);
+  }
+  .gem-core {
+    transform: rotate(225deg) scale(1.4);
+  }
+  .crown {
+    animation-duration: 1s;
+  }
+  .avatar-hexagon-img {
+    filter: brightness(1.1) saturate(1.15);
+  }
+}
+
+// BRONZE: Warm glow bừng lên
+.tier-bronze:hover {
+  .badge-shield {
+    box-shadow: 0 0 28px rgba(217, 136, 85, 0.85), inset 0 0 16px rgba(205, 127, 50, 0.35);
+  }
+}
+
+// SILVER: White flare sáng chớp + Cánh bạc xòe nhẹ
+.tier-silver:hover {
+  .badge-shield {
+    box-shadow: 0 0 35px rgba(255, 255, 255, 0.8), inset 0 0 16px rgba(203, 213, 225, 0.4);
+  }
+  .outer-frame {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+  .small-wing {
+    &.left { transform: scaleX(-1) translateX(12px) rotate(-14deg) scale(1.1); filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)); }
+    &.right { transform: translateX(12px) rotate(-14deg) scale(1.1); filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)); }
+  }
+}
+
+// GOLD: Hào quang vàng nổ, cánh xòe ra
+.tier-gold:hover {
+  .badge-shield {
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.9), inset 0 0 20px rgba(251, 191, 36, 0.25);
+  }
+  .aura-glow {
+    transform: scale(1.25);
+    animation-duration: 0.8s;
+  }
+  .main-wing {
+    &.left { transform: scaleX(-1) translateX(14px) rotate(-15deg); filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); }
+    &.right { transform: translateX(14px) rotate(-15deg); filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); }
+  }
+  .inner-wing {
+    &.left { transform: scaleX(-1) translateX(-16px) translateY(-8px) rotate(35deg) scale(1.1); }
+    &.right { transform: translateX(-16px) translateY(-8px) rotate(35deg) scale(1.1); }
+  }
+}
+
+// PLATINUM: Ice pulse + cánh băng xòe
+.tier-platinum:hover {
+  .badge-shield {
+    box-shadow: 0 0 45px rgba(56, 189, 248, 0.95), inset 0 0 20px rgba(125, 211, 252, 0.25);
+  }
+  .pulse-core {
+    animation-duration: 1s;
+    box-shadow: 0 0 25px #38bdf8;
+  }
+  .outer-frame {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    animation-duration: 6s;
+  }
+  .main-wing {
+    &.left { transform: scaleX(-1) translateX(16px) rotate(-15deg); filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.9)); }
+    &.right { transform: translateX(16px) rotate(-15deg); filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.9)); }
+  }
+  .inner-wing {
+    &.left { transform: scaleX(-1) translateX(-18px) translateY(-10px) rotate(40deg) scale(1.15); }
+    &.right { transform: translateX(-18px) translateY(-10px) rotate(40deg) scale(1.15); }
+  }
+}
+
+// DIAMOND: Prismatic violet storm + 3-layer fan
+.tier-diamond:hover {
+  .badge-shield {
+    box-shadow: 0 0 55px rgba(217, 70, 239, 1), inset 0 0 25px rgba(192, 132, 252, 0.3);
+  }
+  .star-frame {
+    box-shadow: 0 0 30px #d946ef;
+    animation-duration: 4s;
+  }
+  .prism-glow {
+    transform: scale(1.3);
+    animation-duration: 0.9s;
+  }
+  .main-wing {
+    &.left { transform: scaleX(-1) translateX(18px) rotate(-15deg); filter: drop-shadow(0 0 18px rgba(217, 70, 239, 0.95)); }
+    &.right { transform: translateX(18px) rotate(-15deg); filter: drop-shadow(0 0 18px rgba(217, 70, 239, 0.95)); }
+  }
+  .mid-wing {
+    &.left { transform: scaleX(-1) translateX(-14px) translateY(-8px) rotate(32deg) scale(1.1); }
+    &.right { transform: translateX(-14px) translateY(-8px) rotate(32deg) scale(1.1); }
+  }
+  .inner-feather {
+    &.left { transform: scaleX(-1) translateX(-28px) translateY(-16px) rotate(55deg) scale(1.2); filter: drop-shadow(0 0 20px #f0abfc); }
+    &.right { transform: translateX(-28px) translateY(-16px) rotate(55deg) scale(1.2); filter: drop-shadow(0 0 20px #f0abfc); }
+  }
+}
+
+// MASTER: Blood fire eruption + 3-layer crimson fan
+.tier-master:hover {
+  .badge-shield {
+    box-shadow: 0 0 60px rgba(244, 63, 94, 1), inset 0 0 28px rgba(251, 113, 133, 0.35);
+  }
+  .magic-ring {
+    box-shadow: 0 0 35px #f43f5e;
+    animation-duration: 2.5s;
+  }
+  .crown {
+    filter: drop-shadow(0 0 20px #f43f5e);
+    animation-duration: 0.9s;
+  }
+  .main-wing {
+    &.left { transform: scaleX(-1) translateX(22px) rotate(-18deg); filter: drop-shadow(0 0 22px rgba(244, 63, 94, 1)); }
+    &.right { transform: translateX(22px) rotate(-18deg); filter: drop-shadow(0 0 22px rgba(244, 63, 94, 1)); }
+  }
+  .mid-wing {
+    &.left { transform: scaleX(-1) translateX(-16px) translateY(-10px) rotate(35deg) scale(1.15); }
+    &.right { transform: translateX(-16px) translateY(-10px) rotate(35deg) scale(1.15); }
+  }
+  .inner-feather {
+    &.left { transform: scaleX(-1) translateX(-32px) translateY(-18px) rotate(60deg) scale(1.25); filter: drop-shadow(0 0 22px #ffe4e6); }
+    &.right { transform: translateX(-32px) translateY(-18px) rotate(60deg) scale(1.25); filter: drop-shadow(0 0 22px #ffe4e6); }
+  }
+}
+
+// LEGEND: Solar divine explosion + 8-wing divine array
+.tier-legend:hover {
+  .badge-shield {
+    box-shadow: 0 0 70px rgba(250, 204, 21, 1), 0 0 100px rgba(255, 255, 255, 0.6), inset 0 0 30px rgba(253, 224, 71, 0.4);
+  }
+  .halo-ring {
+    animation-duration: 0.8s;
+    box-shadow: 0 0 45px #fde047, inset 0 0 20px #fde047;
+    transform: scale(1.12);
+  }
+  .runic-array {
+    animation-duration: 3s;
+    transform: scale(1.18);
+    box-shadow: 0 0 15px #fef08a;
+  }
+  .solar-flare {
+    transform: scale(1.4);
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(250,204,21,0.6) 50%, transparent 80%);
+  }
+  .crown {
+    filter: drop-shadow(0 0 25px #facc15);
+    animation-duration: 0.7s;
+  }
+  // 4 cánh chính mở rộng
+  .main-wing {
+    &.top-left { transform: scaleX(-1) translateX(12px) rotate(-15deg); }
+    &.top-right { transform: translateX(12px) rotate(-15deg); }
+    &.bottom-left { transform: scaleX(-1) translateX(12px) translateY(14px) rotate(-45deg) scale(1.1); filter: drop-shadow(0 0 18px #fde047); }
+    &.bottom-right { transform: translateX(12px) translateY(14px) rotate(-45deg) scale(1.1); filter: drop-shadow(0 0 18px #fde047); }
+  }
+  // Cánh nhỏ tầng giữa 2 cánh trên bung xòe
+  .mid-wing {
+    &.top-left { transform: scaleX(-1) translateX(-18px) translateY(-10px) rotate(32deg) scale(1.15); }
+    &.top-right { transform: translateX(-18px) translateY(-10px) rotate(32deg) scale(1.15); }
+  }
+  // Cánh nhỏ thần ngọc bung góc cực đại
+  .inner-feather {
+    &.top-left { transform: scaleX(-1) translateX(-34px) translateY(-20px) rotate(56deg) scale(1.25); filter: drop-shadow(0 0 25px #ffffff); }
+    &.top-right { transform: translateX(-34px) translateY(-20px) rotate(56deg) scale(1.25); filter: drop-shadow(0 0 25px #ffffff); }
+  }
+}
+
