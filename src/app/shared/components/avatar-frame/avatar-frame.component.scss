@@ -161,20 +161,75 @@
   position: absolute;
   width: 12px;
   height: 12px;
-  bottom: 10px;
+  left: 50%;
+  margin-left: -6px;
+  bottom: 0;
   transform: rotate(45deg);
+  transform-origin: center;
   z-index: 6;
   box-shadow: 0 0 10px rgba(255,255,255,0.8);
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+
+  // Hiệu ứng bóng kim quét qua bề mặt kim cương / khẩu trang
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.65) 50%,
+      transparent 70%
+    );
+    background-size: 220% 220%;
+    background-position: -220% 0;
+    animation: gemShine 3s infinite ease-in-out;
+    z-index: 2;
+    pointer-events: none;
+  }
 }
 
+// ── MẢNH TAM GIÁC TRÊN ĐỈNH (thay vương miện, kiểu nón samurai) ────────────
+// Nhỏ khi tĩnh, khi hover mới nở bung to lên.
 .crown {
   position: absolute;
-  top: -22px;
-  font-size: 1.4rem;
+  top: -18px;
+  left: 50%;
+  margin-left: -13px;
+  width: 26px;
+  height: 30px;
   z-index: 7;
-  filter: drop-shadow(0 0 12px currentColor);
+  pointer-events: none;
+  background: linear-gradient(180deg, #ffffff 0%, var(--crown-color, #f43f5e) 55%, var(--crown-dark, #9f1239) 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  filter: drop-shadow(0 0 8px var(--crown-glow, rgba(244, 63, 94, 0.8)));
+  scale: 1;
+  transition: scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
   animation: floatCrown 2s infinite alternate ease-in-out;
+
+  // Hiệu ứng bóng kim quét qua bề mặt sừng (bị cắt theo clip-path tam giác)
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 190%;
+    height: 190%;
+    top: -45%;
+    left: -45%;
+    background: linear-gradient(112deg, transparent 28%, rgba(255, 255, 255, 0.5) 50%, transparent 72%);
+    transform: skewX(-25deg) translateX(-220%);
+    animation: sweep 2.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  // Viền trong sáng — cảm giác mảnh kim loại
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    clip-path: polygon(50% 8%, 92% 90%, 8% 90%);
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 // ── WINGS SYSTEM ─────────────────────────────────────────────────────────────
@@ -193,26 +248,21 @@
   position: absolute;
   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: bottom center;
-}
 
-// Sweep light inside shield
-.sweep-light {
-  position: absolute;
-  inset: 0;
-  width: 150%;
-  height: 150%;
-  top: -25%;
-  left: -25%;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 80%
-  );
-  transform: skewX(-25deg) translateX(-200%);
-  animation: sweep 3.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 5;
-  pointer-events: none;
+  // Hiệu ứng bóng kim quét qua bề mặt cánh (bị cắt theo clip-path của cánh)
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 170%;
+    height: 170%;
+    top: -35%;
+    left: -35%;
+    background: linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, 0.4) 50%, transparent 68%);
+    transform: skewX(-24deg) translateX(-240%);
+    animation: sweep 3.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -226,10 +276,6 @@
     box-shadow: inset 0 0 12px #211108;
   }
   .gem-core { background: #d98855; border: 1px solid #ffb088; }
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(217,136,85,0.5) 50%, transparent 80%);
-    animation-duration: 4s;
-  }
 }
 
 // 1. SILVER (Cánh Bạc Nhỏ Tinh Tế)
@@ -253,11 +299,6 @@
 
     &.left { left: -16px; transform: scaleX(-1) rotate(6deg); }
     &.right { right: -16px; transform: rotate(6deg); }
-  }
-
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.75) 50%, transparent 80%);
-    animation-duration: 2.8s;
   }
 }
 
@@ -299,11 +340,6 @@
     opacity: 0.9;
     &.left { left: -12px; transform: scaleX(-1) rotate(10deg); }
     &.right { right: -12px; transform: rotate(10deg); }
-  }
-
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(253,224,71,0.65) 50%, transparent 80%);
-    animation-duration: 3s;
   }
 }
 
@@ -351,11 +387,6 @@
     opacity: 0.9;
     &.left { left: -14px; transform: scaleX(-1) rotate(10deg); }
     &.right { right: -14px; transform: rotate(10deg); }
-  }
-
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(125,211,252,0.6) 50%, transparent 80%);
-    animation-duration: 3.2s;
   }
 }
 
@@ -417,11 +448,6 @@
     &.left { left: -6px; transform: scaleX(-1) rotate(15deg); }
     &.right { right: -6px; transform: rotate(15deg); }
   }
-
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(240,171,252,0.65) 50%, transparent 80%);
-    animation-duration: 2.8s;
-  }
 }
 
 // 5. MASTER
@@ -431,7 +457,11 @@
     box-shadow: 0 0 35px rgba(244,63,94,0.9);
   }
   .gem-core { background: #fb7185; border: 1px solid #fff1f2; box-shadow: 0 0 18px #f43f5e; }
-  .crown { filter: drop-shadow(0 0 12px #f43f5e); }
+  .crown {
+    --crown-color: #f43f5e;
+    --crown-dark: #9f1239;
+    --crown-glow: rgba(244, 63, 94, 0.85);
+  }
 
   .magic-ring {
     position: absolute;
@@ -475,11 +505,6 @@
     &.left { left: -8px; transform: scaleX(-1) rotate(15deg); }
     &.right { right: -8px; transform: rotate(15deg); }
   }
-
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(251,113,133,0.6) 50%, transparent 80%);
-    animation-duration: 2.5s;
-  }
 }
 
 // 6. LEGEND
@@ -496,9 +521,9 @@
     height: 14px;
   }
   .crown {
-    top: -28px;
-    font-size: 1.7rem;
-    filter: drop-shadow(0 0 15px #facc15);
+    --crown-color: #fde047;
+    --crown-dark: #ca8a04;
+    --crown-glow: rgba(250, 204, 21, 0.9);
     animation-duration: 1.8s;
   }
 
@@ -536,8 +561,8 @@
     filter: drop-shadow(0 0 15px rgba(250, 204, 21, 0.9));
     z-index: 2;
 
-    &.top-left { left: -32px; top: -16px; transform: scaleX(-1) rotate(10deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
-    &.top-right { right: -32px; top: -16px; transform: rotate(10deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
+    &.top-left { left: -32px; top: -4px; transform: scaleX(-1) rotate(15deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
+    &.top-right { right: -32px; top: -4px; transform: rotate(15deg); clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%); }
 
     &.bottom-left, &.bottom-right {
       width: 32px;
@@ -583,17 +608,95 @@
     &.top-left { left: -10px; top: 0px; transform: scaleX(-1) rotate(18deg); clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%); }
     &.top-right { right: -10px; top: 0px; transform: rotate(18deg); clip-path: polygon(0 0, 100% 25%, 75% 100%, 0 75%); }
   }
+}
 
-  .sweep-light {
-    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.8) 50%, transparent 80%);
-    animation-duration: 1.8s;
+// ── MINI FEATHER DETAIL (Lông vũ nhỏ) ────────────────────────────────────────
+// Chi tiết cánh nhỏ nằm sát đỉnh khiên, nở bung cuối cùng khi hover.
+.mini-feather {
+  position: absolute;
+  clip-path: polygon(0 0, 100% 35%, 66% 100%, 0 82%);
+  transition-delay: 0.34s;
+  z-index: 6;
+
+  &.left {
+    left: -2px;
+    top: 8px;
+    transform: scaleX(-1) rotate(-4deg);
   }
+  &.right {
+    right: -2px;
+    top: 8px;
+    transform: rotate(-4deg);
+  }
+}
+
+.tier-silver .mini-feather {
+  width: 10px;
+  height: 18px;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 70%, #94a3b8 100%);
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
+  opacity: 0.9;
+  &.left { top: 6px; left: -4px; }
+  &.right { top: 6px; right: -4px; }
+}
+
+.tier-gold .mini-feather {
+  width: 12px;
+  height: 22px;
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 60%, #f59e0b 100%);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
+  &.left { top: 4px; left: -4px; }
+  &.right { top: 4px; right: -4px; }
+}
+
+.tier-platinum .mini-feather {
+  width: 12px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #bae6fd 60%, #38bdf8 100%);
+  filter: drop-shadow(0 0 7px rgba(56, 189, 248, 0.85));
+  &.left { top: 4px; left: -4px; }
+  &.right { top: 4px; right: -4px; }
+}
+
+.tier-diamond .mini-feather {
+  width: 13px;
+  height: 24px;
+  background: linear-gradient(135deg, #fdf4ff 0%, #e879f9 60%, #c084fc 100%);
+  filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.9));
+  &.left { top: -4px; left: -2px; transform: scaleX(-1) rotate(-8deg); }
+  &.right { top: -4px; right: -2px; transform: rotate(-8deg); }
+}
+
+.tier-master .mini-feather {
+  width: 14px;
+  height: 26px;
+  background: linear-gradient(135deg, #ffe4e6 0%, #fb7185 60%, #f43f5e 100%);
+  filter: drop-shadow(0 0 9px rgba(244, 63, 94, 0.95));
+  &.left { top: -6px; left: -2px; transform: scaleX(-1) rotate(-10deg); }
+  &.right { top: -6px; right: -2px; transform: rotate(-10deg); }
+}
+
+.tier-legend .mini-feather {
+  width: 14px;
+  height: 26px;
+  background: linear-gradient(135deg, #ffffff 0%, #fde047 60%, #facc15 100%);
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.95));
+  &.top-left { top: -14px; left: -8px; transform: scaleX(-1) rotate(-6deg); }
+  &.top-right { top: -14px; right: -8px; transform: rotate(-6deg); }
+  &.bottom-left { top: auto; bottom: 24px; left: -10px; transform: scaleX(-1) rotate(-45deg); }
+  &.bottom-right { top: auto; bottom: 24px; right: -10px; transform: rotate(-45deg); }
 }
 
 // ── KEYFRAMES ────────────────────────────────────────────────────────────────
 @keyframes sweep {
   0%   { transform: skewX(-25deg) translateX(-200%); }
   100% { transform: skewX(-25deg) translateX(200%); }
+}
+
+// Bóng kim quét qua kim cương / khẩu trang (trong phạm vi phần tử)
+@keyframes gemShine {
+  0%        { background-position: -220% 0; }
+  55%, 100% { background-position: 320% 0; }
 }
 
 @keyframes pulse {
@@ -620,13 +723,15 @@
 // Hiệu ứng hover giống huy hiệu rank: xòe cánh, bùng sáng, scale khiên
 // ─────────────────────────────────────────────────────────────────────────────
 
-// SHARED: Scale khiên khi hover
+// SHARED: Scale khiên khi hover + kim cương nở thành khẩu trang ninja
 .rank-avatar-frame-container:hover {
   .badge-shield {
     transform: scale(1.08);
   }
+  // Kim cương nở phủ vùng mũi-miệng (~1/3 dưới lục giác) — khẩu trang ninja
   .gem-core {
-    transform: rotate(225deg) scale(1.4);
+    transform: translateY(6px) rotate(45deg) scale(4.5);
+    box-shadow: 0 0 26px rgba(255, 255, 255, 0.85), 0 0 12px rgba(255, 255, 255, 0.5);
   }
   .crown {
     animation-duration: 1s;
@@ -643,7 +748,7 @@
   }
 }
 
-// SILVER: White flare sáng chớp + Cánh bạc xòe nhẹ
+// SILVER: Cánh bạc xòe rộng — 2 lớp chi tiết
 .tier-silver:hover {
   .badge-shield {
     box-shadow: 0 0 35px rgba(255, 255, 255, 0.8), inset 0 0 16px rgba(203, 213, 225, 0.4);
@@ -652,12 +757,18 @@
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   }
   .small-wing {
-    &.left { transform: scaleX(-1) translateX(12px) rotate(-14deg) scale(1.1); filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)); }
-    &.right { transform: translateX(12px) rotate(-14deg) scale(1.1); filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95)); }
+    transition-delay: 0.06s;
+    &.left { transform: scaleX(-1) translateX(16px) rotate(-22deg) scale(1.18); filter: drop-shadow(0 0 18px rgba(255, 255, 255, 1)); }
+    &.right { transform: translateX(16px) rotate(-22deg) scale(1.18); filter: drop-shadow(0 0 18px rgba(255, 255, 255, 1)); }
+  }
+  .mini-feather {
+    transition-delay: 0.2s;
+    &.left { transform: scaleX(-1) translateX(-10px) translateY(-12px) rotate(46deg) scale(1.35); filter: drop-shadow(0 0 12px #ffffff); }
+    &.right { transform: translateX(-10px) translateY(-12px) rotate(46deg) scale(1.35); filter: drop-shadow(0 0 12px #ffffff); }
   }
 }
 
-// GOLD: Hào quang vàng nổ, cánh xòe ra
+// GOLD: Biến hình 2 lớp cánh — cánh chính mở rộng, cánh trong bung cao
 .tier-gold:hover {
   .badge-shield {
     box-shadow: 0 0 40px rgba(245, 158, 11, 0.9), inset 0 0 20px rgba(251, 191, 36, 0.25);
@@ -667,16 +778,22 @@
     animation-duration: 0.8s;
   }
   .main-wing {
-    &.left { transform: scaleX(-1) translateX(14px) rotate(-15deg); filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); }
-    &.right { transform: translateX(14px) rotate(-15deg); filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); }
+    &.left { transform: scaleX(-1) translateX(20px) rotate(-24deg) scale(1.15); filter: drop-shadow(0 0 22px rgba(245, 158, 11, 1)); }
+    &.right { transform: translateX(20px) rotate(-24deg) scale(1.15); filter: drop-shadow(0 0 22px rgba(245, 158, 11, 1)); }
   }
   .inner-wing {
-    &.left { transform: scaleX(-1) translateX(-16px) translateY(-8px) rotate(35deg) scale(1.1); }
-    &.right { transform: translateX(-16px) translateY(-8px) rotate(35deg) scale(1.1); }
+    transition-delay: 0.12s;
+    &.left { transform: scaleX(-1) translateX(-22px) translateY(-16px) rotate(55deg) scale(1.35); filter: drop-shadow(0 0 16px #fef08a); }
+    &.right { transform: translateX(-22px) translateY(-16px) rotate(55deg) scale(1.35); filter: drop-shadow(0 0 16px #fef08a); }
+  }
+  .mini-feather {
+    transition-delay: 0.26s;
+    &.left { transform: scaleX(-1) translateX(-12px) translateY(-16px) rotate(58deg) scale(1.45); filter: drop-shadow(0 0 14px #fef08a); }
+    &.right { transform: translateX(-12px) translateY(-16px) rotate(58deg) scale(1.45); filter: drop-shadow(0 0 14px #fef08a); }
   }
 }
 
-// PLATINUM: Ice pulse + cánh băng xòe
+// PLATINUM: Biến hình 2 lớp cánh băng — cánh trong bung góc cực đại
 .tier-platinum:hover {
   .badge-shield {
     box-shadow: 0 0 45px rgba(56, 189, 248, 0.95), inset 0 0 20px rgba(125, 211, 252, 0.25);
@@ -690,16 +807,22 @@
     animation-duration: 6s;
   }
   .main-wing {
-    &.left { transform: scaleX(-1) translateX(16px) rotate(-15deg); filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.9)); }
-    &.right { transform: translateX(16px) rotate(-15deg); filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.9)); }
+    &.left { transform: scaleX(-1) translateX(22px) rotate(-24deg) scale(1.16); filter: drop-shadow(0 0 24px rgba(56, 189, 248, 1)); }
+    &.right { transform: translateX(22px) rotate(-24deg) scale(1.16); filter: drop-shadow(0 0 24px rgba(56, 189, 248, 1)); }
   }
   .inner-wing {
-    &.left { transform: scaleX(-1) translateX(-18px) translateY(-10px) rotate(40deg) scale(1.15); }
-    &.right { transform: translateX(-18px) translateY(-10px) rotate(40deg) scale(1.15); }
+    transition-delay: 0.12s;
+    &.left { transform: scaleX(-1) translateX(-24px) translateY(-18px) rotate(60deg) scale(1.4); filter: drop-shadow(0 0 18px #bae6fd); }
+    &.right { transform: translateX(-24px) translateY(-18px) rotate(60deg) scale(1.4); filter: drop-shadow(0 0 18px #bae6fd); }
+  }
+  .mini-feather {
+    transition-delay: 0.26s;
+    &.left { transform: scaleX(-1) translateX(-12px) translateY(-16px) rotate(60deg) scale(1.5); filter: drop-shadow(0 0 15px #bae6fd); }
+    &.right { transform: translateX(-12px) translateY(-16px) rotate(60deg) scale(1.5); filter: drop-shadow(0 0 15px #bae6fd); }
   }
 }
 
-// DIAMOND: Prismatic violet storm + 3-layer fan
+// DIAMOND: Biến hình 3 lớp cánh tím — cánh nở tuần tự từ ngoài vào trong
 .tier-diamond:hover {
   .badge-shield {
     box-shadow: 0 0 55px rgba(217, 70, 239, 1), inset 0 0 25px rgba(192, 132, 252, 0.3);
@@ -713,20 +836,27 @@
     animation-duration: 0.9s;
   }
   .main-wing {
-    &.left { transform: scaleX(-1) translateX(18px) rotate(-15deg); filter: drop-shadow(0 0 18px rgba(217, 70, 239, 0.95)); }
-    &.right { transform: translateX(18px) rotate(-15deg); filter: drop-shadow(0 0 18px rgba(217, 70, 239, 0.95)); }
+    &.left { transform: scaleX(-1) translateX(24px) rotate(-24deg) scale(1.18); filter: drop-shadow(0 0 26px rgba(217, 70, 239, 1)); }
+    &.right { transform: translateX(24px) rotate(-24deg) scale(1.18); filter: drop-shadow(0 0 26px rgba(217, 70, 239, 1)); }
   }
   .mid-wing {
-    &.left { transform: scaleX(-1) translateX(-14px) translateY(-8px) rotate(32deg) scale(1.1); }
-    &.right { transform: translateX(-14px) translateY(-8px) rotate(32deg) scale(1.1); }
+    transition-delay: 0.1s;
+    &.left { transform: scaleX(-1) translateX(-18px) translateY(-14px) rotate(42deg) scale(1.25); filter: drop-shadow(0 0 18px #f0abfc); }
+    &.right { transform: translateX(-18px) translateY(-14px) rotate(42deg) scale(1.25); filter: drop-shadow(0 0 18px #f0abfc); }
   }
   .inner-feather {
-    &.left { transform: scaleX(-1) translateX(-28px) translateY(-16px) rotate(55deg) scale(1.2); filter: drop-shadow(0 0 20px #f0abfc); }
-    &.right { transform: translateX(-28px) translateY(-16px) rotate(55deg) scale(1.2); filter: drop-shadow(0 0 20px #f0abfc); }
+    transition-delay: 0.22s;
+    &.left { transform: scaleX(-1) translateX(-34px) translateY(-24px) rotate(70deg) scale(1.4); filter: drop-shadow(0 0 26px #fdf4ff); }
+    &.right { transform: translateX(-34px) translateY(-24px) rotate(70deg) scale(1.4); filter: drop-shadow(0 0 26px #fdf4ff); }
+  }
+  .mini-feather {
+    transition-delay: 0.34s;
+    &.left { transform: scaleX(-1) translateX(-14px) translateY(-22px) rotate(68deg) scale(1.5); filter: drop-shadow(0 0 18px #fdf4ff); }
+    &.right { transform: translateX(-14px) translateY(-22px) rotate(68deg) scale(1.5); filter: drop-shadow(0 0 18px #fdf4ff); }
   }
 }
 
-// MASTER: Blood fire eruption + 3-layer crimson fan
+// MASTER: Biến hình 3 lớp cánh máu lửa — bung tuần tự, dữ dằn
 .tier-master:hover {
   .badge-shield {
     box-shadow: 0 0 60px rgba(244, 63, 94, 1), inset 0 0 28px rgba(251, 113, 133, 0.35);
@@ -736,24 +866,32 @@
     animation-duration: 2.5s;
   }
   .crown {
-    filter: drop-shadow(0 0 20px #f43f5e);
+    scale: 1.5;
+    filter: drop-shadow(0 0 14px var(--crown-glow)) drop-shadow(0 0 34px var(--crown-glow));
     animation-duration: 0.9s;
   }
   .main-wing {
-    &.left { transform: scaleX(-1) translateX(22px) rotate(-18deg); filter: drop-shadow(0 0 22px rgba(244, 63, 94, 1)); }
-    &.right { transform: translateX(22px) rotate(-18deg); filter: drop-shadow(0 0 22px rgba(244, 63, 94, 1)); }
+    &.left { transform: scaleX(-1) translateX(28px) rotate(-26deg) scale(1.2); filter: drop-shadow(0 0 30px rgba(244, 63, 94, 1)); }
+    &.right { transform: translateX(28px) rotate(-26deg) scale(1.2); filter: drop-shadow(0 0 30px rgba(244, 63, 94, 1)); }
   }
   .mid-wing {
-    &.left { transform: scaleX(-1) translateX(-16px) translateY(-10px) rotate(35deg) scale(1.15); }
-    &.right { transform: translateX(-16px) translateY(-10px) rotate(35deg) scale(1.15); }
+    transition-delay: 0.1s;
+    &.left { transform: scaleX(-1) translateX(-20px) translateY(-16px) rotate(46deg) scale(1.3); filter: drop-shadow(0 0 20px #fda4af); }
+    &.right { transform: translateX(-20px) translateY(-16px) rotate(46deg) scale(1.3); filter: drop-shadow(0 0 20px #fda4af); }
   }
   .inner-feather {
-    &.left { transform: scaleX(-1) translateX(-32px) translateY(-18px) rotate(60deg) scale(1.25); filter: drop-shadow(0 0 22px #ffe4e6); }
-    &.right { transform: translateX(-32px) translateY(-18px) rotate(60deg) scale(1.25); filter: drop-shadow(0 0 22px #ffe4e6); }
+    transition-delay: 0.22s;
+    &.left { transform: scaleX(-1) translateX(-38px) translateY(-28px) rotate(75deg) scale(1.45); filter: drop-shadow(0 0 30px #ffe4e6); }
+    &.right { transform: translateX(-38px) translateY(-28px) rotate(75deg) scale(1.45); filter: drop-shadow(0 0 30px #ffe4e6); }
+  }
+  .mini-feather {
+    transition-delay: 0.34s;
+    &.left { transform: scaleX(-1) translateX(-16px) translateY(-26px) rotate(72deg) scale(1.55); filter: drop-shadow(0 0 20px #ffe4e6); }
+    &.right { transform: translateX(-16px) translateY(-26px) rotate(72deg) scale(1.55); filter: drop-shadow(0 0 20px #ffe4e6); }
   }
 }
 
-// LEGEND: Solar divine explosion + 8-wing divine array
+// LEGEND: Biến hình Toàn Thần — 12 cánh vàng kim bung nở tuần tự
 .tier-legend:hover {
   .badge-shield {
     box-shadow: 0 0 70px rgba(250, 204, 21, 1), 0 0 100px rgba(255, 255, 255, 0.6), inset 0 0 30px rgba(253, 224, 71, 0.4);
@@ -773,25 +911,37 @@
     background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(250,204,21,0.6) 50%, transparent 80%);
   }
   .crown {
-    filter: drop-shadow(0 0 25px #facc15);
+    scale: 1.55;
+    filter: drop-shadow(0 0 18px var(--crown-glow)) drop-shadow(0 0 44px var(--crown-glow));
     animation-duration: 0.7s;
   }
-  // 4 cánh chính mở rộng
+  // 4 cánh chính mở rộng, cặp dưới lao xuống như chim săn mồi
   .main-wing {
-    &.top-left { transform: scaleX(-1) translateX(12px) rotate(-15deg); }
-    &.top-right { transform: translateX(12px) rotate(-15deg); }
-    &.bottom-left { transform: scaleX(-1) translateX(12px) translateY(14px) rotate(-45deg) scale(1.1); filter: drop-shadow(0 0 18px #fde047); }
-    &.bottom-right { transform: translateX(12px) translateY(14px) rotate(-45deg) scale(1.1); filter: drop-shadow(0 0 18px #fde047); }
+    transition-delay: 0.06s;
+    &.top-left { transform: scaleX(-1) translateX(20px) rotate(-22deg) scale(1.2); filter: drop-shadow(0 0 22px #fde047); }
+    &.top-right { transform: translateX(20px) rotate(-22deg) scale(1.2); filter: drop-shadow(0 0 22px #fde047); }
+    &.bottom-left { transform: scaleX(-1) translateX(18px) translateY(20px) rotate(-48deg) scale(1.3); filter: drop-shadow(0 0 26px #fde047); }
+    &.bottom-right { transform: translateX(18px) translateY(20px) rotate(-48deg) scale(1.3); filter: drop-shadow(0 0 26px #fde047); }
   }
-  // Cánh nhỏ tầng giữa 2 cánh trên bung xòe
+  // Cánh tầng giữa bung cao
   .mid-wing {
-    &.top-left { transform: scaleX(-1) translateX(-18px) translateY(-10px) rotate(32deg) scale(1.15); }
-    &.top-right { transform: translateX(-18px) translateY(-10px) rotate(32deg) scale(1.15); }
+    transition-delay: 0.18s;
+    &.top-left { transform: scaleX(-1) translateX(-26px) translateY(-18px) rotate(45deg) scale(1.35); filter: drop-shadow(0 0 22px #fef08a); }
+    &.top-right { transform: translateX(-26px) translateY(-18px) rotate(45deg) scale(1.35); filter: drop-shadow(0 0 22px #fef08a); }
   }
-  // Cánh nhỏ thần ngọc bung góc cực đại
+  // Lông thần ngọc bung góc tối đa
   .inner-feather {
-    &.top-left { transform: scaleX(-1) translateX(-34px) translateY(-20px) rotate(56deg) scale(1.25); filter: drop-shadow(0 0 25px #ffffff); }
-    &.top-right { transform: translateX(-34px) translateY(-20px) rotate(56deg) scale(1.25); filter: drop-shadow(0 0 25px #ffffff); }
+    transition-delay: 0.3s;
+    &.top-left { transform: scaleX(-1) translateX(-40px) translateY(-28px) rotate(72deg) scale(1.5); filter: drop-shadow(0 0 32px #ffffff); }
+    &.top-right { transform: translateX(-40px) translateY(-28px) rotate(72deg) scale(1.5); filter: drop-shadow(0 0 32px #ffffff); }
+  }
+  // Lông vũ mini cuối cùng bung nở trên + cặp dưới lao xuống
+  .mini-feather {
+    transition-delay: 0.4s;
+    &.top-left { transform: scaleX(-1) translateX(-20px) translateY(-26px) rotate(68deg) scale(1.5); filter: drop-shadow(0 0 24px #ffffff); }
+    &.top-right { transform: translateX(-20px) translateY(-26px) rotate(68deg) scale(1.5); filter: drop-shadow(0 0 24px #ffffff); }
+    &.bottom-left { transform: scaleX(-1) translateX(14px) translateY(18px) rotate(-62deg) scale(1.4); filter: drop-shadow(0 0 20px #fde047); }
+    &.bottom-right { transform: translateX(14px) translateY(18px) rotate(-62deg) scale(1.4); filter: drop-shadow(0 0 20px #fde047); }
   }
 }
 

@@ -86,5 +86,16 @@
     "completed": "Practice session completed!",
     "correct": "Correct!",
     "incorrect": "Incorrect"
+  },
+  "rank": {
+    "badgeSubtitle": {
+      "bronze": "Novice Warrior",
+      "silver": "Silver Guard",
+      "gold": "Gold General",
+      "platinum": "Frost Overlord",
+      "diamond": "Diamond Daimyo",
+      "master": "Sword Saint",
+      "legend": "Sovereign Blade"
+    }
   }
 }

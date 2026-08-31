@@ -508,7 +508,11 @@ export class HomeComponent implements OnInit {
   loadTopUsers(): void {
     this.userStatsApi.getLeaderboard({ page: 0, size: 5 }).subscribe({
       next: (res) => {
-        this.topUsers = res || [];
+        this.topUsers = Array.isArray(res)
+          ? res
+          : Array.isArray((res as { content?: LeaderboardEntry[] } | null)?.content)
+            ? ((res as { content?: LeaderboardEntry[] }).content ?? [])
+            : [];
       },
       error: () => {},
     });

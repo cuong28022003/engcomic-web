@@ -1,0 +1,163 @@
+<div class="leaderboard-page">
+  <!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+  <app-page-header
+    title="Bảng Vinh Danh Độc Giả"
+    subtitle="Đại Sảnh Danh Vọng — những học giả dũng mãnh nhất EngComic"
+    icon="fa-solid fa-dragon"
+    theme="reader"
+    [customIconBg]="'linear-gradient(135deg, rgba(255,184,0,0.28) 0%, rgba(255,122,26,0.16) 100%)'"
+    [customIconColor]="'#ffd75e'"
+  >
+    <span class="season-pill">
+      <i class="fa-solid fa-fire"></i>
+      <span>Mùa Giải Alpha</span>
+    </span>
+    <button
+      type="button"
+      class="btn-refresh"
+      aria-label="Tải lại bảng xếp hạng"
+      [title]="'Tải lại bảng xếp hạng'"
+      (click)="loadLeaderboard()"
+    >
+      <i class="fa-solid fa-rotate" [class.spinning]="loading()"></i>
+    </button>
+  </app-page-header>
+
+  <!-- ── LOADING ────────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="lb-state loading-state">
+      <div class="loader-orb"><i class="fa-solid fa-dragon"></i></div>
+      <p>Đang triệu hồi bảng xếp hạng...</p>
+    </div>
+  } @else if (error()) {
+    <div class="lb-state error-state glass-panel">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p>Không thể tải bảng xếp hạng. Kiểm tra kết nối rồi thử lại.</p>
+      <button type="button" class="btn-retry" (click)="retry()">
+        <i class="fa-solid fa-rotate"></i> Thử lại
+      </button>
+    </div>
+  } @else if (users().length === 0) {
+    <div class="lb-state empty-state glass-panel">
+      <i class="fa-solid fa-scroll"></i>
+      <p>Chưa có học giả nào được vinh danh. Hãy là người đầu tiên!</p>
+    </div>
+  } @else {
+    <!-- ── PODIUM TOP 3 ─────────────────────────────────────────────────── -->
+    @if (users().length >= 3) {
+      @let second = users()[1];
+      @let first = users()[0];
+      @let third = users()[2];
+
+      <section class="podium-wrap">
+        <div class="podium-floor-glow"></div>
+        <div class="podium-row">
+          <!-- Rank 2 -->
+          <div class="podium-card podium-second">
+            <span class="crown crown-silver"><i class="fa-solid fa-crown"></i></span>
+            <app-avatar-frame
+              [tier]="tierOf(second)"
+              [avatarUrl]="second.avatarUrl || ''"
+              size="xl"
+              [showGlow]="true"
+            ></app-avatar-frame>
+            <h3 class="podium-name">{{ second.username }}</h3>
+            <span class="podium-tier-tag" [style.color]="tierColor(second)">
+              <i class="fa-solid fa-shield-halved"></i> {{ second.rank?.name || 'Chiến Binh' }}
+            </span>
+            <span class="podium-xp"><i class="fa-solid fa-bolt bolt"></i> {{ second.xp | number }} XP</span>
+            <div class="podium-stand stand-2"><span>2</span></div>
+          </div>
+
+          <!-- Rank 1 -->
+          <div class="podium-card podium-first">
+            <span class="crown crown-gold"><i class="fa-solid fa-crown"></i></span>
+            <app-avatar-frame
+              [tier]="tierOf(first)"
+              [avatarUrl]="first.avatarUrl || ''"
+              size="xl"
+              [showGlow]="true"
+            ></app-avatar-frame>
+            <h3 class="podium-name">{{ first.username }}</h3>
+            <span class="podium-tier-tag" [style.color]="tierColor(first)">
+              <i class="fa-solid fa-dragon"></i> {{ first.rank?.name || 'Chiến Binh' }}
+            </span>
+            <span class="podium-xp gold-xp"><i class="fa-solid fa-bolt bolt"></i> {{ first.xp | number }} XP</span>
+            <div class="podium-stand stand-1"><span>1</span></div>
+          </div>
+
+          <!-- Rank 3 -->
+          <div class="podium-card podium-third">
+            <span class="crown crown-bronze"><i class="fa-solid fa-crown"></i></span>
+            <app-avatar-frame
+              [tier]="tierOf(third)"
+              [avatarUrl]="third.avatarUrl || ''"
+              size="xl"
+              [showGlow]="true"
+            ></app-avatar-frame>
+            <h3 class="podium-name">{{ third.username }}</h3>
+            <span class="podium-tier-tag" [style.color]="tierColor(third)">
+              <i class="fa-solid fa-shield"></i> {{ third.rank?.name || 'Chiến Binh' }}
+            </span>
+            <span class="podium-xp"><i class="fa-solid fa-bolt bolt"></i> {{ third.xp | number }} XP</span>
+            <div class="podium-stand stand-3"><span>3</span></div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ── HALL OF FAME TABLE ───────────────────────────────────────────── -->
+    <section class="hall-wrap glass-panel">
+      <div class="hall-head">
+        <h2 class="hall-title"><i class="fa-solid fa-ranking-star"></i> Đại Sảnh Danh Vọng</h2>
+        <span class="hall-count">{{ users().length }} học giả</span>
+      </div>
+
+      <div class="hall-list">
+        @for (user of users(); track user.userId; let i = $index) {
+          <div
+            class="hall-row"
+            [class.row-top3]="i < 3"
+            [class.row-me]="user.userId === myUserId()"
+          >
+            <div class="cell-rank">
+              <span class="rank-medal" [class]="'medal-' + (i + 1)">
+                <i [class]="medalIcon(i)"></i>
+              </span>
+              <span class="rank-num">#{{ i + 1 }}</span>
+            </div>
+
+            <app-avatar-frame
+              [tier]="tierOf(user)"
+              [avatarUrl]="user.avatarUrl || ''"
+              size="md"
+              [showGlow]="false"
+            ></app-avatar-frame>
+
+            <div class="cell-user">
+              <span class="hall-username">{{ user.username }}</span>
+              <span class="hall-xp"><i class="fa-solid fa-bolt bolt"></i> {{ user.xp | number }} XP</span>
+            </div>
+
+            <div class="cell-tier">
+              <span class="tier-pill" [style.--tc]="tierColor(user)">
+                <i class="fa-solid fa-shield-halved"></i>
+                {{ user.rank?.name || 'Tập Sự' }}
+              </span>
+            </div>
+
+            <div class="cell-bar">
+              <div class="xp-bar-track">
+                <div class="xp-bar-fill" [style.width.%]="barWidth(user)" [style.background]="tierColor(user)"></div>
+              </div>
+            </div>
+
+            @if (user.userId === myUserId()) {
+              <span class="you-tag"><i class="fa-solid fa-location-arrow"></i> Bạn</span>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

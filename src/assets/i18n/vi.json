@@ -86,5 +86,16 @@
     "completed": "Hoàn thành buổi luyện tập!",
     "correct": "Chính xác!",
     "incorrect": "Chưa chính xác"
+  },
+  "rank": {
+    "badgeSubtitle": {
+      "bronze": "Sơ Nhiệm Võ Sĩ",
+      "silver": "Bạc Giáp Vệ Binh",
+      "gold": "Kim Giáp Tướng Quân",
+      "platinum": "Băng Phong Thượng Tướng",
+      "diamond": "Kim Cương Đại Danh",
+      "master": "Vô Song Kiếm Thánh",
+      "legend": "Thiên Hoàng Chi Đao"
+    }
   }
 }

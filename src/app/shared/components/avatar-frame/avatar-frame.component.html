@@ -48,31 +48,35 @@
       <div class="solar-flare"></div>
     }
 
-    <!-- Vương miện cho Master & Legend -->
+    <!-- Mảnh tam giác trên đỉnh (thay vương miện) cho Master & Legend -->
     @if (tierIndex() >= 5) {
-      <div class="crown">👑</div>
+      <div class="crown"></div>
     }
 
     <!-- Hệ thống cánh xòe đa lớp -->
-    <!-- Silver: 1 lớp cánh nhỏ thanh thoát -->
+    <!-- Silver: 1 lớp cánh nhỏ + lông vũ tinh tế -->
     @if (tierIndex() === 1) {
       <div class="wing-system">
         <div class="wing-layer small-wing left"></div>
         <div class="wing-layer small-wing right"></div>
+        <div class="wing-layer mini-feather left"></div>
+        <div class="wing-layer mini-feather right"></div>
       </div>
     }
 
-    <!-- Gold & Platinum: 2 lớp cánh -->
+    <!-- Gold & Platinum: 2 lớp cánh + lông vũ mini -->
     @if (tierIndex() === 2 || tierIndex() === 3) {
       <div class="wing-system">
         <div class="wing-layer main-wing left"></div>
         <div class="wing-layer main-wing right"></div>
         <div class="wing-layer inner-wing left"></div>
         <div class="wing-layer inner-wing right"></div>
+        <div class="wing-layer mini-feather left"></div>
+        <div class="wing-layer mini-feather right"></div>
       </div>
     }
 
-    <!-- Diamond & Master: 3 lớp cánh -->
+    <!-- Diamond & Master: 3 lớp cánh + lông vũ mini -->
     @if (tierIndex() === 4 || tierIndex() === 5) {
       <div class="wing-system">
         <div class="wing-layer main-wing left"></div>
@@ -81,10 +85,12 @@
         <div class="wing-layer mid-wing right"></div>
         <div class="wing-layer inner-feather left"></div>
         <div class="wing-layer inner-feather right"></div>
+        <div class="wing-layer mini-feather left"></div>
+        <div class="wing-layer mini-feather right"></div>
       </div>
     }
 
-    <!-- Legend: 4 cánh chính + cánh nhỏ đa lớp 2 cánh trên -->
+    <!-- Legend: 4 cánh chính + cánh nhỏ đa lớp 2 cánh trên + mini-feather -->
     @if (tierIndex() === 6) {
       <div class="wing-system">
         <div class="wing-layer main-wing top-left"></div>
@@ -95,6 +101,10 @@
         <div class="wing-layer mid-wing top-right"></div>
         <div class="wing-layer inner-feather top-left"></div>
         <div class="wing-layer inner-feather top-right"></div>
+        <div class="wing-layer mini-feather top-left"></div>
+        <div class="wing-layer mini-feather top-right"></div>
+        <div class="wing-layer mini-feather bottom-left"></div>
+        <div class="wing-layer mini-feather bottom-right"></div>
       </div>
     }
 
@@ -102,7 +112,6 @@
     <div class="badge-shield">
       <div class="shield-pattern"></div>
       <div class="shield-inner-border"></div>
-      <div class="sweep-light"></div>
 
       @if (displayAvatarUrl()) {
         <!-- Render Avatar của user -->

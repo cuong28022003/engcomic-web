@@ -150,7 +150,7 @@
           <!-- Badge Label (below badge) -->
           <div class="badge-label-row">
             <span class="badge-tier-name" [style.color]="tier.color">{{ tier.name }}</span>
-            <span class="badge-sub-title">{{ getTierSubTitle(idx) }}</span>
+            <span class="badge-sub-title">{{ getTierSubTitleKey(idx) | translate }}</span>
           </div>
 
           <!-- XP Range -->

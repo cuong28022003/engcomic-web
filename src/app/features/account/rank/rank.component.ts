@@ -109,11 +109,12 @@ export const PRESET_RANKS: RankTierDisplay[] = [
 ];
 
 import { AvatarFrameComponent } from '../../../shared/components/avatar-frame/avatar-frame.component';
+import { TranslatePipe } from '@shared/pipes/translate.pipe';
 
 @Component({
   selector: 'app-rank',
   standalone: true,
-  imports: [CommonModule, RouterModule, AvatarFrameComponent],
+  imports: [CommonModule, RouterModule, AvatarFrameComponent, TranslatePipe],
   templateUrl: './rank.component.html',
   styleUrls: ['./rank.component.scss']
 })
@@ -398,18 +399,18 @@ export class RankComponent implements OnInit {
     return classes[idx] ?? 'tier-bronze';
   }
 
-  /** Tên phụ Hán-Việt cho mỗi tier (hiển thị dưới badge) */
-  getTierSubTitle(idx: number): string {
-    const subtitles = [
-      'Sơ Nhiệm Long',
-      'Tiềm Long',
-      'Kim Long',
-      'Băng Sương Long',
-      'Bạch Ngân Tinh Long',
-      'U Mẫn Ma Long',
-      'Thái Hoang Thần Long'
+  /** Khóa i18n tên phụ cho mỗi tier (hiển thị dưới badge, theo chủ đề samurai) */
+  getTierSubTitleKey(idx: number): string {
+    const keys = [
+      'rank.badgeSubtitle.bronze',
+      'rank.badgeSubtitle.silver',
+      'rank.badgeSubtitle.gold',
+      'rank.badgeSubtitle.platinum',
+      'rank.badgeSubtitle.diamond',
+      'rank.badgeSubtitle.master',
+      'rank.badgeSubtitle.legend'
     ];
-    return subtitles[idx] ?? '';
+    return keys[idx] ?? 'rank.badgeSubtitle.bronze';
   }
 
   /** Lấy URL ảnh huy hiệu tương ứng cho từng bậc rank */
