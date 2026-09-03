@@ -4,6 +4,42 @@
   [size]="'xl'"
   (closed)="onClose()">
   <div class="import-modal-container">
+    <app-data-filter-bar
+      [showSearch]="false"
+      [showSelectAll]="false"
+      [showSort]="false"
+      [showClearButton]="false"
+      [showCountSummary]="true"
+      [totalCount]="questionsToReview().length"
+      [filteredCount]="reviewQuestions().length"
+      itemLabel="câu cần phân tích"
+      [isFilterActive]="selectedPromptTest() !== 'all'"
+    >
+      <div class="prompt-test-filter">
+        <div class="prompt-test-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Tìm đề thi..."
+            [value]="testSearchQuery()"
+            (input)="testSearchQuery.set($any($event.target).value)"
+          />
+        </div>
+        <select
+          id="prompt-test-select"
+          class="filter-select"
+          [(ngModel)]="selectedPromptTest"
+          name="promptTest"
+          title="Chọn đề thi để sinh prompt"
+        >
+          <option value="all">Tất cả đề thi</option>
+          @for (test of filteredTestOptions(); track test) {
+            <option [value]="test">{{ test }}</option>
+          }
+        </select>
+      </div>
+    </app-data-filter-bar>
     <app-ai-import-workspace
       [enableModeSwitch]="false"
       [steps]="steps"

@@ -8,7 +8,7 @@ import { MistakeQueueService } from '../services/mistake-queue.service';
 import { ReaderApiService } from '../services/reader-api.service';
 import { MistakeItemComponent } from './mistake-item/mistake-item.component';
 import { AiReviewImportModalComponent } from '../reading-session/ai-review-import-modal/ai-review-import-modal.component';
-import { EmptyStateComponent, PaginatorComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
+import { EmptyStateComponent, PaginatorComponent, BreadcrumbComponent, BreadcrumbItem, DataFilterBarComponent, SortOption } from '@shared/components';
 
 import { ToastService } from '@core/services/toast.service';
 
@@ -23,7 +23,8 @@ import { ToastService } from '@core/services/toast.service';
     AiReviewImportModalComponent,
     EmptyStateComponent,
     PaginatorComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    DataFilterBarComponent
   ],
   templateUrl: './mistake-queue.component.html',
   styleUrls: ['./mistake-queue.component.scss']
@@ -43,7 +44,16 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
 
   readonly activeTab = signal<'all' | 'pending' | 'explained' | 'resolved'>('all');
   readonly searchQuery = signal<string>('');
+  readonly selectedTest = signal<string>('all');
+  readonly sortBy = signal<string>('test-qnum');
   readonly showImportModal = signal<boolean>(false);
+
+  readonly sortOptions: SortOption[] = [
+    { value: 'test-qnum', label: 'Theo đề & số câu', icon: 'fa-solid fa-list-ol' },
+    { value: 'qnum', label: 'Theo số câu', icon: 'fa-solid fa-hashtag' },
+    { value: 'created-desc', label: 'Mới nhất', icon: 'fa-solid fa-clock' },
+    { value: 'created-asc', label: 'Cũ nhất', icon: 'fa-solid fa-clock-rotate-left' }
+  ];
 
   // Pagination state
   readonly currentPage = signal<number>(1);
@@ -60,8 +70,22 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
       userAnswer: m.userAnswer,
       correctAnswer: m.correctAnswer,
       isCorrect: false,
-      flagged: m.reason === 'flagged'
+      flagged: m.reason === 'flagged',
+      testName: m.testName
     }));
+  });
+
+  /** Danh sách đề thi có câu đang cần review, dùng cho lọc per-test trong modal */
+  readonly reviewTestOptions = computed<string[]>(() => {
+    const names = new Set<string>();
+    for (const q of this.questionsNeedingReview()) {
+      if (q.testName) names.add(q.testName);
+    }
+    const selected = this.selectedTest();
+    if (selected !== 'all') {
+      names.add(selected);
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
   });
 
   ngOnInit(): void {
@@ -87,12 +111,25 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
     return this.mistakes().filter(m => m.status === 'resolved').length;
   });
 
+  /** Danh sách đề thi có lỗi, dùng cho ô lọc theo đề */
+  readonly availableTests = computed<string[]>(() => {
+    const names = new Set<string>();
+    for (const m of this.mistakes()) {
+      if (m.testName) names.add(m.testName);
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  });
+
   readonly filteredMistakes = computed<MistakeItem[]>(() => {
     const tab = this.activeTab();
     const q = this.searchQuery().trim().toLowerCase();
+    const test = this.selectedTest();
 
     const filtered = this.mistakes().filter(m => {
       if (tab !== 'all' && m.status !== tab) {
+        return false;
+      }
+      if (test !== 'all' && m.testName !== test) {
         return false;
       }
       if (q) {
@@ -103,7 +140,17 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
       return true;
     });
 
+    const sort = this.sortBy();
     return filtered.sort((a, b) => {
+      if (sort === 'qnum') {
+        return (a.questionNumber || 0) - (b.questionNumber || 0);
+      }
+      if (sort === 'created-desc') {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      }
+      if (sort === 'created-asc') {
+        return (a.createdAt || '').localeCompare(b.createdAt || '');
+      }
       const testA = a.testName || '';
       const testB = b.testName || '';
       const cmp = testA.localeCompare(testB);
@@ -121,14 +168,33 @@ export class MistakeQueueComponent implements OnInit, OnDestroy {
     return list.slice(start, start + size);
   });
 
+  /** Số lỗi sau khi lọc (phục vụ count summary của data-filter-bar) */
+  readonly filteredCount = computed<number>(() => this.filteredMistakes().length);
+
   setTab(tab: 'all' | 'pending' | 'explained' | 'resolved'): void {
     this.activeTab.set(tab);
     this.currentPage.set(1);
   }
 
-  onSearchInput(event: Event): void {
-    const val = (event.target as HTMLInputElement).value;
+  onSearchChange(val: string): void {
     this.searchQuery.set(val);
+    this.currentPage.set(1);
+  }
+
+  onSortChange(val: string): void {
+    this.sortBy.set(val);
+    this.currentPage.set(1);
+  }
+
+  onTestFilterChange(event: Event): void {
+    const val = (event.target as HTMLSelectElement).value;
+    this.selectedTest.set(val);
+    this.currentPage.set(1);
+  }
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.selectedTest.set('all');
     this.currentPage.set(1);
   }
 

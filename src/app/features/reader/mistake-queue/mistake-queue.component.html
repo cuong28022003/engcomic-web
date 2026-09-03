@@ -37,19 +37,34 @@
     </div>
   </div>
 
-  <!-- Filter & Search Controls -->
-  <div class="controls-bar">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input 
-        type="text" 
-        class="search-input" 
-        placeholder="Tìm theo tên đề thi hoặc số câu..." 
-        [value]="searchQuery()"
-        (input)="onSearchInput($event)"
-      />
+  <!-- Filter & Search Controls (Shared Data Filter Bar) -->
+  <app-data-filter-bar
+    [searchQuery]="searchQuery()"
+    (searchChange)="onSearchChange($event)"
+    searchPlaceholder="Tìm theo tên đề thi hoặc số câu..."
+    [sortBy]="sortBy()"
+    (sortChange)="onSortChange($event)"
+    [sortOptions]="sortOptions"
+    [totalCount]="mistakes().length"
+    [filteredCount]="filteredCount()"
+    itemLabel="lỗi"
+    [isFilterActive]="selectedTest() !== 'all'"
+    (clear)="clearFilters()"
+  >
+    <div class="test-filter">
+      <span class="filter-icon">📝</span>
+      <select
+        class="filter-select"
+        [value]="selectedTest()"
+        (change)="onTestFilterChange($event)"
+      >
+        <option value="all">Tất cả đề thi</option>
+        @for (test of availableTests(); track test) {
+          <option [value]="test">{{ test }}</option>
+        }
+      </select>
     </div>
-  </div>
+  </app-data-filter-bar>
 
   <!-- Mistakes List -->
   @if (paginatedMistakes().length > 0) {
@@ -86,6 +101,8 @@
   <app-ai-review-import-modal
     [isOpen]="showImportModal()"
     [testName]="'TOEIC Mistake Queue'"
+    [testOptions]="reviewTestOptions()"
+    [initialSelectedTest]="selectedTest()"
     [questionsToReview]="questionsNeedingReview()"
     (importData)="handleImportMistakeReviews($event)"
     (close)="closeImportModal()"
