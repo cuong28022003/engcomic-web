@@ -8,7 +8,6 @@ import { PreTestConfigModalComponent } from './pre-test-config-modal/pre-test-co
 import { ResumeAttemptModalComponent } from './resume-attempt-modal/resume-attempt-modal.component';
 import { AttemptHistoryModalComponent } from './attempt-history-modal/attempt-history-modal.component';
 import { ReaderApiService } from '../services/reader-api.service';
-import { MistakeQueueService } from '../services/mistake-queue.service';
 import { TestTimerService } from '../services/test-timer.service';
 import { TestSessionService } from '../services/test-session.service';
 import { GradedQuestion, SubmitSessionPayload, SubmitSessionResponse, TestDetail, TimeTargetConfig, ToeicAttempt } from '../models';
@@ -40,7 +39,6 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private readerApi = inject(ReaderApiService);
-  private mistakeQueueService = inject(MistakeQueueService);
   private toast = inject(ToastService);
   readonly timerService = inject(TestTimerService);
   readonly sessionService = inject(TestSessionService);
@@ -92,6 +90,9 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
       const id = params.get('testId');
       if (id) {
         this.testId.set(id);
+        if (this.answerSheet) {
+          this.answerSheet.resetAnswers();
+        }
         this.loadTestDetailAndCheckAttempt();
       }
     });
@@ -129,11 +130,19 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
           this.showResumeModal.set(true);
           this.showConfigModal.set(false);
         } else {
+          if (this.answerSheet) {
+            this.answerSheet.resetAnswers();
+          }
+          localStorage.removeItem(`toeic_session_${this.testId()}`);
           this.showConfigModal.set(true);
         }
         this.cdr.markForCheck();
       },
       error: () => {
+        if (this.answerSheet) {
+          this.answerSheet.resetAnswers();
+        }
+        localStorage.removeItem(`toeic_session_${this.testId()}`);
         this.showConfigModal.set(true);
         this.cdr.markForCheck();
       }
@@ -177,6 +186,10 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
 
   async onAbandonAttempt(att: ToeicAttempt) {
     await this.sessionService.abandonCurrentAttempt();
+    if (this.answerSheet) {
+      this.answerSheet.resetAnswers();
+    }
+    localStorage.removeItem(`toeic_session_${this.testId()}`);
     this.showResumeModal.set(false);
     this.showConfigModal.set(true);
     this.cdr.markForCheck();
@@ -191,6 +204,12 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
     if (config.selectedParts && config.selectedParts.length > 0) {
       this.selectedParts.set(config.selectedParts);
     }
+
+    // Reset Answer Sheet & Local Storage for a clean fresh session
+    if (this.answerSheet) {
+      this.answerSheet.resetAnswers();
+    }
+    localStorage.removeItem(`toeic_session_${this.testId()}`);
 
     try {
       await this.sessionService.startNewAttempt(this.testId(), config);
@@ -261,11 +280,6 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
         this.submissionResult.set(res);
         this.gradedResults.set(res.results);
         this.sessionService.clear();
-
-        // Auto update local mistake queue
-        if (res.newMistakes && res.newMistakes.length > 0) {
-          this.mistakeQueueService.addMistakes(res.newMistakes);
-        }
 
         this.toast.success(`Nộp bài thành công! Điểm của bạn: ${res.rawScore}/${res.totalQuestions}`);
 

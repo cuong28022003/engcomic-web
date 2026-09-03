@@ -19,14 +19,6 @@ export const READER_ROUTES: Routes = [
       ),
   },
   {
-    path: 'mistakes',
-    data: { route: `${ROUTE.READER}/mistakes`, title: 'Hàng Đợi Lỗi Sai' },
-    loadComponent: () =>
-      import('./mistake-queue/mistake-queue.component').then(
-        (m) => m.MistakeQueueComponent
-      ),
-  },
-  {
     path: ':testId',
     data: { route: `${ROUTE.READER}/session`, title: 'Phòng Thi TOEIC' },
     loadComponent: () =>

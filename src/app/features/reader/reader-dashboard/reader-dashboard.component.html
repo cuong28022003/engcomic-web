@@ -2,19 +2,10 @@
   <!-- Top Hero Header (Shared Component) -->
   <app-page-header
     title="TOEIC Reader & Error Tracker"
-    subtitle="Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, tự động gom lỗi sai để phân tích cùng AI."
+    subtitle="Môi trường làm bài thi TOEIC đọc song song PDF và Answer Sheet, phân tích lời giải chi tiết cùng AI theo từng lượt làm bài."
     icon="fa-solid fa-file-lines"
     theme="reader"
   >
-    <a routerLink="/reader/mistakes" class="btn btn-secondary btn-mistakes">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Hàng đợi lỗi</span>
-      @if ((mistakeQueueService.pendingCount$ | async); as count) {
-        @if (count > 0) {
-          <span class="badge-count">{{ count }}</span>
-        }
-      }
-    </a>
     <a routerLink="/reader/new" class="btn btn-primary btn-create">
       <i class="fa-solid fa-plus"></i>
       <span>Tạo đề thi mới</span>
@@ -66,10 +57,10 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon danger">🚨</div>
+      <div class="stat-icon info">⚡</div>
       <div class="stat-body">
-        <div class="stat-val">{{ (mistakeQueueService.pendingCount$ | async) || 0 }}</div>
-        <div class="stat-lbl">Lỗi cần xử lý với AI</div>
+        <div class="stat-val">{{ dashboardData()?.totalAttempts || 0 }}</div>
+        <div class="stat-lbl">Tổng lượt thi đã làm</div>
       </div>
     </div>
   </div>

@@ -60,7 +60,7 @@ export interface AnswerKeyParseResult {
 export interface ToeicDashboardData {
   totalTests: number;
   completedTests: number;
-  pendingMistakes: number;
+  totalAttempts: number;
   averageAccuracy?: number;
   recentTests: TestSummary[];
 }

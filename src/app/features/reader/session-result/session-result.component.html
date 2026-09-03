@@ -70,10 +70,10 @@
       <div class="mistakes-header">
         <div>
           <h2 class="section-title">Danh sách câu sai ({{ wrongQuestions.length }} câu)</h2>
-          <p class="section-desc">Hệ thống đã tự động thêm các câu sai này vào <strong>Hàng đợi lỗi</strong> để bạn phân tích với AI.</p>
+          <p class="section-desc">Bạn có thể bấm <strong>Xem lại bài thi</strong> để nhận giải thích chi tiết từ AI và lưu từ vựng trọng tâm.</p>
         </div>
-        <a routerLink="/reader/mistakes" class="btn-goto-queue">
-          🤖 Đến Hàng Đợi Lỗi →
+        <a *ngIf="result.attemptId" [routerLink]="['/reader', testId, 'attempts', result.attemptId, 'review']" class="btn-goto-queue">
+          🤖 Xem Lời Giải AI →
         </a>
       </div>
 
@@ -119,9 +119,6 @@
         <button type="button" class="btn-action-pill" (click)="openHistory()">
           <i class="fas fa-history"></i> 📊 Lịch sử làm bài
         </button>
-        <a routerLink="/reader/mistakes" class="btn-action-pill accent">
-          <i class="fas fa-exclamation-circle"></i> 🚨 Hàng đợi lỗi sai
-        </a>
         <a [routerLink]="['/reader', testId]" class="btn-action-pill outline">
           <i class="fas fa-redo"></i> ▶ Làm lại đề này
         </a>

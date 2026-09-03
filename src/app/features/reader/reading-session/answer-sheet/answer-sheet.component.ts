@@ -39,7 +39,6 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   filterTab: 'all' | 'unanswered' | 'flagged' | 'p5' | 'p6' | 'p7' = 'all';
 
   ngOnInit() {
-    this.restoreFromLocalStorage();
     if (!this.isSubmitted) {
       this.startTimer();
     }
@@ -73,6 +72,14 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
     return `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 
+  resetAnswers() {
+    this.userAnswersMap.clear();
+    this.secondsElapsed = 0;
+    if (this.testId) {
+      localStorage.removeItem(this.storageKey);
+    }
+  }
+
   private saveToLocalStorage() {
     if (this.isSubmitted || !this.testId) return;
     const obj: Record<number, { answer?: string; flagged?: boolean }> = {};
@@ -92,6 +99,7 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.answers) {
+          this.userAnswersMap.clear();
           Object.keys(parsed.answers).forEach(k => {
             this.userAnswersMap.set(Number(k), parsed.answers[k]);
           });
@@ -114,6 +122,7 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   }
 
   loadAnswers(answers: Array<{ questionNumber: number; userAnswer?: string; flagged?: boolean }>) {
+    this.userAnswersMap.clear();
     answers.forEach(a => {
       this.userAnswersMap.set(a.questionNumber, { answer: a.userAnswer, flagged: a.flagged });
     });

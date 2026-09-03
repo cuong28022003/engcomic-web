@@ -2,7 +2,6 @@ import { Component, OnInit, ChangeDetectorRef, inject, signal, computed } from '
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReaderApiService } from '../services/reader-api.service';
-import { MistakeQueueService } from '../services/mistake-queue.service';
 import { AnswerKeyService } from '../services/answer-key.service';
 import { TestSummary, ToeicDashboardData, ToeicAttempt } from '../models';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +16,7 @@ import { ToastService } from '@core/services/toast.service';
   imports: [
     CommonModule, 
     RouterModule, 
-    FormsModule,
+    FormsModule, 
     TimeAgoPipe, 
     EmptyStateComponent, 
     AttemptHistoryModalComponent,
@@ -31,7 +30,6 @@ import { ToastService } from '@core/services/toast.service';
 export class ReaderDashboardComponent implements OnInit {
   private readerApi = inject(ReaderApiService);
   private answerKeyService = inject(AnswerKeyService);
-  public mistakeQueueService = inject(MistakeQueueService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -78,7 +76,6 @@ export class ReaderDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
-    this.mistakeQueueService.fetchFromBackend();
   }
 
   loadData() {
@@ -300,7 +297,6 @@ export class ReaderDashboardComponent implements OnInit {
         this.deletingTest.set(null);
         this.toast.success(`Đã xóa đề thi "${test.testName}"`);
         this.loadData();
-        this.mistakeQueueService.fetchFromBackend();
       },
       error: (err) => {
         this.isDeleting.set(false);

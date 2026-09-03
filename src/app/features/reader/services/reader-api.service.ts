@@ -7,9 +7,6 @@ import {
   CreateTestPayload,
   SubmitSessionPayload,
   SubmitSessionResponse,
-  MistakeItem,
-  CreateMistakeBatchPayload,
-  UpdateMistakePayload,
   ToeicDashboardData
 } from '../models';
 
@@ -26,7 +23,6 @@ export interface PageResponse<T> {
 })
 export class ReaderApiService extends ApiBaseService {
   private readonly TEST_BASE = '/toeic/tests';
-  private readonly MISTAKE_BASE = '/toeic/mistakes';
 
   getDashboard(): Observable<ToeicDashboardData> {
     return this.get<ToeicDashboardData>(`${this.TEST_BASE}/dashboard`);
@@ -76,18 +72,6 @@ export class ReaderApiService extends ApiBaseService {
     return this.post<SubmitSessionResponse>(`${this.TEST_BASE}/${testId}/submit`, payload);
   }
 
-  getMistakes(status?: string, page: number = 0, size: number = 1000): Observable<PageResponse<MistakeItem>> {
-    return this.get<PageResponse<MistakeItem>>(this.MISTAKE_BASE, { status, page, size });
-  }
-
-  createMistakesBatch(payload: CreateMistakeBatchPayload): Observable<MistakeItem[]> {
-    return this.post<MistakeItem[]>(`${this.MISTAKE_BASE}/batch`, payload);
-  }
-
-  updateMistake(id: string, payload: UpdateMistakePayload): Observable<MistakeItem> {
-    return this.patch<MistakeItem>(`${this.MISTAKE_BASE}/${id}`, payload);
-  }
-
   startAttempt(testId: string, payload?: { timeMode?: string; selectedParts?: number[]; part5TargetSeconds?: number; part6TargetSeconds?: number; part7TargetSeconds?: number }): Observable<import('../models').ToeicAttempt> {
     return this.post<import('../models').ToeicAttempt>(`${this.TEST_BASE}/${testId}/attempts`, payload || {});
   }
@@ -120,15 +104,7 @@ export class ReaderApiService extends ApiBaseService {
     return this.post<import('../models').ToeicReviewItem[]>(`/toeic/attempts/${attemptId}/reviews/import`, payload);
   }
 
-  importMistakeReviews(payload: import('../models').ImportReviewItemsPayload): Observable<import('../models').MistakeItem[]> {
-    return this.post<import('../models').MistakeItem[]>(`${this.MISTAKE_BASE}/import-reviews`, payload);
-  }
-
   getAttemptReviews(attemptId: string): Observable<import('../models').ToeicReviewItem[]> {
     return this.get<import('../models').ToeicReviewItem[]>(`/toeic/attempts/${attemptId}/reviews`);
-  }
-
-  deleteMistake(id: string): Observable<void> {
-    return this.delete<void>(`${this.MISTAKE_BASE}/${id}`);
   }
 }

@@ -72,7 +72,6 @@ export const FULL_ROUTE = {
   vocabImport: '/vocab/import',
   reader: '/reader',
   readerNew: '/reader/new',
-  readerMistakes: '/reader/mistakes',
   readerSession: (testId: string) => `/reader/${testId}`,
   readerReview: (testId: string, attemptId: string) =>
     `/reader/${testId}/attempts/${attemptId}/review`,

@@ -78,7 +78,6 @@ export interface SubmitSessionResponse {
   duration: number;
   partBreakdown: PartBreakdown[];
   results: GradedQuestion[];
-  newMistakes: import('./mistake.model').MistakeItem[];
 }
 
 export type AttemptStatus = 'in_progress' | 'completed' | 'abandoned';

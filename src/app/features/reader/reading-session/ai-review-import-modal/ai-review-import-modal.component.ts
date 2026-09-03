@@ -1,8 +1,7 @@
-import { Component, computed, inject, input, output, signal, model, effect } from '@angular/core';
+import { Component, computed, inject, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '@shared/components/modal/modal.component';
-import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-filter-bar.component';
 import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 import { ImportReviewItemsPayload } from '../../models';
 import { ToastService } from '@core/services/toast.service';
@@ -10,7 +9,7 @@ import { ToastService } from '@core/services/toast.service';
 @Component({
   selector: 'app-ai-review-import-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent, DataFilterBarComponent, AiImportWorkspaceComponent],
+  imports: [CommonModule, FormsModule, ModalComponent, AiImportWorkspaceComponent],
   templateUrl: './ai-review-import-modal.component.html',
   styleUrls: ['./ai-review-import-modal.component.scss']
 })
@@ -19,8 +18,6 @@ export class AiReviewImportModalComponent {
 
   readonly isOpen = input<boolean>(false);
   readonly testName = input<string>('');
-  readonly testOptions = input<string[]>([]);
-  readonly initialSelectedTest = input<string>('all');
   readonly questionsToReview = input<Array<{
     questionNumber: number;
     part: number;
@@ -45,10 +42,6 @@ export class AiReviewImportModalComponent {
   parseError = signal<string>('');
   isImporting = signal<boolean>(false);
 
-  /** Đề thi được chọn để sinh prompt; 'all' nghĩa là tất cả */
-  readonly selectedPromptTest = model<string>('all');
-  readonly testSearchQuery = signal<string>('');
-
   constructor() {
     effect(() => {
       if (this.isOpen()) {
@@ -56,46 +49,18 @@ export class AiReviewImportModalComponent {
         this.rawJsonInput = '';
         this.clearError();
         this.isImporting.set(false);
-        this.testSearchQuery.set('');
-
-        // Default to the test currently filtered in the mistake queue page
-        // (if it is still a valid option), otherwise fall back to 'all'.
-        const initial = this.initialSelectedTest();
-        const options = this.testOptions().filter(t => t && t.trim());
-        this.selectedPromptTest.set(initial !== 'all' && options.includes(initial) ? initial : 'all');
       }
     });
   }
 
-  /** Danh sách đề thi sau khi lọc theo search */
-  readonly filteredTestOptions = computed<string[]>(() => {
-    const all = this.testOptions().filter(t => t && t.trim());
-    const q = this.testSearchQuery().trim().toLowerCase();
-    if (!q) return all;
-    return all.filter(t => t.toLowerCase().includes(q));
+  /** Danh sách câu cần phân tích */
+  readonly reviewQuestions = computed(() => {
+    return this.questionsToReview();
   });
 
-  /** Danh sách câu cần phân tích theo đề đã chọn */
-  readonly reviewQuestions = computed<Array<{
-    questionNumber: number;
-    part: number;
-    userAnswer?: string;
-    correctAnswer: string;
-    isCorrect: boolean;
-    flagged?: boolean;
-    testName?: string;
-  }>>(() => {
-    const all = this.questionsToReview();
-    const selected = this.selectedPromptTest();
-    if (selected === 'all') return all;
-    return all.filter(q => q.testName === selected);
-  });
-
-  /** Tên đề hiển thị theo lựa chọn */
+  /** Tên đề hiển thị */
   readonly selectedTestName = computed<string>(() => {
-    const selected = this.selectedPromptTest();
-    if (selected === 'all') return this.testName() || 'TOEIC Reading Test';
-    return selected;
+    return this.testName() || 'TOEIC Reading Test';
   });
 
   readonly steps = ['1. Sao Chép Prompt & PDF', '2. Dán & Import JSON'];
