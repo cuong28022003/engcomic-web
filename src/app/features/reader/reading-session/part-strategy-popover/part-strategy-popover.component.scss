@@ -1,7 +1,7 @@
 .strategy-popover-wrapper {
   position: relative;
   display: inline-block;
-  z-index: 1500;
+  z-index: 9999;
 }
 
 // ── Trigger Button ───────────────────────────────────────────────────
@@ -20,7 +20,7 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   position: relative;
-  z-index: 1501;
+  z-index: 10000;
 
   .icon-bulb {
     color: #f59e0b;
@@ -61,7 +61,7 @@
   border-radius: 20px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.25);
   padding: 18px;
-  z-index: 1600;
+  z-index: 10001;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -391,7 +391,7 @@
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 25px rgba(245, 158, 11, 0.2);
     border-radius: 12px;
     padding: 12px 14px;
-    z-index: 2000;
+    z-index: 10005;
     pointer-events: auto;
     animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 

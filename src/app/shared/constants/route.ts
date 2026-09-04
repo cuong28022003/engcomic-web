@@ -69,7 +69,6 @@ export const FULL_ROUTE = {
   vocabLeech: '/vocab/leech',
   vocabWord: (id: string) => `/vocab/word/${id}`,
   vocabCollector: '/vocab/collector',
-  vocabImport: '/vocab/import',
   reader: '/reader',
   readerNew: '/reader/new',
   readerSession: (testId: string) => `/reader/${testId}`,

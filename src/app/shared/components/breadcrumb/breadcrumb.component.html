@@ -1,13 +1,27 @@
 <nav class="breadcrumb-container glass-panel" aria-label="Breadcrumb">
   <div class="breadcrumb-nav-group">
     <!-- Optional Back Button -->
-    @if (backUrl()) {
-      <a [routerLink]="backUrl()" class="nav-back-btn" [title]="backLabel() || 'Quay lại'">
-        <i class="fa-solid fa-arrow-left"></i>
-        @if (backLabel()) {
-          <span class="back-text">{{ backLabel() }}</span>
-        }
-      </a>
+    @if (backUrl() || useHistoryBack()) {
+      @if (useHistoryBack()) {
+        <button
+          type="button"
+          class="nav-back-btn"
+          (click)="onBack()"
+          [title]="backLabel() || 'Quay lại'"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+          @if (backLabel()) {
+            <span class="back-text">{{ backLabel() }}</span>
+          }
+        </button>
+      } @else {
+        <a [routerLink]="backUrl()" class="nav-back-btn" [title]="backLabel() || 'Quay lại'">
+          <i class="fa-solid fa-arrow-left"></i>
+          @if (backLabel()) {
+            <span class="back-text">{{ backLabel() }}</span>
+          }
+        </a>
+      }
       <span class="breadcrumb-divider back-divider"></span>
     }
 

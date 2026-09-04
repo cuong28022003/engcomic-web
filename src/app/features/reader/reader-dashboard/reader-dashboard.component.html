@@ -6,10 +6,13 @@
     icon="fa-solid fa-file-lines"
     theme="reader"
   >
-    <a routerLink="/reader/new" class="btn btn-primary btn-create">
-      <i class="fa-solid fa-plus"></i>
-      <span>Tạo đề thi mới</span>
-    </a>
+    <div class="header-action-group">
+      <app-part-strategy-popover [initialPart]="5"></app-part-strategy-popover>
+      <a routerLink="/reader/new" class="btn btn-primary btn-create">
+        <i class="fa-solid fa-plus"></i>
+        <span>Tạo đề thi mới</span>
+      </a>
+    </div>
   </app-page-header>
 
   <!-- Active Dang Do Attempt Banner -->
@@ -248,7 +251,7 @@
                     <div class="pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>
                     <div class="pdf-info">
                       <div class="pdf-name">Tệp PDF hiện tại của đề thi</div>
-                      <a [href]="editPdfUrl()" target="_blank" class="pdf-link">
+                      <a [href]="getResolvedPdfUrl(editPdfUrl())" target="_blank" class="pdf-link">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem tệp hiện tại
                       </a>
                     </div>
@@ -342,18 +345,20 @@
         }
       </div>
 
-      <div footer class="modal-footer-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isSaving()">
-          Hủy
-        </button>
-        <button type="button" class="btn btn-primary" (click)="saveEditTest()" [disabled]="isSaving() || !editTestName().trim()">
-          @if (isSaving()) {
-            <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
-          } @else {
-            <i class="fa-solid fa-check"></i> Lưu tất cả thay đổi
-          }
-        </button>
-      </div>
+      @if (editActiveTab() !== 'json') {
+        <div footer class="modal-footer-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isSaving()">
+            Hủy
+          </button>
+          <button type="button" class="btn btn-primary" (click)="saveEditTest()" [disabled]="isSaving() || !editTestName().trim()">
+            @if (isSaving()) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+            } @else {
+              <i class="fa-solid fa-check"></i> Lưu tất cả thay đổi
+            }
+          </button>
+        </div>
+      }
     </app-modal>
   }
 

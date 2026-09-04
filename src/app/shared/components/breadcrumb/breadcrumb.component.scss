@@ -1,3 +1,9 @@
+:host {
+  display: block;
+  position: relative;
+  z-index: 50;
+}
+
 .breadcrumb-container {
   display: flex;
   align-items: center;
@@ -13,6 +19,8 @@
   margin-bottom: 20px;
   min-height: 52px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 50;
 }
 
 .breadcrumb-nav-group {
@@ -30,6 +38,9 @@
   color: var(--text-muted, #94a3b8);
   font-size: 0.88rem;
   font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
   padding: 6px 12px;
   border-radius: var(--radius-md, 8px);
   background: rgba(255, 255, 255, 0.05);

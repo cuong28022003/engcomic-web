@@ -11,6 +11,9 @@ import { FormInputComponent } from '@shared/components/form-input/form-input.com
 import { FormSelectComponent, FormSelectOption } from '@shared/components/form-select/form-select.component';
 import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 
+import { DeckApiService } from '@core/services/deck-api.service';
+import { AuthService } from '@core/services/auth.service';
+
 export interface PreviewVocabItem {
   word: string;
   ipa?: string;
@@ -41,6 +44,8 @@ export interface PreviewVocabItem {
 export class VocabImportModalComponent {
   private cardApi = inject(CardApiService);
   private pendingApi = inject(PendingItemApiService);
+  private deckApi = inject(DeckApiService);
+  private auth = inject(AuthService);
   private toast = inject(ToastService);
 
   readonly isOpen = input.required<boolean>();
@@ -48,6 +53,7 @@ export class VocabImportModalComponent {
   readonly targetDeckId = input<string | undefined>(undefined);
   readonly targetDeckName = input<string | undefined>(undefined);
   readonly availableDecks = input<Deck[]>([]);
+  readonly initialWords = input<string[] | undefined>(undefined);
   readonly initialTab = input<'ai-import' | 'manual'>('ai-import');
 
   readonly closeModal = output<void>();
@@ -55,6 +61,13 @@ export class VocabImportModalComponent {
   readonly cardSaved = output<Card>();
 
   readonly isEditMode = computed(() => !!this.card()?.id);
+
+  internalDecks = signal<Deck[]>([]);
+
+  readonly allDecks = computed<Deck[]>(() => {
+    if (this.availableDecks().length > 0) return this.availableDecks();
+    return this.internalDecks();
+  });
 
   activeTab = signal<'ai-import' | 'manual'>('ai-import');
   importStep = signal<'prompt' | 'paste' | 'preview' | 'result'>('prompt');
@@ -173,7 +186,7 @@ export class VocabImportModalComponent {
     const list: FormSelectOption[] = [
       { label: '-- Kho từ vựng chung (Không gán bộ thẻ) --', value: '' }
     ];
-    for (const d of this.availableDecks()) {
+    for (const d of this.allDecks()) {
       list.push({ label: `🗂️ ${d.name}`, value: d.id });
     }
     return list;
@@ -183,7 +196,7 @@ export class VocabImportModalComponent {
 Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema:
 [
   {
-    "word": "từ hoặc cụm từ tiếng Anh",
+    "word": "từ hoặc cụm từ tiếng Anh ở dạng nguyên mẫu (base form / lemma, VD: 'reported' -> 'report', 'decisions' -> 'decision')",
     "ipa": "/phiên_âm_IPA/",
     "part_of_speech": "noun|verb|adjective|adverb|preposition|conjunction|transition_word|phrasal_verb|idiom|collocation",
     "meaning_vi": "nghĩa tiếng Việt chính xác và ngắn gọn",
@@ -210,14 +223,18 @@ Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema
 ]
 
 QUY TẮC QUAN TRỌNG:
-1. BẮT BUỘC: MỌI TỪ VỰNG (dù là Danh từ, Động từ, Tính từ, Trạng từ, Giới từ, Liên từ hay Cụm từ) ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
-2. QUY TẮC GÁN CHỦ ĐỀ ("topic"):
+1. BẮT BUỘC QUY VỀ TỪ NGUYÊN MẪU (LEMMA / BASE FORM):
+   - Trường "word" PHẢI LUÔN LÀ DẠNG TỪ NGUYÊN MẪU / TỪ GỐC (Base form / Infinitive / Singular form).
+   - Ví dụ: Người dùng note "reported" / "reporting" -> "word" phải là "report"; "decisions" -> "decision"; "accommodated" -> "accommodate"; "faster" -> "fast".
+   - Nếu là cụm từ (collocation, phrasal verb, idiom), đưa động từ trong cụm về dạng nguyên mẫu (VD: "looked forward to" -> "look forward to", "taking into account" -> "take into account").
+2. BẮT BUỘC: MỌI TỪ VỰNG (dù là Danh từ, Động từ, Tính từ, Trạng từ, Giới từ, Liên từ hay Cụm từ) ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
+3. QUY TẮC GÁN CHỦ ĐỀ ("topic"):
    - Viết hoa chữ cái đầu mỗi từ (Title Case), ngắn gọn bằng tiếng Anh (1-3 từ, VD: "Travel", "Technology & IT", "Medicine").
    - Nếu từ vựng có thể xếp vào các chủ đề quen thuộc (TOEIC / IELTS / Đời sống), ưu tiên chọn từ danh sách gợi ý để đồng bộ bộ lọc.
    - Nếu từ vựng thuộc chuyên ngành/lĩnh vực khác ngoài danh sách (Y tế, Hàng không, Thể thao, Thời trang...), HÃY TỰ DO ĐẶT TÊN CHỦ ĐỀ PHÙ HỢP (hệ thống sẽ tự động tổng hợp chủ đề mới vào danh mục lọc của người dùng).
    - Nếu là từ trừu tượng hoặc từ ngữ pháp đa dụng, đặt là "General Vocabulary".
-3. Mọi câu ví dụ ngữ cảnh minh họa phải nằm trực tiếp bên trong danh sách "examples" của từng cấu trúc trong "usages".
-4. Chỉ trả về JSON array thuần túy trong cặp ngoặc vuông [ ... ], không bao bọc thêm bất kỳ lời giải thích nào.`;
+4. Mọi câu ví dụ ngữ cảnh minh họa phải nằm trực tiếp bên trong danh sách "examples" của từng cấu trúc trong "usages".
+5. Chỉ trả về JSON array thuần túy trong cặp ngoặc vuông [ ... ], không bao bọc thêm bất kỳ lời giải thích nào.`;
 
   generatedPrompt = signal<string>('');
 
@@ -280,16 +297,36 @@ QUY TẮC QUAN TRỌNG:
           this.jsonInputText = JSON.stringify(sampleJson, null, 2);
         } else {
           this.resetManualForm();
-          this.wordListText = '';
-          this.jsonInputText = '';
-          const defaultList = 'mitigate, implement, accommodate, tentative, prerequisite';
-          this.generatedPrompt.set(this.PROMPT_TEMPLATE.replace('{WORDS}', defaultList));
+          const initWords = this.initialWords();
+          if (initWords && initWords.length > 0) {
+            this.wordListText = initWords.join(', ');
+            this.generatedPrompt.set(this.PROMPT_TEMPLATE.replace('{WORDS}', this.wordListText));
+          } else {
+            this.wordListText = '';
+            this.jsonInputText = '';
+            const defaultList = 'mitigate, implement, accommodate, tentative, prerequisite';
+            this.generatedPrompt.set(this.PROMPT_TEMPLATE.replace('{WORDS}', defaultList));
+          }
         }
 
         this.importStep.set('prompt');
         this.activeTab.set(this.initialTab());
         this.loadCollectorWords();
+        if (this.availableDecks().length === 0) {
+          this.loadDecks();
+        }
       }
+    });
+  }
+
+  loadDecks(): void {
+    const user = this.auth.currentUser;
+    if (!user) return;
+    this.deckApi.getDecksByUserId(user.userId, { page: 0, size: 200 }).subscribe({
+      next: (res) => {
+        this.internalDecks.set(res?.content ?? []);
+      },
+      error: () => {}
     });
   }
 

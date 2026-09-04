@@ -8,6 +8,8 @@ import { PendingItem } from '@models/index';
 import { VocabImportModalComponent } from '@shared/components/vocab-import-modal/vocab-import-modal.component';
 import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 
+export type SourceFilter = 'all' | 'toeic_review' | 'relations' | 'manual';
+
 @Component({
   selector: 'app-word-collector',
   standalone: true,
@@ -20,12 +22,36 @@ export class WordCollectorComponent implements OnInit {
   loading = signal(true);
   newWord = '';
   addingManual = false;
+  sourceFilter = signal<SourceFilter>('all');
 
   // Shared Vocab Modal
   isVocabModalOpen = signal<boolean>(false);
 
-  pendingWordsText = computed(() => {
-    return this.items().map(i => i.content).join(', ');
+  readonly toeicCount = computed(() => this.items().filter(i => i.sourceType === 'toeic_review').length);
+  readonly relationsCount = computed(() => this.items().filter(i => ['family', 'collocation', 'synonym'].includes(i.sourceType || '')).length);
+  readonly manualCount = computed(() => this.items().filter(i => !i.sourceType || i.sourceType === 'manual').length);
+
+  readonly filteredItems = computed(() => {
+    const f = this.sourceFilter();
+    const list = this.items();
+    if (f === 'toeic_review') {
+      return list.filter(i => i.sourceType === 'toeic_review');
+    }
+    if (f === 'relations') {
+      return list.filter(i => ['family', 'collocation', 'synonym'].includes(i.sourceType || ''));
+    }
+    if (f === 'manual') {
+      return list.filter(i => !i.sourceType || i.sourceType === 'manual');
+    }
+    return list;
+  });
+
+  readonly filteredWordsList = computed(() => {
+    return this.filteredItems().map(i => i.content.trim()).filter(Boolean);
+  });
+
+  readonly pendingWordsText = computed(() => {
+    return this.filteredWordsList().join(', ');
   });
 
   constructor(
@@ -36,6 +62,10 @@ export class WordCollectorComponent implements OnInit {
 
   ngOnInit() {
     this.loadItems();
+  }
+
+  setSourceFilter(f: SourceFilter) {
+    this.sourceFilter.set(f);
   }
 
   loadItems() {
@@ -86,9 +116,18 @@ export class WordCollectorComponent implements OnInit {
   getSourceLabel(item: PendingItem): string {
     if (!item.sourceType || item.sourceType === 'manual') return '';
     const map: Record<string, string> = {
-      family: '← họ từ', collocation: '← cụm từ', synonym: '← đồng nghĩa'
+      family: '← họ từ',
+      collocation: '← cụm từ',
+      synonym: '← đồng nghĩa',
+      toeic_review: '← đề thi TOEIC'
     };
     return map[item.sourceType] ?? '';
+  }
+
+  getSourceBadgeClass(item: PendingItem): string {
+    if (item.sourceType === 'toeic_review') return 'source-toeic';
+    if (['family', 'collocation', 'synonym'].includes(item.sourceType || '')) return 'source-relation';
+    return 'source-manual';
   }
 
   get pendingCount(): number {

@@ -45,7 +45,7 @@ export interface PendingItem {
   id: string;
   userId: string;
   content: string;
-  sourceType?: 'family' | 'collocation' | 'synonym' | 'manual';
+  sourceType?: 'family' | 'collocation' | 'synonym' | 'manual' | 'toeic_review';
   sourceCardId?: string;
   status: 'pending' | 'imported';
   createdAt?: string;

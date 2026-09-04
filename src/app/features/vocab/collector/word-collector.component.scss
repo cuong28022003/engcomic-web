@@ -86,6 +86,93 @@
   &:focus { border-color: var(--primary-color); }
 }
 
+// Filter Bar
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.filter-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .count-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  &.active {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--primary-color, #6366f1);
+    color: #fff;
+
+    .count-tag {
+      background: var(--primary-color, #6366f1);
+      color: #fff;
+    }
+  }
+
+  &.toeic-pill.active {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: #f59e0b;
+    color: #fbbf24;
+
+    .count-tag {
+      background: #f59e0b;
+      color: #0f172a;
+    }
+  }
+
+  &.relation-pill.active {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: #0ea5e9;
+    color: #38bdf8;
+
+    .count-tag {
+      background: #0ea5e9;
+      color: #fff;
+    }
+  }
+
+  &.manual-pill.active {
+    background: rgba(168, 85, 247, 0.18);
+    border-color: #a855f7;
+    color: #c084fc;
+
+    .count-tag {
+      background: #a855f7;
+      color: #fff;
+    }
+  }
+}
+
 // Item List
 .item-list {
   display: flex;
@@ -111,6 +198,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
   flex: 1;
   min-width: 0;
 }
@@ -122,9 +210,29 @@
 }
 
 .item-source {
-  font-size: 0.78rem;
-  color: var(--text-dim);
+  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 6px;
   white-space: nowrap;
+  font-weight: 500;
+
+  &.source-toeic {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  &.source-relation {
+    background: rgba(14, 165, 233, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+  }
+
+  &.source-manual {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
 }
 
 .remove-btn:hover {
@@ -144,3 +252,4 @@
   h3 { font-size: 1.1rem; color: #fff; }
   p { color: var(--text-muted); max-width: 340px; font-size: 0.88rem; }
 }
+

@@ -92,20 +92,20 @@
         </div>
       </div>
 
-      <!-- Target Deck Select in json-extra-fields slot -->
-      @if (!targetDeckId() && availableDecks().length > 0) {
-        <div json-extra-fields class="deck-select-group">
-          <app-form-select
-            label="Gán vào bộ thẻ (tùy chọn):"
-            [options]="deckOptions()"
-            [(value)]="selectedDeckId"
-            icon="fa-solid fa-folder-tree"
-          ></app-form-select>
-        </div>
-      }
-
       <!-- Preview Content Slot -->
       <div preview-content class="preview-step-inner">
+        <!-- Optional Deck Selection in Step 3 Preview -->
+        @if (!targetDeckId() && allDecks().length > 0) {
+          <div class="deck-select-preview-bar">
+            <app-form-select
+              label="Chọn bộ thẻ lưu vào (tùy chọn):"
+              [options]="deckOptions()"
+              [(value)]="selectedDeckId"
+              icon="fa-solid fa-folder-tree"
+            ></app-form-select>
+          </div>
+        }
+
         <div class="preview-header-summary">
           <app-status-badge
             type="success"

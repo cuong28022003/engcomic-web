@@ -5,9 +5,9 @@
       <h1><i class="fa-solid fa-inbox"></i> Word Collector</h1>
       <p class="subtitle">Danh sách từ chờ học — {{ pendingCount }} từ đang chờ xử lý</p>
     </div>
-    <button class="btn-primary" (click)="openVocabImportModal()" [disabled]="pendingCount === 0">
+    <button class="btn-primary" (click)="openVocabImportModal()" [disabled]="filteredWordsList().length === 0">
       <i class="fa-solid fa-wand-magic-sparkles"></i>
-      Trích Xuất Prompt & Nhập Vào Kho ({{ pendingCount }})
+      Trích Xuất Prompt & Nhập Vào Kho ({{ filteredWordsList().length }})
     </button>
   </div>
 
@@ -25,6 +25,54 @@
     </button>
   </div>
 
+  <!-- Source Filter Bar -->
+  @if (!loading() && items().length > 0) {
+    <div class="filter-bar">
+      <button
+        type="button"
+        class="filter-pill-btn"
+        [class.active]="sourceFilter() === 'all'"
+        (click)="setSourceFilter('all')"
+      >
+        <span>Tất cả</span>
+        <span class="count-tag">{{ items().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-pill-btn toeic-pill"
+        [class.active]="sourceFilter() === 'toeic_review'"
+        (click)="setSourceFilter('toeic_review')"
+      >
+        <i class="fa-solid fa-bullseye"></i>
+        <span>Đề thi TOEIC</span>
+        <span class="count-tag">{{ toeicCount() }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-pill-btn relation-pill"
+        [class.active]="sourceFilter() === 'relations'"
+        (click)="setSourceFilter('relations')"
+      >
+        <i class="fa-solid fa-diagram-project"></i>
+        <span>Từ liên quan</span>
+        <span class="count-tag">{{ relationsCount() }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="filter-pill-btn manual-pill"
+        [class.active]="sourceFilter() === 'manual'"
+        (click)="setSourceFilter('manual')"
+      >
+        <i class="fa-solid fa-pen-fancy"></i>
+        <span>Thủ công</span>
+        <span class="count-tag">{{ manualCount() }}</span>
+      </button>
+    </div>
+  }
+
   <!-- Loading State -->
   @if (loading()) {
     <div class="loading-state">
@@ -33,24 +81,33 @@
     </div>
   }
 
-  <!-- Empty State -->
+  <!-- Empty State (Overall) -->
   @if (!loading() && items().length === 0) {
     <div class="empty-state glass-panel">
       <i class="fa-regular fa-inbox empty-icon"></i>
       <h3>Collector đang trống</h3>
-      <p>Nhấn nút "+ Thêm" trên các từ liên quan ở trang Chi Tiết Từ Vựng hoặc thêm nhanh ở thanh trên để thu thập từ mới.</p>
+      <p>Nhấn nút "+ Thêm" trên các từ liên quan ở trang Chi Tiết Từ Vựng hoặc thêm từ Review Đề Thi TOEIC để thu thập từ mới.</p>
+    </div>
+  }
+
+  <!-- Empty Filter State -->
+  @if (!loading() && items().length > 0 && filteredItems().length === 0) {
+    <div class="empty-state glass-panel">
+      <i class="fa-solid fa-filter-circle-xmark empty-icon"></i>
+      <h3>Không có từ vựng nào</h3>
+      <p>Không tìm thấy từ vựng nào phù hợp với bộ lọc đã chọn.</p>
     </div>
   }
 
   <!-- Item List -->
-  @if (!loading() && items().length > 0) {
+  @if (!loading() && filteredItems().length > 0) {
     <div class="item-list">
-      @for (item of items(); track item.id) {
+      @for (item of filteredItems(); track item.id) {
         <div class="pending-item glass-panel">
           <div class="item-content">
             <span class="item-word">{{ item.content }}</span>
             @if (getSourceLabel(item)) {
-              <span class="item-source">{{ getSourceLabel(item) }}</span>
+              <span class="item-source" [class]="getSourceBadgeClass(item)">{{ getSourceLabel(item) }}</span>
             }
           </div>
           <button class="btn-icon remove-btn" (click)="removeItem(item)" title="Xóa khỏi danh sách thu thập">
@@ -66,6 +123,7 @@
 <!-- Modal Thêm Từ Vựng Vào Kho (Shared VocabImportModal) -->
 <app-vocab-import-modal
   [isOpen]="isVocabModalOpen()"
+  [initialWords]="filteredWordsList()"
   (closeModal)="isVocabModalOpen.set(false)"
   (vocabAdded)="onVocabAdded()"
 ></app-vocab-import-modal>

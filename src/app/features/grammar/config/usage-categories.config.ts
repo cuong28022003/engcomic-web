@@ -263,3 +263,21 @@ export function findUsageCategoryInfo(categoryKey: string, posKey?: string): Usa
   }
   return undefined;
 }
+
+export function isCardMatchingPosGroup(cardPos?: string, groupPosKey?: string): boolean {
+  if (!groupPosKey) return true;
+  if (!cardPos) return false;
+  const p = cardPos.trim().toLowerCase();
+  switch (groupPosKey) {
+    case 'preposition':
+      return p === 'preposition' || p === 'prep';
+    case 'conjunction':
+      return p === 'conjunction' || p === 'conj';
+    case 'transition_word':
+      return p === 'transition_word' || p === 'transition' || p === 'transition_adverb' || p === 'conjunctive_adverb';
+    case 'collocation_idiom':
+      return ['collocation', 'phrasal_verb', 'idiom', 'phrase'].includes(p);
+    default:
+      return p === groupPosKey.toLowerCase();
+  }
+}

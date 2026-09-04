@@ -624,12 +624,6 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  goToImport() {
-    this.router.navigate(['/vocab/import'], {
-      queryParams: this.filterTopic ? { topic: this.filterTopic } : undefined
-    });
-  }
-
   goToCollector() {
     this.router.navigate(['/vocab/collector']);
   }

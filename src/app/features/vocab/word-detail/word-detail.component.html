@@ -8,8 +8,9 @@
       <!-- ── 1. Top Breadcrumb & Quick Actions ── -->
       <app-breadcrumb
         [items]="breadcrumbItems()"
+        [useHistoryBack]="true"
         backUrl="/vocab"
-        backLabel="Kho Từ Vựng"
+        backLabel="Quay lại"
       >
         <div actions class="top-action-buttons">
           <button

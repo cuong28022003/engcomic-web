@@ -454,131 +454,162 @@
 .explanation-box, .tip-box {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 12px;
+  gap: 10px;
+  background: rgba(18, 24, 44, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 16px 18px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
   .box-heading {
-    font-size: 0.8125rem;
-    font-weight: 700;
+    font-size: 0.88rem;
+    font-weight: 800;
     color: #38bdf8;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    letter-spacing: -0.01em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.15);
   }
 
   .explanation-content {
-    font-size: 0.875rem;
-    color: #e2e8f0;
-    line-height: 1.6;
-    white-space: pre-line;
+    font-size: 0.88rem;
+    color: #f1f5f9;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 }
 
 .tip-box {
-  background: rgba(234, 179, 8, 0.08);
-  border-color: rgba(234, 179, 8, 0.25);
+  background: rgba(36, 28, 14, 0.75);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
 
   .box-heading {
-    color: #facc15;
+    color: #fbbf24;
+    border-bottom-color: rgba(245, 158, 11, 0.2);
   }
 
   .tip-content {
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     color: #fef08a;
-    line-height: 1.5;
+    line-height: 1.65;
+    white-space: pre-wrap;
   }
 }
 
 /* Key Vocabulary Card */
 .key-vocab-card {
-  background: rgba(168, 85, 247, 0.08);
-  border: 1px solid rgba(168, 85, 247, 0.25);
-  border-radius: 10px;
-  padding: 12px;
+  background: rgba(28, 18, 48, 0.75);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 12px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.1);
 
   .vocab-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2);
 
     .card-title {
-      font-size: 0.8125rem;
-      font-weight: 700;
-      color: #c084fc;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #d8b4fe;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .card-sub {
-      font-size: 0.75rem;
-      color: #94a3b8;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+
+      strong {
+        color: #fde047;
+      }
     }
   }
 
   .vocab-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 
     .vocab-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 6px;
-      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
+      gap: 12px;
+
+      &:hover {
+        background: rgba(15, 23, 42, 0.85);
+        border-color: rgba(168, 85, 247, 0.35);
+        transform: translateY(-1px);
+      }
 
       .vocab-text {
         display: flex;
-        align-items: baseline;
-        gap: 8px;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
 
         .v-word {
-          font-weight: 700;
-          color: #f8fafc;
-          font-size: 0.85rem;
+          font-weight: 800;
+          color: #fde047;
+          font-size: 0.9rem;
+          letter-spacing: -0.01em;
         }
 
         .v-meaning {
-          color: #cbd5e1;
-          font-size: 0.8125rem;
+          color: #e2e8f0;
+          font-size: 0.82rem;
+          line-height: 1.4;
         }
       }
 
       .btn-collect-word {
-        padding: 3px 8px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        background: rgba(168, 85, 247, 0.2);
-        color: #d8b4fe;
-        border: 1px solid rgba(168, 85, 247, 0.35);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(168, 85, 247, 0.18);
+        color: #e9d5ff;
+        border: 1px solid rgba(168, 85, 247, 0.4);
         cursor: pointer;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 4px;
-        transition: all 0.15s ease;
+        gap: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover {
           background: rgba(168, 85, 247, 0.35);
+          border-color: #a855f7;
           color: #fff;
+          transform: scale(1.02);
         }
 
         &.collected {
           background: rgba(34, 197, 94, 0.2);
-          color: #86efac;
-          border-color: rgba(34, 197, 94, 0.4);
-          cursor: default;
+          border-color: rgba(34, 197, 94, 0.5);
+          color: #4ade80;
         }
       }
     }

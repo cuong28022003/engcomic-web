@@ -31,6 +31,7 @@
           <span class="attempt-badge">Lượt #{{ att.attemptNumber }}</span>
           <span class="attempt-score">{{ att.rawScore }}/{{ att.totalQuestions }} ({{ att.accuracyPercentage }}%)</span>
         }
+        <app-part-strategy-popover [initialPart]="currentActivePart()"></app-part-strategy-popover>
         <button type="button" class="btn btn-secondary btn-sm" (click)="openAiImportModal()">
           <i class="fas fa-robot"></i> Import AI
         </button>

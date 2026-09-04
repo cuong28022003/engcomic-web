@@ -123,7 +123,6 @@ export class AiReviewImportModalComponent {
     const name = this.selectedTestName();
 
     const questionRows = list.map(q => {
-      const isWrong = !q.isCorrect;
       const extra = q.flagged && q.isCorrect ? ' (câu tôi đánh dấu phân vân dù chọn đúng)' : '';
       return `- Câu ${q.questionNumber} (Part ${q.part}): tôi chọn "${q.userAnswer || 'Bỏ qua'}", đáp án đúng "${q.correctAnswer}"${extra}`;
     }).join('\n');
@@ -132,7 +131,7 @@ export class AiReviewImportModalComponent {
 
 ${questionRows}
 
-Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bất kỳ văn bản giải thích nào ngoài JSON):
+Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bất kỳ văn bản giải thích nào ngoài JSON, không dùng markdown code block):
 
 {
   "items": [
@@ -149,7 +148,7 @@ Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bấ
         "C": "lựa chọn C",
         "D": "lựa chọn D"
       },
-      "explanation": "giải thích ngắn gọn vì sao đáp án đúng là đúng, và vì sao đáp án tôi chọn là sai",
+      "explanation": "giải thích súc tích lý do đáp án đúng là đúng và phân tích điểm sai/phân vân của người làm",
       "tip": "mẹo ngắn gọn để tránh bẫy câu này",
       "key_vocab": [
         { "word": "từ_vựng", "meaning_vi": "nghĩa tiếng Việt" }
@@ -158,8 +157,29 @@ Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bấ
   ]
 }
 
-Lưu ý: "error_type" chỉ được nhận 1 trong các giá trị: "vocab", "grammar", "inference", "detail_missed", "trap_answer", "time_pressure".
-Chỉ trả về JSON hợp lệ.`;
+Lưu ý:
+- "key_vocab": Đọc kỹ toàn bộ đoạn trích (passage), câu hỏi và TẤT CẢ 4 đáp án A, B, C, D trong file PDF để trích xuất triệt để các từ/cụm từ quan trọng cho kỳ thi TOEIC:
+  1. Phạm vi quét bắt buộc:
+     - Part 5 (Câu đơn): Quét câu hỏi và CẢ 4 ĐÁP ÁN (kể cả các đáp án sai/gây nhiễu vì chúng là từ vựng TOEIC thực chiến). Mục tiêu: 3 - 6 từ/cụm từ.
+     - Part 6 & 7 (Đoạn văn/Đọc hiểu): Quét sâu toàn bộ đoạn trích, câu hỏi, các đáp án và đặc biệt là các cặp từ Paraphrase (từ trong bài ↔ từ trong đáp án). Mục tiêu: 4 - 8 từ/cụm từ.
+  2. Các dạng từ ưu tiên trích xuất:
+     - Collocation & Cụm từ cố định (VD: in accordance with, subject to change, take advantage of, place an order).
+     - Phrasal verbs, Liên từ / Trạng từ liên kết hay gặp trong đề (VD: nevertheless, preliminary, tentative, adhere to, comply with).
+     - Từ vựng công sở, kinh doanh, hợp đồng, nhân sự, giao nhận, du lịch, bảo dưỡng, tài chính.
+     - Các từ có word-family dễ nhầm (VD: rely/reliable/reliance) hoặc cặp từ dễ nhầm (VD: personnel/personal, considerate/considerable).
+  3. Yêu cầu:
+     - Bỏ qua từ sơ cấp thông thường (a, the, go, have, good, table...).
+     - Ưu tiên từ xuất hiện nhiều trong đề thi TOEIC thật, sắp xếp từ quan trọng nhất lên đầu.
+     - "meaning_vi": Nghĩa tiếng Việt chính xác và sát theo ngữ cảnh bài thi, không dịch nghĩa từ điển chung chung.
+- "explanation": Trình bày ngắn gọn, rõ ràng, đi thẳng vào trọng tâm (khoảng 2-3 câu):
+  1. Nêu lý do cốt lõi vì sao đáp án đúng là đúng (dẫn chứng cấu trúc ngữ pháp, từ loại, sự hòa hợp hoặc trích dẫn từ khóa paraphrase trong bài đọc).
+  2. Phân tích tùy theo trường hợp làm bài:
+     - Nếu người làm chọn sai: Chỉ ra ngắn gọn lý do vì sao đáp án đó sai hoặc bị bẫy ở điểm nào.
+     - Nếu người làm chọn đúng nhưng phân vân: Khẳng định dấu hiệu nhận biết mấu chốt để tự tin chọn và giải tỏa yếu tố gây do dự/nhiễu.
+     - Nếu người làm bỏ qua (chưa chọn): Chỉ ra manh mối giúp nhận biết nhanh đáp án đúng trong đề.
+  - Dùng câu ngắn, súc tích, tránh lặp lại nguyên văn đề bài hay viết lan man.
+- "error_type" chỉ được nhận 1 trong các giá trị: "vocab", "grammar", "inference", "detail_missed", "trap_answer", "time_pressure".
+- Chỉ trả về JSON hợp lệ, đúng cấu trúc trên, không có văn bản nào khác trước hoặc sau JSON.`;
   });
 
   copyPrompt() {

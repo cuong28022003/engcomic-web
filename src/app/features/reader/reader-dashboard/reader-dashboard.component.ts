@@ -8,7 +8,9 @@ import { FormsModule } from '@angular/forms';
 import { TimeAgoPipe } from '@shared/pipes/time-ago.pipe';
 import { EmptyStateComponent, ModalComponent, FormInputComponent, PageHeaderComponent, DataFilterBarComponent } from '@shared/components';
 import { AttemptHistoryModalComponent } from '../reading-session/attempt-history-modal/attempt-history-modal.component';
+import { PartStrategyPopoverComponent } from '../reading-session/part-strategy-popover/part-strategy-popover.component';
 import { ToastService } from '@core/services/toast.service';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-reader-dashboard',
@@ -22,7 +24,8 @@ import { ToastService } from '@core/services/toast.service';
     AttemptHistoryModalComponent,
     ModalComponent,
     FormInputComponent,
-    PageHeaderComponent
+    PageHeaderComponent,
+    PartStrategyPopoverComponent
   ],
   templateUrl: './reader-dashboard.component.html',
   styleUrls: ['./reader-dashboard.component.scss']
@@ -202,6 +205,16 @@ export class ReaderDashboardComponent implements OnInit {
   removeNewPdfFile() {
     this.editNewPdfFile.set(null);
     this.cdr.markForCheck();
+  }
+
+  getResolvedPdfUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    const trimmed = url.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('blob:')) {
+      return trimmed;
+    }
+    const base = environment.apiUrl.replace(/\/api\/?$/, '');
+    return `${base}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
   }
 
   updateQuestionAnswer(qNumber: number, ans: string) {

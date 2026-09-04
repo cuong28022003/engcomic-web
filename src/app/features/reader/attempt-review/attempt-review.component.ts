@@ -7,7 +7,7 @@ import { AiReviewImportModalComponent } from '../reading-session/ai-review-impor
 import { ReaderApiService } from '../services/reader-api.service';
 import { PendingItemApiService } from '../../../core/services/pending-item-api.service';
 import { ImportReviewItemsPayload, TestDetail, ToeicAttempt, ToeicAttemptAnswer, ToeicReviewItem } from '../models';
-
+import { PartStrategyPopoverComponent } from '../reading-session/part-strategy-popover/part-strategy-popover.component';
 import { ToastService } from '@core/services/toast.service';
 
 @Component({
@@ -20,7 +20,8 @@ import { ToastService } from '@core/services/toast.service';
     ErrorStateComponent,
     PdfViewerComponent,
     AiReviewImportModalComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    PartStrategyPopoverComponent
   ],
   templateUrl: './attempt-review.component.html',
   styleUrls: ['./attempt-review.component.scss']
@@ -144,6 +145,18 @@ export class AttemptReviewComponent implements OnInit {
     const qNum = this.selectedQuestionNumber();
     if (qNum === null) return undefined;
     return this.allQuestions().find(a => a.questionNumber === qNum);
+  });
+
+  readonly currentActivePart = computed<number>(() => {
+    const ans = this.currentAnswer();
+    if (ans && ans.part) return ans.part;
+    const qNum = this.selectedQuestionNumber();
+    if (qNum !== null) {
+      if (qNum <= 130) return 5;
+      if (qNum <= 146) return 6;
+      return 7;
+    }
+    return 5;
   });
 
   readonly selectedReviewItem = computed<ToeicReviewItem | null>(() => {

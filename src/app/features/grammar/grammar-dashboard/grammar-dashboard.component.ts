@@ -31,7 +31,8 @@ import {
 import {
   USAGE_CATEGORY_GROUPS,
   PosUsageGroup,
-  UsageCategoryItem
+  UsageCategoryItem,
+  isCardMatchingPosGroup
 } from '../config/usage-categories.config';
 
 @Component({
@@ -143,13 +144,23 @@ export class GrammarDashboardComponent implements OnInit {
 
   readonly functionalSidebarItems = computed<SidebarItem[]>(() => {
     const grp = this.activeFunctionalGroup();
-    return grp.categories.map(cat => ({
-      key: cat.key,
-      label: cat.labelVi,
-      labelSub: cat.labelEn,
-      icon: cat.icon,
-      color: cat.color
-    }));
+    const all = this.userCards();
+    const posKey = this.selectedFuncPos();
+    return grp.categories.map(cat => {
+      const count = all.filter(c =>
+        isCardMatchingPosGroup(c.partOfSpeech, posKey) &&
+        c.usages &&
+        c.usages.some(u => u.category === cat.key)
+      ).length;
+      return {
+        key: cat.key,
+        label: cat.labelVi,
+        labelSub: cat.labelEn,
+        icon: cat.icon,
+        color: cat.color,
+        count
+      };
+    });
   });
 
   readonly activeFunctionalCategory = computed<UsageCategoryItem | undefined>(() => {
@@ -161,7 +172,12 @@ export class GrammarDashboardComponent implements OnInit {
     const item = this.activeFunctionalCategory();
     if (!item) return [];
     const all = this.userCards();
-    return all.filter(c => c.usages && c.usages.some(u => u.category === item.key));
+    const posKey = this.selectedFuncPos();
+    return all.filter(c =>
+      isCardMatchingPosGroup(c.partOfSpeech, posKey) &&
+      c.usages &&
+      c.usages.some(u => u.category === item.key)
+    );
   });
 
   // Computed for Points Filter & Pagination

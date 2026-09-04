@@ -228,17 +228,34 @@ export const TOEIC_READING_STRATEGIES: PartStrategyData[] = [
       {
         id: 'p7-3',
         number: 3,
-        title: 'Đọc câu hỏi trước khi đọc đoạn văn',
-        summary: 'Lướt nhanh câu hỏi (không đọc đáp án) để định hướng từ khóa cần tìm, tiết kiệm thời gian đọc lại.',
+        title: 'Quy trình 4 bước làm bài thực chiến',
+        summary: '1. Nhận diện văn bản ➔ 2. Đọc câu hỏi lấy Keyword ➔ 3. Quét định vị đoạn văn ➔ 4. Đối chiếu Paraphrase.',
         details: [
-          'Lướt nhanh qua các câu hỏi (không cần đọc đáp án) để biết mình cần tìm thông tin gì.',
-          'Việc này giúp đọc đoạn văn có mục đích rõ ràng, tiết kiệm thời gian không phải đọc đi đọc lại nhiều lần.'
+          '<strong>Bước 1 - Nhận diện cấu trúc văn bản (2-3s):</strong> Nhìn nhanh tiêu đề, hình thức (đơn/kép/ba) và dòng tiêu đề/người gửi để kích hoạt ngữ cảnh tương ứng.',
+          '<strong>Bước 2 - Đọc câu hỏi & gạch chân Keyword (10-15s):</strong> Đọc câu hỏi trước (không đọc 4 đáp án). Gạch chân từ khóa định vị: Tên riêng viết hoa, con số, ngày tháng, thuật ngữ chuyên ngành.',
+          '<strong>Bước 3 - Quét (Scanning) & định vị đoạn văn (20-30s):</strong> Rà nhanh mắt theo hình chữ Z để tìm khu vực chứa từ khóa hoặc từ đồng nghĩa. Với đoạn kép/ba, xác định câu hỏi thuộc bài đọc 1, 2 hay kết hợp cả hai.',
+          '<strong>Bước 4 - Đọc kỹ ngữ cảnh, đối chiếu Paraphrase (15-20s):</strong> Đọc kỹ 1-2 câu xung quanh vị trí định vị. Tìm phương án đã được diễn đạt lại (Paraphrase) bằng từ đồng nghĩa; cảnh giác đáp án sao chép nguyên văn nhưng sai ngữ cảnh.'
         ],
-        badge: 'Chiến thuật vàng'
+        badge: 'Quy trình 4 bước'
       },
       {
         id: 'p7-4',
         number: 4,
+        title: 'Phân loại 6 dạng văn bản thường gặp',
+        summary: 'Email/Letter, Memo/Notice, Quảng cáo (Ad), Bài báo (Article), Bảng biểu/Hóa đơn và Đoạn chat trực tuyến.',
+        details: [
+          '<strong>1. Email / Letter (Thư từ - phổ biến nhất):</strong> Xem dòng Subject và 1-2 câu đầu để biết mục đích gửi thư (hỏi hàng, khiếu nại, phản hồi, mời họp). Chú ý ngày gửi.',
+          '<strong>2. Memo / Notice / Announcement (Thông báo nội bộ & công cộng):</strong> Thường nói về quy định mới, thăng chức, bảo trì, lịch nghỉ. Chú ý đối tượng áp dụng (To all staff...) và thời hạn thực hiện.',
+          '<strong>3. Advertisement / Flyer (Quảng cáo, tờ rơi):</strong> Giới thiệu sản phẩm/dịch vụ/tuyển dụng. Quét nhanh giá tiền, điều kiện ưu đãi (discount, coupon, special offer), thời hạn và liên hệ.',
+          '<strong>4. Article / Review (Bài báo, đánh giá):</strong> Văn phong học thuật, câu dài. Đọc tiêu đề (Headline) và đoạn đầu để nắm ý chính; không hoang mang trước từ vựng chuyên ngành.',
+          '<strong>5. Form / Invoice / Schedule / Webpage (Bảng biểu, hóa đơn, lịch trình):</strong> Dạng bảng ít chữ, nhiều số liệu. Quét trực tiếp theo keyword; đặc biệt lưu ý <em>dấu hoa thị (*) hoặc dòng ghi chú nhỏ ở chân trang</em> vì rất hay bị hỏi.',
+          '<strong>6. Text Message Chain / Online Chat (Chuỗi tin nhắn):</strong> Hội thoại 2-3 người. Thường có câu hỏi: <em>Tại thời điểm XX:XX, người A ngụ ý gì?</em> ➔ Phải đọc câu nói ngay trước đó của người đối diện để suy ra ngữ cảnh.'
+        ],
+        badge: '6 Dạng Văn Bản'
+      },
+      {
+        id: 'p7-5',
+        number: 5,
         title: 'Phân loại 6 dạng câu hỏi cốt lõi',
         summary: 'Nhận diện: Chi tiết (What/When), Ý chính, Suy luận (Inference), Từ vựng ngữ cảnh, NOT/TRUE, Điền câu.',
         details: [
@@ -249,11 +266,11 @@ export const TOEIC_READING_STRATEGIES: PartStrategyData[] = [
           '<strong>Câu hỏi "NOT/TRUE" (loại trừ):</strong> đối chiếu từng đáp án với đoạn văn, loại dần — đây là dạng tốn thời gian nhất, nên làm sau cùng nếu gấp.',
           '<strong>Câu hỏi điền câu vào đoạn văn ("insert sentence"):</strong> chú ý các từ nối (however, therefore, in addition...), đại từ (this, that, it) để xác định vị trí logic.'
         ],
-        badge: '6 Dạng Đề'
+        badge: '6 Dạng Câu Hỏi'
       },
       {
-        id: 'p7-5',
-        number: 5,
+        id: 'p7-6',
+        number: 6,
         title: 'Kỹ thuật Skimming & Scanning',
         summary: 'Skimming đọc lướt nắm ý chính & thể loại; Scanning quét nhanh từ khóa cụ thể (tên riêng, số liệu).',
         details: [
@@ -262,8 +279,8 @@ export const TOEIC_READING_STRATEGIES: PartStrategyData[] = [
         ]
       },
       {
-        id: 'p7-6',
-        number: 6,
+        id: 'p7-7',
+        number: 7,
         title: 'Xử lý Double / Triple Passages',
         summary: 'Chú ý liên kết chéo giữa các bài đọc. Luôn có 1-2 câu kết hợp thông tin 2 văn bản mới ra đáp án.',
         details: [
@@ -273,8 +290,8 @@ export const TOEIC_READING_STRATEGIES: PartStrategyData[] = [
         badge: 'Đoạn kép & ba'
       },
       {
-        id: 'p7-7',
-        number: 7,
+        id: 'p7-8',
+        number: 8,
         title: 'Nhận diện bẫy "Paraphrase"',
         summary: 'Đáp án đúng thường diễn đạt lại bằng từ đồng nghĩa; cảnh giác đáp án chứa từ y hệt bài đọc.',
         details: [
@@ -285,8 +302,8 @@ export const TOEIC_READING_STRATEGIES: PartStrategyData[] = [
         badge: 'Tránh bẫy'
       },
       {
-        id: 'p7-8',
-        number: 8,
+        id: 'p7-9',
+        number: 9,
         title: 'Chiến lược luyện tập & Review',
         summary: 'Luyện đề theo áp lực thời gian thực tế; sau khi nộp bài phân tích kỹ nguyên nhân gốc rễ của câu sai.',
         details: [

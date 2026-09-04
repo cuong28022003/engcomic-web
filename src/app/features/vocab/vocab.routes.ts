@@ -27,14 +27,6 @@ export const VOCAB_ROUTES: Routes = [
       ),
   },
   {
-    path: 'import',
-    data: { route: `${ROUTE.VOCAB}/import`, title: 'Import Từ Vựng' },
-    loadComponent: () =>
-      import('./import/vocab-import.component').then(
-        (m) => m.VocabImportComponent
-      ),
-  },
-  {
     path: 'collector',
     data: { route: `${ROUTE.VOCAB}/collector`, title: 'Hộp Thư Từ Vựng Thu Thập' },
     loadComponent: () =>
