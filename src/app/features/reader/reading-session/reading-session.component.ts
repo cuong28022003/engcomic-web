@@ -70,6 +70,14 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
   submissionResult = signal<SubmitSessionResponse | null>(null);
   gradedResults = signal<GradedQuestion[]>([]);
 
+  readonly currentActivePart = computed<number>(() => {
+    const parts = this.selectedParts();
+    if (parts && parts.length === 1) {
+      return parts[0];
+    }
+    return 6;
+  });
+
   readonly filteredQuestions = computed<Array<{ number: number; part: number }>>(() => {
     const t = this.test();
     if (!t || !t.questions) return [];

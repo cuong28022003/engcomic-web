@@ -64,36 +64,83 @@
             </div>
           </div>
 
-          <!-- Core Tactics List -->
-          <div class="tactics-section">
-            <div class="section-heading">
-              <i class="fa-solid fa-crosshairs"></i>
-              <span>Các bước giải quyết trọng tâm:</span>
-            </div>
-            <ul class="tactics-list">
-              @for (tactic of strat.coreTactics; track tactic) {
-                <li>
-                  <i class="fa-solid fa-check-circle bullet-icon" [style.color]="strat.color"></i>
-                  <span>{{ tactic }}</span>
-                </li>
-              }
-            </ul>
+          <!-- Quick Interactive Guide Hint -->
+          <div class="interactive-hint">
+            <i class="fa-solid fa-circle-info hint-icon"></i>
+            <span>Rê chuột vào nút <strong class="hint-highlight"><i class="fa-solid fa-circle-info"></i> Chi tiết</strong> để xem hướng dẫn chi tiết của từng phần.</span>
           </div>
 
-          <!-- Common Traps to Avoid -->
-          <div class="traps-section">
-            <div class="section-heading trap-heading">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-              <span>Cảnh báo bẫy thi thường gặp:</span>
-            </div>
-            <ul class="traps-list">
-              @for (trap of strat.commonTraps; track trap) {
-                <li>
-                  <i class="fa-solid fa-ban trap-bullet"></i>
-                  <span>{{ trap }}</span>
-                </li>
-              }
-            </ul>
+          <!-- Strategy Sections List -->
+          <div class="sections-container">
+            @for (sec of strat.sections; track sec.id) {
+              <div
+                class="strategy-section-item"
+                [class.active-item]="activeTooltipId() === sec.id"
+              >
+                <!-- Left: Number & Content -->
+                <div class="section-left">
+                  <div class="section-number-badge" [style.color]="strat.color" [style.borderColor]="strat.color + '40'">
+                    {{ sec.number }}
+                  </div>
+                  <div class="section-text-body">
+                    <div class="section-title-row">
+                      <strong class="section-title">{{ sec.title }}</strong>
+                      @if (sec.badge) {
+                        <span class="section-tag" [style.color]="strat.color" [style.background]="strat.color + '20'">
+                          {{ sec.badge }}
+                        </span>
+                      }
+                    </div>
+                    <p class="section-summary">{{ sec.summary }}</p>
+                  </div>
+                </div>
+
+                <!-- Right: Info Button with Hover Tooltip -->
+                <div
+                  class="info-action-anchor"
+                  (mouseenter)="showDetail(sec.id)"
+                  (mouseleave)="hideDetail()"
+                >
+                  <button
+                    type="button"
+                    class="btn-info-detail"
+                    [class.active]="activeTooltipId() === sec.id"
+                    [style.--theme-color]="strat.color"
+                    (click)="toggleDetail(sec.id); $event.stopPropagation()"
+                    aria-label="Xem chi tiết"
+                    title="Rê chuột để xem chi tiết"
+                  >
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span class="btn-info-text">Chi tiết</span>
+                  </button>
+
+                  <!-- Hover Tooltip Flyout -->
+                  @if (activeTooltipId() === sec.id) {
+                    <div
+                      class="detail-tooltip"
+                      [class.tooltip-top]="sec.number >= 5"
+                      [class.tooltip-bottom]="sec.number < 5"
+                      (mouseenter)="showDetail(sec.id)"
+                      (mouseleave)="hideDetail()"
+                      (click)="$event.stopPropagation()"
+                    >
+                      <div class="tooltip-header">
+                        <i class="fa-solid fa-lightbulb tooltip-icon" [style.color]="strat.color"></i>
+                        <span class="tooltip-title">{{ sec.title }}</span>
+                      </div>
+                      <ul class="tooltip-list">
+                        @for (detail of sec.details; track detail) {
+                          <li>
+                            <i class="fa-solid fa-check bullet-icon" [style.color]="strat.color"></i>
+                            <span [innerHTML]="detail"></span>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Pro Tip Footer Note -->

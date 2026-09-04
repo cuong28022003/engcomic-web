@@ -54,8 +54,8 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 480px;
-  max-width: 92vw;
+  width: 580px;
+  max-width: 95vw;
   background: #0d1120;
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 20px;
@@ -64,7 +64,7 @@
   z-index: 1600;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   animation: popoverFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
 
@@ -106,7 +106,7 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     font-weight: 800;
     color: #f8fafc;
 
@@ -121,9 +121,9 @@
     gap: 5px;
 
     .part-tab-chip {
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 8px;
-      font-size: 0.74rem;
+      font-size: 0.76rem;
       font-weight: 700;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -137,8 +137,8 @@
       }
 
       &.active {
-        background: var(--active-color, #38bdf8);
-        border-color: var(--active-color, #38bdf8);
+        background: var(--active-color, #f97316);
+        border-color: var(--active-color, #f97316);
         color: #fff;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
       }
@@ -150,12 +150,12 @@
 .strategy-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .part-hero-meta {
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   color: #fff;
   display: flex;
   justify-content: space-between;
@@ -168,7 +168,7 @@
     gap: 2px;
 
     .part-title {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 800;
       margin: 0;
       line-height: 1.2;
@@ -194,7 +194,7 @@
       padding: 3px 8px;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.3);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 800;
       white-space: nowrap;
     }
@@ -206,63 +206,305 @@
   }
 }
 
-// ── Tactics & Traps Lists ────────────────────────────────────────────
-.tactics-section,
-.traps-section {
+// ── Interactive Hint ──────────────────────────────────────────────────
+.interactive-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px dashed rgba(56, 189, 248, 0.25);
+  color: #93c5fd;
+  font-size: 0.72rem;
+  line-height: 1.35;
+
+  .hint-icon {
+    color: #38bdf8;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .hint-highlight {
+    color: #fde047;
+    font-weight: 700;
+  }
+}
+
+// ── Sections Container ────────────────────────────────────────────────
+.sections-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
 
-  .section-heading {
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.4);
+    }
+  }
+}
+
+// ── Strategy Section Item ─────────────────────────────────────────────
+.strategy-section-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover,
+  &.active-item {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    z-index: 50;
+  }
+
+  .section-left {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: #cbd5e1;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    align-items: flex-start;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
 
-    i {
-      color: #38bdf8;
-      font-size: 0.8rem;
+    .section-number-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid currentColor;
+      font-size: 0.72rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
-    &.trap-heading i {
-      color: #f87171;
+    .section-text-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+
+      .section-title-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+
+        .section-title {
+          font-size: 0.79rem;
+          font-weight: 700;
+          color: #f1f5f9;
+        }
+
+        .section-tag {
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 1px 6px;
+          border-radius: 4px;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+        }
+      }
+
+      .section-summary {
+        margin: 0;
+        font-size: 0.74rem;
+        color: #94a3b8;
+        line-height: 1.35;
+      }
+    }
+  }
+}
+
+// ── Info Action Button & Hover Tooltip ────────────────────────────────
+.info-action-anchor {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+
+  .btn-info-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+
+    i {
+      color: var(--theme-color, #f59e0b);
+      font-size: 0.76rem;
+      transition: transform 0.2s ease;
+    }
+
+    &:hover,
+    &.active {
+      background: rgba(245, 158, 11, 0.16);
+      border-color: var(--theme-color, #f59e0b);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+
+      i {
+        transform: scale(1.15);
+      }
     }
   }
 
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  // ── Detail Tooltip Popover ──────────────────────────────────────────
+  .detail-tooltip {
+    position: absolute;
+    right: 0;
+    width: 380px;
+    max-width: 84vw;
+    background: #0f172a;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 25px rgba(245, 158, 11, 0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    z-index: 2000;
+    pointer-events: auto;
+    animation: tooltipFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
-    li {
-      font-size: 0.78rem;
-      color: #cbd5e1;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      line-height: 1.4;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 6px 10px;
-      border-radius: 8px;
+    &.tooltip-bottom {
+      top: calc(100% + 8px);
 
-      .bullet-icon {
-        font-size: 0.8rem;
-        margin-top: 2px;
-        flex-shrink: 0;
+      &::before {
+        content: '';
+        position: absolute;
+        top: -6px;
+        right: 22px;
+        width: 10px;
+        height: 10px;
+        background: #0f172a;
+        border-top: 1px solid rgba(245, 158, 11, 0.45);
+        border-left: 1px solid rgba(245, 158, 11, 0.45);
+        transform: rotate(45deg);
       }
 
-      .trap-bullet {
-        color: #ef4444;
-        font-size: 0.78rem;
-        margin-top: 2px;
-        flex-shrink: 0;
+      &::after {
+        content: '';
+        position: absolute;
+        top: -12px;
+        left: 0;
+        right: 0;
+        height: 12px;
+      }
+    }
+
+    &.tooltip-top {
+      bottom: calc(100% + 8px);
+
+      &::before {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        right: 22px;
+        width: 10px;
+        height: 10px;
+        background: #0f172a;
+        border-bottom: 1px solid rgba(245, 158, 11, 0.45);
+        border-right: 1px solid rgba(245, 158, 11, 0.45);
+        transform: rotate(45deg);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        left: 0;
+        right: 0;
+        height: 12px;
+      }
+    }
+
+    .tooltip-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #f8fafc;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 8px;
+
+      .tooltip-icon {
+        font-size: 0.85rem;
+      }
+    }
+
+    .tooltip-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        font-size: 0.74rem;
+        color: #cbd5e1;
+        line-height: 1.45;
+
+        .bullet-icon {
+          font-size: 0.65rem;
+          margin-top: 4px;
+          flex-shrink: 0;
+        }
+
+        span {
+          strong {
+            color: #fde047;
+          }
+
+          em {
+            color: #fde047;
+            font-style: normal;
+            font-weight: 600;
+          }
+
+          code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #7dd3fc;
+            font-family: monospace;
+          }
+        }
       }
     }
   }
@@ -278,12 +520,12 @@
   background: rgba(99, 102, 241, 0.14);
   border: 1px solid rgba(99, 102, 241, 0.3);
   color: #c7d2fe;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   line-height: 1.35;
 
   .tip-icon {
     color: #818cf8;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     flex-shrink: 0;
   }
 }
@@ -308,13 +550,29 @@
   }
 }
 
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 600px) {
   .strategy-floating-card {
-    width: 320px;
-    right: -60px;
+    width: 330px;
+    right: -40px;
 
     &::before {
-      right: 80px;
+      right: 60px;
     }
+  }
+
+  .info-action-anchor .detail-tooltip {
+    width: 290px;
+    right: -20px;
   }
 }
