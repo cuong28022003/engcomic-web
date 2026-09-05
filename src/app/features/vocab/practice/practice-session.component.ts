@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CardApiService } from '@services/card-api.service';
 import { ToastService } from '@services/toast.service';
+import { UserStatsApiService } from '@core/services/user-stats-api.service';
+import { UserStateService } from '@core/services/user-state.service';
 import { PracticeQueueItem, PracticePromptResponse, SubmitLevelAnswerResponse } from '@models/index';
 import { LevelIndicatorComponent } from './components/level-indicator/level-indicator.component';
 import { Level1RecognitionExerciseComponent } from './components/level1-recognition-exercise/level1-recognition-exercise.component';
@@ -60,7 +62,9 @@ export class PracticeSessionComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cardApi: CardApiService,
-    private toast: ToastService
+    private toast: ToastService,
+    private userStatsApi: UserStatsApiService,
+    private userState: UserStateService
   ) {}
 
   ngOnInit(): void {
@@ -134,6 +138,10 @@ export class PracticeSessionComponent implements OnInit {
     const nextIdx = this.currentIndex() + 1;
     if (nextIdx >= this.queue().length) {
       this.state.set('completed');
+      this.userStatsApi.getMyStats().subscribe({
+        next: (stats) => this.userState.setUserStats(stats),
+        error: () => {}
+      });
     } else {
       this.currentIndex.set(nextIdx);
     }

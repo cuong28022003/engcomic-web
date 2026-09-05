@@ -1,10 +1,7 @@
-import { Component, input, output, inject, signal, computed } from '@angular/core';
+import { Component, input, output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ModalComponent } from '@shared/components/modal/modal.component';
-import { UserStatsApiService } from '@core/services/user-stats-api.service';
-import { UserStateService } from '@core/services/user-state.service';
-import { ToastService } from '@core/services/toast.service';
 import { UserStats } from '@models/index';
 
 export interface DayOfWeekItem {
@@ -23,17 +20,12 @@ export interface DayOfWeekItem {
   styleUrls: ['./streak-modal.component.scss']
 })
 export class StreakModalComponent {
-  private userStatsApi = inject(UserStatsApiService);
-  private userState = inject(UserStateService);
-  private toast = inject(ToastService);
   private router = inject(Router);
 
   readonly isOpen = input<boolean>(false);
   readonly stats = input<UserStats | null>(null);
 
   readonly close = output<void>();
-
-  readonly checkingIn = signal<boolean>(false);
 
   readonly streakCount = computed(() => {
     const s = this.stats();
@@ -96,21 +88,38 @@ export class StreakModalComponent {
 
   readonly nextMilestone = computed<{ target: number; reward: string; progress: number }>(() => {
     const current = this.streakCount();
-    if (current < 7) {
-      return { target: 7, reward: '+20 Kim Cương', progress: Math.min(100, Math.round((current / 7) * 100)) };
+    if (current < 3) {
+      return { target: 3, reward: '+10 Kim Cương', progress: Math.min(100, Math.round((current / 3) * 100)) };
+    } else if (current < 7) {
+      return { target: 7, reward: '+30 Kim Cương & Huy Hiệu Chăm Chỉ', progress: Math.min(100, Math.round((current / 7) * 100)) };
     } else if (current < 14) {
-      return { target: 14, reward: '+50 Kim Cương & Huy Hiệu Chiến Binh', progress: Math.min(100, Math.round((current / 14) * 100)) };
+      return { target: 14, reward: '+60 Kim Cương & Khung Avatar Lửa', progress: Math.min(100, Math.round((current / 14) * 100)) };
     } else if (current < 30) {
-      return { target: 30, reward: '+100 Kim Cương & Huy Hiệu Kỷ Luật', progress: Math.min(100, Math.round((current / 30) * 100)) };
+      return { target: 30, reward: '+150 Kim Cương & Danh Hiệu Kỷ Luật', progress: Math.min(100, Math.round((current / 30) * 100)) };
     } else {
-      const next100 = Math.ceil((current + 1) / 50) * 50;
-      return { target: next100, reward: '+200 Kim Cương Huyền Thoại', progress: Math.min(100, Math.round((current / next100) * 100)) };
+      const next100 = Math.ceil((current + 1) / 30) * 30;
+      return { target: next100, reward: '+300 Kim Cương Huyền Thoại', progress: Math.min(100, Math.round((current / next100) * 100)) };
     }
   });
 
-  goToPractice(): void {
+  goToDecks(): void {
     this.close.emit();
-    this.router.navigate(['/vocab/practice']);
+    this.router.navigate(['/deck']);
+  }
+
+  goToToeic(): void {
+    this.close.emit();
+    this.router.navigate(['/reader']);
+  }
+
+  goToGrammar(): void {
+    this.close.emit();
+    this.router.navigate(['/grammar']);
+  }
+
+  goToVocabVault(): void {
+    this.close.emit();
+    this.router.navigate(['/vocab']);
   }
 
   onClose(): void {

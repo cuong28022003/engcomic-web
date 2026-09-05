@@ -19,17 +19,18 @@
   border-radius: 20px;
   box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 51, 119, 0.08);
   width: 100%;
-  max-height: 90vh;
+  max-height: 94vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   color: #fff;
 
-  &.modal-sm { max-width: 400px; }
-  &.modal-md { max-width: 560px; }
-  &.modal-lg { max-width: 800px; }
-  &.modal-xl { max-width: 980px; }
+  &.modal-sm { max-width: 420px; }
+  &.modal-md { max-width: 600px; }
+  &.modal-lg { max-width: 820px; }
+  &.modal-xl { max-width: 1040px; }
+  &.modal-auto { max-width: min(92vw, 900px); width: auto; }
 }
 
 .modal-header {

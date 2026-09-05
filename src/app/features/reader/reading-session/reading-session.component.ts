@@ -14,6 +14,8 @@ import { GradedQuestion, SubmitSessionPayload, SubmitSessionResponse, TestDetail
 
 import { PartStrategyPopoverComponent } from './part-strategy-popover/part-strategy-popover.component';
 import { ToastService } from '@core/services/toast.service';
+import { UserStatsApiService } from '@core/services/user-stats-api.service';
+import { UserStateService } from '@core/services/user-state.service';
 
 @Component({
   selector: 'app-reading-session',
@@ -39,6 +41,8 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private readerApi = inject(ReaderApiService);
+  private userStatsApi = inject(UserStatsApiService);
+  private userState = inject(UserStateService);
   private toast = inject(ToastService);
   readonly timerService = inject(TestTimerService);
   readonly sessionService = inject(TestSessionService);
@@ -288,6 +292,12 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
         this.submissionResult.set(res);
         this.gradedResults.set(res.results);
         this.sessionService.clear();
+
+        // Refresh user learning stats & streak
+        this.userStatsApi.getMyStats().subscribe({
+          next: (stats) => this.userState.setUserStats(stats),
+          error: () => {}
+        });
 
         this.toast.success(`Nộp bài thành công! Điểm của bạn: ${res.rawScore}/${res.totalQuestions}`);
 

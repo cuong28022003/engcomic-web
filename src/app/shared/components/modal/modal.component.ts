@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 export class ModalComponent {
   readonly isOpen = model<boolean>(false);
   readonly title = input<string>('');
-  readonly size = input<'sm' | 'md' | 'lg' | 'xl'>('md');
+  readonly size = input<'sm' | 'md' | 'lg' | 'xl' | 'auto'>('md');
   readonly closeOnBackdrop = input<boolean>(true);
 
   readonly closed = output<void>();
