@@ -8,7 +8,18 @@
 
     <div class="progress-section">
       <div class="progress-info">
-        <span class="progress-title">Tiến độ hôm nay</span>
+        <div class="progress-title-row">
+          <span class="progress-title">Tiến độ hôm nay</span>
+          @if (levelParam() > 0) {
+            <span class="session-chip lvl">Level {{ levelParam() }}</span>
+          }
+          @if (posParam() !== 'all') {
+            <span class="session-chip pos">{{ posParam() }}</span>
+          }
+          @if (starParam()) {
+            <span class="session-chip star"><i class="fa-solid fa-star"></i> Yêu thích</span>
+          }
+        </div>
         <span class="progress-count">{{ currentIndex() }} / {{ totalCount() }} từ</span>
       </div>
       <div class="progress-bar-track">

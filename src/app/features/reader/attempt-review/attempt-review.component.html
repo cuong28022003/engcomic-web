@@ -305,7 +305,9 @@
     <app-ai-review-import-modal
       [isOpen]="showImportModal()"
       [testName]="test()?.testName || ''"
+      [filterLabel]="currentFilterLabel()"
       [questionsToReview]="questionsNeedingReview()"
+      [isSubmitting]="isImportingReviews()"
       (importData)="handleImportReviews($event)"
       (close)="closeAiImportModal()"
     ></app-ai-review-import-modal>

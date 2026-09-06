@@ -77,19 +77,31 @@
     (clear)="clearFilters()"
   >
     <!-- Projected Custom Filters: Part of Speech, Status, Topic Selector Button, Active Category -->
-    <select class="filter-select pos-select" [(ngModel)]="filterPos" (change)="onFilterChange()">
+    <app-filter-select
+      [(value)]="filterPos"
+      (valueChange)="onFilterChange()"
+      icon="fa-solid fa-spell-check"
+      defaultValue=""
+      title="Lọc theo từ loại"
+    >
       @for (opt of posOptions; track opt.key) {
         <option [value]="opt.key">{{ opt.label }}</option>
       }
-    </select>
+    </app-filter-select>
 
-    <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+    <app-filter-select
+      [(value)]="filterStatus"
+      (valueChange)="onFilterChange()"
+      icon="fa-solid fa-circle-check"
+      defaultValue=""
+      title="Lọc theo trạng thái học"
+    >
       <option value="">Tất cả trạng thái</option>
       <option value="new">Mới</option>
       <option value="learning">Đang học</option>
       <option value="mature">Thành thạo</option>
       <option value="leech">Khó nhớ</option>
-    </select>
+    </app-filter-select>
 
     <button
       type="button"

@@ -123,11 +123,12 @@
           <div class="hero-cta-buttons">
             <button
               class="btn btn-primary btn-lg practice-primary-btn"
-              (click)="startPractice()"
-              [disabled]="readyCards().length === 0"
-              [title]="readyCards().length === 0 ? 'Cần import bài tập JSON trước khi luyện tập' : 'Bắt đầu phiên luyện tập'"
+              (click)="openPracticeSetup()"
+              [disabled]="cards().length === 0"
+              title="Thiết lập phiên luyện tập thông minh (Luyện 4 Cấp Độ AI hoặc Lật Thẻ SRS)"
             >
-              <i class="fa-solid fa-play"></i> Luyện Tập 4 Level ({{ readyCards().length }} từ)
+              <i class="fa-solid fa-graduation-cap"></i> Luyện Tập Thông Minh
+              <span class="ready-badge-pill">{{ cards().length }} từ</span>
             </button>
             <button class="btn btn-secondary btn-lg" (click)="openExerciseModal()" [disabled]="cards().length === 0">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Thêm Bài Tập AI
@@ -188,10 +189,10 @@
         (clear)="clearAllFilters()"
       >
         <!-- Status Filter Dropdown -->
-        <select
-          class="filter-select status-select"
-          [ngModel]="filterStatus()"
-          (ngModelChange)="onFilterStatusChange($event)"
+        <app-filter-select
+          [value]="filterStatus()"
+          (valueChange)="onFilterStatusChange($event)"
+          icon="fa-solid fa-circle-check"
           title="Lọc theo trạng thái bài tập"
         >
           <option value="all">Tất cả trạng thái ({{ cards().length }})</option>
@@ -199,13 +200,26 @@
           @if (pendingCards().length > 0) {
             <option value="pending">Chờ tạo bài tập AI ({{ pendingCards().length }})</option>
           }
-        </select>
+        </app-filter-select>
+
+        <!-- Part of Speech Filter Dropdown -->
+        <app-filter-select
+          [value]="filterPos()"
+          (valueChange)="onFilterPosChange($event)"
+          icon="fa-solid fa-spell-check"
+          title="Lọc theo từ loại"
+        >
+          <option value="all">Tất cả từ loại ({{ cards().length }})</option>
+          @for (p of availablePosList(); track p.key) {
+            <option [value]="p.key">{{ p.label }} ({{ p.count }})</option>
+          }
+        </app-filter-select>
 
         <!-- Mastery Level Filter Dropdown -->
-        <select
-          class="filter-select level-select"
-          [ngModel]="filterLevel()"
-          (ngModelChange)="onFilterLevelChange($event)"
+        <app-filter-select
+          [value]="filterLevel()"
+          (valueChange)="onFilterLevelChange($event)"
+          icon="fa-solid fa-layer-group"
           title="Lọc theo cấp độ thành thạo 4-Level"
         >
           <option value="all">Tất cả cấp độ (L1 - L4)</option>
@@ -213,7 +227,7 @@
           <option value="2">Level 2: Ngữ cảnh ({{ levelStats().l2 }})</option>
           <option value="3">Level 3: Tái hiện ({{ levelStats().l3 }})</option>
           <option value="4">Level 4: Thực tế ({{ levelStats().l4 }})</option>
-        </select>
+        </app-filter-select>
       </app-data-filter-bar>
 
       <!-- Cards Grid / List -->
@@ -352,3 +366,13 @@
   (importSuccess)="onExerciseImportSuccess()"
   (startPractice)="startPractice()"
 ></app-exercise-import-modal>
+
+<!-- 3. Modal Thiết Lập Luyện Tập Thông Minh (PracticeSetupModal) -->
+<app-practice-setup-modal
+  [isOpen]="isPracticeSetupModalOpen()"
+  [deck]="deck()"
+  [cards]="cards()"
+  [availablePosList]="availablePosList()"
+  [initialMode]="practiceSetupInitialMode()"
+  (close)="closePracticeSetup()"
+></app-practice-setup-modal>

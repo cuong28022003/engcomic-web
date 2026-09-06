@@ -282,9 +282,30 @@
 
     .practice-primary-btn {
       flex: 1.4;
-      min-width: 240px;
-      box-shadow: 0 6px 20px rgba(255, 51, 119, 0.35);
-      font-size: 1.05rem;
+      min-width: 220px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-color: #6366f1;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+      }
+    }
+
+    .ready-badge-pill {
+      background: rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
     }
 
     .pending-count-chip {

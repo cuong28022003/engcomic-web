@@ -17,11 +17,22 @@ import { Card, Deck } from '@models/index';
     <div class="study-session-page">
       <!-- Top header with Progress -->
       <div class="study-topbar glass-panel">
-        <a routerLink="/deck" class="btn-icon" title="Thoát phiên học">
+        <a [routerLink]="deckId ? ['/deck', deckId] : '/deck'" class="btn-icon" title="Thoát phiên học">
           <i class="fa-solid fa-arrow-left"></i>
         </a>
         <div class="progress-wrap">
-          <span class="deck-title">{{ deck?.name || 'Phiên học Flashcard' }}</span>
+          <div class="deck-title-row">
+            <span class="deck-title">{{ deck?.name || 'Ôn Tập Flashcard' }}</span>
+            @if (levelParam > 0) {
+              <span class="filter-pill lvl">Level {{ levelParam }}</span>
+            }
+            @if (posParam !== 'all') {
+              <span class="filter-pill pos">{{ posParam }}</span>
+            }
+            @if (starParam) {
+              <span class="filter-pill star"><i class="fa-solid fa-star"></i> Yêu thích</span>
+            }
+          </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" [style.width.%]="progressPercent"></div>
           </div>
@@ -160,6 +171,38 @@ import { Card, Deck } from '@models/index';
       display: flex;
       align-items: center;
       gap: 14px;
+    }
+
+    .deck-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .filter-pill {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+
+      &.lvl {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+      }
+
+      &.pos {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      &.star {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
     }
 
     .deck-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
@@ -405,6 +448,13 @@ export class StudyComponent implements OnInit, OnDestroy {
   loading = true;
   isFinished = false;
 
+  // Smart Practice Filters
+  levelParam = 0;
+  posParam = 'all';
+  starParam = false;
+  shuffleParam = true;
+  limitParam = 20;
+
   get currentCard(): Card | null {
     return this.cards[this.currentIndex] || null;
   }
@@ -444,6 +494,16 @@ export class StudyComponent implements OnInit, OnDestroy {
       this.deckId = params['deckId'];
       if (this.deckId) {
         this.loadDeck();
+      }
+    });
+
+    this.route.queryParams.subscribe((queryParams) => {
+      this.levelParam = queryParams['level'] ? parseInt(queryParams['level'], 10) : 0;
+      this.posParam = queryParams['pos'] || 'all';
+      this.starParam = queryParams['starOnly'] === 'true' || queryParams['starOnly'] === true;
+      this.shuffleParam = queryParams['shuffle'] !== 'false' && queryParams['shuffle'] !== false;
+      this.limitParam = queryParams['limit'] ? parseInt(queryParams['limit'], 10) : 20;
+      if (this.deckId) {
         this.loadCards();
       }
     });
@@ -460,9 +520,44 @@ export class StudyComponent implements OnInit, OnDestroy {
 
   loadCards(): void {
     this.loading = true;
-    this.cardApi.getCardsByDeckId(this.deckId, { page: 0, size: 200 }).subscribe({
+    this.cardApi.getCardsByDeckId(this.deckId, { page: 0, size: 500 }).subscribe({
       next: (res) => {
-        this.cards = res.content || [];
+        let list = res.content || [];
+
+        if (this.starParam) {
+          list = list.filter((c) => c.isFavorite || c.favorite);
+        }
+
+        if (this.levelParam > 0) {
+          list = list.filter((c) => {
+            const cardLvl = c.masteryLevel || 1;
+            return this.levelParam === 4 ? cardLvl >= 4 : cardLvl === this.levelParam;
+          });
+        }
+
+        if (this.posParam !== 'all') {
+          list = list.filter((c) => {
+            const cardPos = (c.partOfSpeech || '').trim().toLowerCase();
+            if (this.posParam === 'unknown') return !cardPos;
+            return cardPos === this.posParam.toLowerCase();
+          });
+        }
+
+        if (this.shuffleParam) {
+          for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+          }
+        }
+
+        if (this.limitParam > 0 && list.length > this.limitParam) {
+          list = list.slice(0, this.limitParam);
+        }
+
+        this.cards = list;
+        this.currentIndex = 0;
+        this.isFlipped = false;
+        this.isFinished = false;
         this.loading = false;
         if (this.cards.length > 0) {
           this.speakWord(this.cards[0].word || this.cards[0].front || '');

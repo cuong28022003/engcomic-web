@@ -20,7 +20,8 @@ export interface PreviewVocabItem {
   partOfSpeech?: string;
   meaningVi: string;
   definitionEn?: string;
-  examplesCount: number;
+  usagesCount: number;
+  examplesCount?: number;
   relationsCount: number;
   valid: boolean;
   error?: string;
@@ -87,10 +88,17 @@ export class VocabImportModalComponent {
       partOfSpeech: "verb",
       meaning_vi: "làm dịu bớt, giảm nhẹ",
       definition_en: "to make something less harmful, unpleasant, or bad",
-      examples: [
+      usages: [
         {
-          text: "It is unclear how to mitigate the effects of tourism on the island.",
-          note: "Chưa rõ cách giảm nhẹ tác động của du lịch lên hòn đảo."
+          category: "collocation",
+          structure: "mitigate the effects / impact of something",
+          meaning: "giảm nhẹ tác động / ảnh hưởng của điều gì",
+          examples: [
+            {
+              text: "It is unclear how to mitigate the effects of tourism on the island.",
+              translation: "Chưa rõ cách giảm nhẹ tác động của du lịch lên hòn đảo."
+            }
+          ]
         }
       ],
       relations: [
@@ -435,12 +443,17 @@ QUY TẮC QUAN TRỌNG:
         if (!entry.word && !entry.front) missing.push('word');
         if (!entry.meaning_vi && !entry.meaning && !entry.back) missing.push('meaning_vi');
 
+        const usagesCount = Array.isArray(entry.usages)
+          ? entry.usages.length
+          : (entry.structure || (Array.isArray(entry.examples) && entry.examples.length > 0)) ? 1 : 0;
+
         return {
           word: entry.word ?? entry.front ?? '',
           ipa: entry.ipa,
           partOfSpeech: entry.part_of_speech ?? entry.partOfSpeech,
           meaningVi: entry.meaning_vi ?? entry.meaning ?? entry.back ?? '',
           definitionEn: entry.definition_en ?? entry.definitionEn,
+          usagesCount,
           examplesCount: Array.isArray(entry.examples) ? entry.examples.length : 0,
           relationsCount: Array.isArray(entry.relations) ? entry.relations.length : 0,
           valid: missing.length === 0,

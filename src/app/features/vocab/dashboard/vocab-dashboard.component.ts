@@ -22,6 +22,7 @@ import { VocabCardComponent } from '@shared/components/vocab-card/vocab-card.com
 import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-filter-bar.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { ModalComponent } from '@shared/components/modal/modal.component';
+import { FilterSelectComponent } from '@shared/components/filter-select/filter-select.component';
 
 export interface VocabTopicCategory {
   categoryName: string;
@@ -98,6 +99,7 @@ export const PART_OF_SPEECH_OPTIONS = [
     DataFilterBarComponent,
     PageHeaderComponent,
     ModalComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './vocab-dashboard.component.html',
   styleUrls: ['./vocab-dashboard.component.scss'],

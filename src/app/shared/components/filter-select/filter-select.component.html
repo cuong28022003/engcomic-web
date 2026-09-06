@@ -1,0 +1,106 @@
+<div
+  class="filter-select-container"
+  [class.has-icon]="!!icon()"
+  [class.is-active]="isActive()"
+  [class.is-open]="isOpen()"
+  [class.disabled]="disabled()"
+  [ngClass]="customClass()"
+  [title]="title()"
+>
+  <!-- ── 1. Trigger Button (36px Glassmorphic) ── -->
+  <button
+    type="button"
+    class="filter-select-trigger"
+    [disabled]="disabled()"
+    (click)="toggleDropdown($event)"
+    (keydown)="onTriggerKeydown($event)"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="listbox"
+  >
+    @if (icon()) {
+      <i [class]="icon() + ' filter-select-icon'"></i>
+    }
+
+    @if (prefix()) {
+      <span class="filter-select-prefix">{{ prefix() }}</span>
+    }
+
+    <span class="filter-select-label" [title]="displayLabel()">
+      {{ displayLabel() }}
+    </span>
+
+    @if (displayCount() !== undefined) {
+      <span class="trigger-count-badge">{{ displayCount() }}</span>
+    }
+
+    <i class="fa-solid fa-chevron-down caret-icon" [class.open]="isOpen()"></i>
+  </button>
+
+  <!-- ── 2. Custom Floating Dropdown Menu Panel ── -->
+  @if (isOpen()) {
+    <div
+      class="filter-dropdown-panel"
+      [class.align-right]="alignRight()"
+      (click)="$event.stopPropagation()"
+      role="listbox"
+    >
+      @if (placeholder()) {
+        <button
+          type="button"
+          class="dropdown-option-item"
+          [class.is-selected]="isDefaultSelected()"
+          (click)="selectOption({ value: defaultValue(), label: placeholder() }, $event)"
+          role="option"
+        >
+          <span class="option-label-wrap">
+            <span class="option-text">{{ placeholder() }}</span>
+          </span>
+          @if (isDefaultSelected()) {
+            <i class="fa-solid fa-check check-icon"></i>
+          }
+        </button>
+      }
+
+      @for (opt of allOptions(); track opt.value) {
+        <button
+          type="button"
+          class="dropdown-option-item"
+          [class.is-selected]="isSelected(opt)"
+          [class.disabled]="opt.disabled"
+          [disabled]="opt.disabled"
+          (click)="selectOption(opt, $event)"
+          role="option"
+          [attr.aria-selected]="isSelected(opt)"
+        >
+          <span class="option-label-wrap">
+            @if (opt.icon) {
+              <i [class]="opt.icon + ' option-item-icon'"></i>
+            }
+            <span class="option-text">{{ opt.label }}</span>
+          </span>
+
+          <div class="option-meta">
+            @if (opt.count !== undefined) {
+              <span class="option-count-badge">{{ opt.count }}</span>
+            }
+            @if (isSelected(opt)) {
+              <i class="fa-solid fa-check check-icon"></i>
+            }
+          </div>
+        </button>
+      }
+
+      @if (allOptions().length === 0 && !placeholder()) {
+        <div class="dropdown-empty-item">
+          <i class="fa-solid fa-inbox"></i>
+          <span>Không có lựa chọn nào</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── 3. Hidden Projected Content Slot ── -->
+  <div class="projected-options-slot" style="display: none;" aria-hidden="true">
+    <ng-content></ng-content>
+  </div>
+</div>

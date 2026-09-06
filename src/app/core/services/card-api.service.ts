@@ -100,8 +100,22 @@ export class CardApiService extends ApiBaseService {
   }
 
   /** GET /api/card/practice/queue — lấy queue bài tập theo Level */
-  getPracticeQueue(deckId?: string, limit = 20): Observable<{ items: PracticeQueueItem[]; totalDue: number }> {
-    const params: any = { limit };
+  getPracticeQueue(
+    deckId?: string,
+    options?: { limit?: number; level?: number; pos?: string; starOnly?: boolean; shuffle?: boolean } | number
+  ): Observable<{ items: PracticeQueueItem[]; totalDue: number }> {
+    const params: any = {};
+    if (typeof options === 'number') {
+      params.limit = options;
+    } else if (options) {
+      if (options.limit) params.limit = options.limit;
+      if (options.level && options.level > 0) params.level = options.level;
+      if (options.pos && options.pos !== 'all') params.pos = options.pos;
+      if (options.starOnly) params.starOnly = true;
+      if (options.shuffle) params.shuffle = true;
+    } else {
+      params.limit = 20;
+    }
     if (deckId) params.deckId = deckId;
     return this.get<{ items: PracticeQueueItem[]; totalDue: number }>(`${this.BASE}/practice/queue`, params);
   }

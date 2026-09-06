@@ -3,6 +3,8 @@
    ========================================================= */
 
 :root {
+  color-scheme: dark;
+
   /* === 1. Color Palette === */
   --primary-color: #ff3377;
   --primary-hover: #e02466;
@@ -103,6 +105,7 @@
 
 html, body {
   height: 100%;
+  color-scheme: dark;
   font-family: var(--font-main);
   background-color: var(--bg-main);
   color: var(--text-main);
@@ -121,6 +124,16 @@ button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
+}
+
+select {
+  color-scheme: dark;
+
+  option,
+  optgroup {
+    background-color: #161926;
+    color: #f8fafc;
+  }
 }
 
 /* === Scrollbars === */

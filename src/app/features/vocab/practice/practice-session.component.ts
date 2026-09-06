@@ -35,6 +35,11 @@ export class PracticeSessionComponent implements OnInit {
   queue = signal<PracticeQueueItem[]>([]);
   currentIndex = signal<number>(0);
   deckId = signal<string>('');
+  levelParam = signal<number>(0);
+  posParam = signal<string>('all');
+  limitParam = signal<number>(20);
+  starParam = signal<boolean>(false);
+  shuffleParam = signal<boolean>(false);
 
   // Stats
   totalCount = signal<number>(0);
@@ -70,6 +75,11 @@ export class PracticeSessionComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.deckId.set(params['deckId'] || '');
+      this.levelParam.set(params['level'] ? parseInt(params['level'], 10) : 0);
+      this.posParam.set(params['pos'] || 'all');
+      this.limitParam.set(params['limit'] ? parseInt(params['limit'], 10) : 20);
+      this.starParam.set(params['starOnly'] === 'true' || params['starOnly'] === true);
+      this.shuffleParam.set(params['shuffle'] === 'true' || params['shuffle'] === true);
       this.loadQueue();
     });
   }
@@ -78,7 +88,13 @@ export class PracticeSessionComponent implements OnInit {
     this.state.set('loading');
     const dId = this.deckId();
 
-    this.cardApi.getPracticeQueue(dId || undefined).subscribe({
+    this.cardApi.getPracticeQueue(dId || undefined, {
+      limit: this.limitParam(),
+      level: this.levelParam(),
+      pos: this.posParam(),
+      starOnly: this.starParam(),
+      shuffle: this.shuffleParam(),
+    }).subscribe({
       next: (res) => {
         const items = res?.items || [];
         if (items.length === 0) {

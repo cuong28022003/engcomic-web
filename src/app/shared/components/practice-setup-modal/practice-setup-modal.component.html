@@ -1,0 +1,224 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-container glass-modal" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-title-wrap">
+          <div class="header-icon-box">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 class="modal-title">Thiết Lập Phiên Luyện Tập</h3>
+            <p class="modal-subtitle">
+              Bộ thẻ: <strong>{{ deck?.name || 'Từ Vựng' }}</strong> • {{ cards.length }} từ vựng
+            </p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="onClose()" title="Đóng modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body custom-scroll">
+        <!-- 1. Learning Mode Selector -->
+        <div class="setup-section">
+          <label class="section-label">
+            <i class="fa-solid fa-sliders"></i> 1. Chọn Chế Độ Luyện Tập
+          </label>
+          <div class="mode-cards-grid">
+            <!-- 4-Level Interactive -->
+            <div
+              class="mode-card"
+              [class.active]="selectedMode() === '4level'"
+              (click)="setMode('4level')"
+            >
+              <div class="mode-badge-rec">
+                <i class="fa-solid fa-sparkles"></i> AI 4-Level
+              </div>
+              <div class="mode-icon-circle level-mode">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+              <div class="mode-info">
+                <h4 class="mode-name">Luyện Tập 4 Cấp Độ</h4>
+                <p class="mode-desc">
+                  Trắc nghiệm nhận biết, Điền từ ngữ cảnh, Xếp từ thành câu & Ứng dụng thực tế AI.
+                </p>
+                <div class="mode-meta">
+                  <span class="meta-tag ready-tag">
+                    <i class="fa-solid fa-circle-check"></i> {{ readyCount() }} từ sẵn sàng bài tập
+                  </span>
+                </div>
+              </div>
+              <div class="mode-radio">
+                <i class="fa-solid" [class.fa-circle-dot]="selectedMode() === '4level'" [class.fa-circle]="selectedMode() !== '4level'"></i>
+              </div>
+            </div>
+
+            <!-- Flashcard Quick Review -->
+            <div
+              class="mode-card"
+              [class.active]="selectedMode() === 'flashcard'"
+              (click)="setMode('flashcard')"
+            >
+              <div class="mode-badge-rec quick-badge">
+                <i class="fa-solid fa-bolt"></i> Siêu Nhanh
+              </div>
+              <div class="mode-icon-circle flashcard-mode">
+                <i class="fa-solid fa-bolt-lightning"></i>
+              </div>
+              <div class="mode-info">
+                <h4 class="mode-name">Ôn Nhanh Flashcard (SRS)</h4>
+                <p class="mode-desc">
+                  Lật thẻ 3D tốc độ cao, nghe phát âm chuẩn, chấm điểm Again/Hard/Good/Easy.
+                </p>
+                <div class="mode-meta">
+                  <span class="meta-tag all-tag">
+                    <i class="fa-solid fa-layer-group"></i> Luyện toàn bộ {{ cards.length }} từ
+                  </span>
+                </div>
+              </div>
+              <div class="mode-radio">
+                <i class="fa-solid" [class.fa-circle-dot]="selectedMode() === 'flashcard'" [class.fa-circle]="selectedMode() !== 'flashcard'"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Smart Filters -->
+        <div class="setup-section">
+          <label class="section-label">
+            <i class="fa-solid fa-filter"></i> 2. Bộ Lọc Từ Vựng Mục Tiêu
+          </label>
+
+          <!-- Level Filter Chips -->
+          <div class="filter-group">
+            <span class="sub-label">Cấp độ thành thạo:</span>
+            <div class="chips-row">
+              @for (opt of levelOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="chip-btn"
+                  [class.active]="selectedLevel() === opt.value"
+                  (click)="setLevel(opt.value)"
+                >
+                  <i [class]="opt.icon"></i>
+                  <span>{{ opt.label }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Part of Speech & Special Toggles -->
+          <div class="filter-controls-row">
+            <div class="select-field-wrap">
+              <span class="sub-label">Từ loại (Part of Speech):</span>
+              <div class="select-wrapper">
+                <select [ngModel]="selectedPos()" (ngModelChange)="setPos($event)" class="custom-select">
+                  <option value="all">Tất cả từ loại</option>
+                  @for (pos of availablePosList; track pos.key) {
+                    <option [value]="pos.key">
+                      {{ pos.label }} ({{ pos.count }})
+                    </option>
+                  }
+                </select>
+                <i class="fa-solid fa-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <!-- Toggles for Favorite & Shuffle -->
+            <div class="toggles-wrap">
+              <button
+                type="button"
+                class="toggle-btn"
+                [class.active]="isStarOnly()"
+                (click)="toggleStarOnly()"
+                title="Chỉ học các từ đã gắn dấu sao yêu thích"
+              >
+                <i class="fa-solid fa-star star-icon"></i>
+                <span>Chỉ từ yêu thích</span>
+              </button>
+
+              <button
+                type="button"
+                class="toggle-btn"
+                [class.active]="isShuffle()"
+                (click)="toggleShuffle()"
+                title="Trộn ngẫu nhiên thứ tự thẻ khi bắt đầu"
+              >
+                <i class="fa-solid fa-shuffle shuffle-icon"></i>
+                <span>Trộn ngẫu nhiên</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Target Number of Cards (Limit) -->
+        <div class="setup-section">
+          <label class="section-label">
+            <i class="fa-solid fa-bullseye"></i> 3. Số Lượng Thẻ Mỗi Phiên
+          </label>
+          <div class="limit-chips-grid">
+            @for (opt of limitOptions; track opt.value) {
+              <div
+                class="limit-card"
+                [class.active]="selectedLimit() === opt.value"
+                (click)="setLimit(opt.value)"
+              >
+                <div class="limit-top">
+                  <span class="limit-val">{{ opt.label }}</span>
+                  @if (opt.badge) {
+                    <span class="limit-badge">{{ opt.badge }}</span>
+                  }
+                </div>
+                <span class="limit-time">
+                  <i class="fa-regular fa-clock"></i> {{ opt.timeEstimate }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Live Preview Status Banner -->
+        <div class="preview-status-banner" [class.warning]="matchingCards().length === 0">
+          <div class="preview-icon">
+            @if (matchingCards().length > 0) {
+              <i class="fa-solid fa-circle-check"></i>
+            } @else {
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            }
+          </div>
+          <div class="preview-text">
+            @if (matchingCards().length > 0) {
+              <div>
+                <strong>Tìm thấy {{ matchingCards().length }} từ vựng phù hợp bộ lọc.</strong>
+                <span> Phiên học sẽ khởi tạo với <strong>{{ effectiveCardCount() }}</strong> thẻ được chọn.</span>
+              </div>
+            } @else {
+              <div>
+                <strong>Không tìm thấy từ vựng nào thỏa mãn bộ lọc hiện tại!</strong>
+                <span> Vui lòng chọn lại cấp độ hoặc từ loại khác để bắt đầu.</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">
+          Hủy bỏ
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-start-session"
+          [disabled]="matchingCards().length === 0"
+          (click)="startSession()"
+        >
+          <i class="fa-solid fa-rocket"></i>
+          <span>Bắt Đầu Luyện Tập ({{ effectiveCardCount() }} Từ)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}

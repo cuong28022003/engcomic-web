@@ -18,6 +18,8 @@ import { VocabCardComponent } from '@shared/components/vocab-card/vocab-card.com
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
 import { FormInputComponent } from '@shared/components/form-input/form-input.component';
 import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-filter-bar.component';
+import { FilterSelectComponent } from '@shared/components/filter-select/filter-select.component';
+import { PracticeSetupModalComponent, PracticeMode } from '@shared/components/practice-setup-modal/practice-setup-modal.component';
 
 @Component({
   selector: 'app-deck-detail',
@@ -28,11 +30,13 @@ import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-
     FormsModule,
     VocabImportModalComponent,
     ExerciseImportModalComponent,
+    PracticeSetupModalComponent,
     BulkActionsBarComponent,
     VocabCardComponent,
     BreadcrumbComponent,
     FormInputComponent,
     DataFilterBarComponent,
+    FilterSelectComponent,
   ],
   templateUrl: './deck-detail.component.html',
   styleUrls: ['./deck-detail.component.scss'],
@@ -54,9 +58,57 @@ export class DeckDetailComponent implements OnInit {
   searchQuery = signal<string>('');
   filterStatus = signal<string>('all');
   filterLevel = signal<string>('all');
+  filterPos = signal<string>('all');
   readonly isStarActive = signal<boolean>(false);
   viewMode = signal<'grid' | 'list'>((localStorage.getItem('deck_detail_view_mode') as 'grid' | 'list') || 'grid');
   notFound = signal<boolean>(false);
+
+  // Dynamic list of Parts of Speech present in the current deck's cards with counts
+  availablePosList = computed(() => {
+    const list = this.cards();
+    const countMap = new Map<string, number>();
+
+    for (const c of list) {
+      const rawPos = (c.partOfSpeech || '').trim().toLowerCase();
+      const key = rawPos || 'unknown';
+      countMap.set(key, (countMap.get(key) || 0) + 1);
+    }
+
+    const posLabels: Record<string, string> = {
+      noun: 'Danh từ (Noun)',
+      verb: 'Động từ (Verb)',
+      adjective: 'Tính từ (Adjective)',
+      adverb: 'Trạng từ (Adverb)',
+      preposition: 'Giới từ (Preposition)',
+      conjunction: 'Liên từ (Conjunction)',
+      pronoun: 'Đại từ (Pronoun)',
+      phrasal_verb: 'Cụm động từ (Phrasal Verb)',
+      collocation: 'Cụm từ (Collocation)',
+      idiom: 'Thành ngữ (Idiom)',
+      phrase: 'Cụm từ (Phrase)',
+      transition_word: 'Trạng từ liên kết',
+      interjection: 'Thán từ (Interjection)',
+    };
+
+    const result: Array<{ key: string; label: string; count: number }> = [];
+    countMap.forEach((count, key) => {
+      let label = posLabels[key];
+      if (!label) {
+        label = key === 'unknown' ? 'Chưa phân loại' : key.charAt(0).toUpperCase() + key.slice(1);
+      }
+      result.push({ key, label, count });
+    });
+
+    const order = ['noun', 'verb', 'adjective', 'adverb', 'preposition', 'conjunction', 'phrasal_verb', 'collocation', 'idiom', 'phrase', 'pronoun', 'interjection', 'transition_word', 'unknown'];
+    return result.sort((a, b) => {
+      const idxA = order.indexOf(a.key);
+      const idxB = order.indexOf(b.key);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return b.count - a.count;
+    });
+  });
 
   filterTab = computed<'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'>(() => {
     if (this.filterStatus() === 'ready') return 'ready';
@@ -79,6 +131,8 @@ export class DeckDetailComponent implements OnInit {
   // Shared Modals
   isVocabModalOpen = signal<boolean>(false);
   isExerciseModalOpen = signal<boolean>(false);
+  isPracticeSetupModalOpen = signal<boolean>(false);
+  practiceSetupInitialMode = signal<PracticeMode>('4level');
   promptData = signal<PracticePromptResponse | null>(null);
 
   // Edit Deck Modal
@@ -114,11 +168,12 @@ export class DeckDetailComponent implements OnInit {
     return { l1, l2, l3, l4, total: list.length };
   });
 
-  // Filtered cards by search query, status, level & star
+  // Filtered cards by search query, status, level, pos & star
   filteredCards = computed<Card[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
     const status = this.filterStatus();
     const level = this.filterLevel();
+    const pos = this.filterPos();
     const star = this.isStarActive();
     let list = this.cards();
 
@@ -142,6 +197,16 @@ export class DeckDetailComponent implements OnInit {
       list = list.filter(c => (c.masteryLevel || 1) >= 4);
     }
 
+    if (pos !== 'all') {
+      list = list.filter(c => {
+        const cardPos = (c.partOfSpeech || '').trim().toLowerCase();
+        if (pos === 'unknown') {
+          return !cardPos;
+        }
+        return cardPos === pos.toLowerCase();
+      });
+    }
+
     if (!q) return list;
     return list.filter(c =>
       (c.word && c.word.toLowerCase().includes(q)) ||
@@ -151,10 +216,15 @@ export class DeckDetailComponent implements OnInit {
   });
 
   isFilterActive = computed<boolean>(() => {
-    return this.filterStatus() !== 'all' || this.filterLevel() !== 'all' || this.isStarActive() || !!this.searchQuery().trim();
+    return this.filterStatus() !== 'all' ||
+      this.filterLevel() !== 'all' ||
+      this.filterPos() !== 'all' ||
+      this.isStarActive() ||
+      !!this.searchQuery().trim();
   });
 
   setFilterTab(tab: 'all' | 'ready' | 'pending' | 'l1' | 'l2' | 'l3' | 'l4'): void {
+    this.filterPos.set('all');
     if (tab === 'all') {
       this.filterStatus.set('all');
       this.filterLevel.set('all');
@@ -178,6 +248,11 @@ export class DeckDetailComponent implements OnInit {
     this.clearSelection();
   }
 
+  onFilterPosChange(pos: string): void {
+    this.filterPos.set(pos);
+    this.clearSelection();
+  }
+
   onStarFilterChange(active: boolean): void {
     this.isStarActive.set(active);
     this.clearSelection();
@@ -187,6 +262,7 @@ export class DeckDetailComponent implements OnInit {
     this.searchQuery.set('');
     this.filterStatus.set('all');
     this.filterLevel.set('all');
+    this.filterPos.set('all');
     this.isStarActive.set(false);
     this.clearSelection();
   }
@@ -370,9 +446,17 @@ export class DeckDetailComponent implements OnInit {
     this.loadCards();
   }
 
+  openPracticeSetup(mode: PracticeMode = '4level'): void {
+    this.practiceSetupInitialMode.set(mode);
+    this.isPracticeSetupModalOpen.set(true);
+  }
+
+  closePracticeSetup(): void {
+    this.isPracticeSetupModalOpen.set(false);
+  }
+
   startPractice(): void {
-    const id = this.deckId();
-    this.router.navigate(['/vocab/practice'], { queryParams: { deckId: id } });
+    this.openPracticeSetup('4level');
   }
 
   // ─── Edit Deck ────────────────────────────────────────────────

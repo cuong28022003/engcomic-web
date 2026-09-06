@@ -55,6 +55,7 @@ export class AttemptReviewComponent implements OnInit {
   addedWords = signal<Set<string>>(new Set());
 
   showImportModal = signal<boolean>(false);
+  isImportingReviews = signal<boolean>(false);
 
   readonly reviewItemsMap = computed(() => {
     const map = new Map<number, ToeicReviewItem>();
@@ -165,17 +166,31 @@ export class AttemptReviewComponent implements OnInit {
     return this.reviewItemsMap().get(qNum) || null;
   });
 
+  readonly currentFilterLabel = computed<string>(() => {
+    switch (this.filterMode()) {
+      case 'wrong':
+        return 'Câu làm sai';
+      case 'flagged':
+        return 'Câu phân vân';
+      case 'correct':
+        return 'Câu làm đúng';
+      case 'reviewed':
+        return 'Câu đã có AI';
+      case 'all':
+      default:
+        return 'Tất cả câu hỏi';
+    }
+  });
+
   readonly questionsNeedingReview = computed(() => {
-    return this.allQuestions()
-      .filter(a => !a.isCorrect || a.flagged)
-      .map(a => ({
-        questionNumber: a.questionNumber,
-        part: a.part,
-        userAnswer: a.userAnswer,
-        correctAnswer: a.correctAnswer || '',
-        isCorrect: !!a.isCorrect,
-        flagged: !!a.flagged
-      }));
+    return this.filteredQuestions().map(a => ({
+      questionNumber: a.questionNumber,
+      part: a.part,
+      userAnswer: a.userAnswer,
+      correctAnswer: a.correctAnswer || '',
+      isCorrect: this.isAnswerCorrect(a),
+      flagged: !!a.flagged
+    }));
   });
 
   ngOnInit() {
@@ -311,24 +326,29 @@ export class AttemptReviewComponent implements OnInit {
   }
 
   openAiImportModal() {
+    this.isImportingReviews.set(false);
     this.showImportModal.set(true);
     this.cdr.markForCheck();
   }
 
   closeAiImportModal() {
+    this.isImportingReviews.set(false);
     this.showImportModal.set(false);
     this.cdr.markForCheck();
   }
 
   handleImportReviews(payload: ImportReviewItemsPayload) {
+    this.isImportingReviews.set(true);
     this.readerApi.importAttemptReviews(this.attemptId(), payload).subscribe({
       next: (savedList) => {
+        this.isImportingReviews.set(false);
         this.reviewItems.set(savedList || []);
         this.showImportModal.set(false);
         this.toast.success(`Đã import thành công phân tích cho ${savedList.length} câu!`);
         this.cdr.markForCheck();
       },
       error: (err: any) => {
+        this.isImportingReviews.set(false);
         this.toast.error(err.message || 'Import thất bại. Vui lòng kiểm tra lại định dạng JSON!');
         this.cdr.markForCheck();
       }

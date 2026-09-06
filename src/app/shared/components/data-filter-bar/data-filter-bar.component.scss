@@ -1,4 +1,6 @@
 .data-filter-bar {
+  position: relative;
+  z-index: 25;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -181,42 +183,14 @@
 }
 
 .projected-filters-slot {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 
-  // Global styling for projected filter controls
+  // Projection slot support
   ::ng-deep {
-    .filter-select {
-      height: 36px;
-      padding: 0 10px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      color: #cbd5e1;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      outline: none;
-      transition: all 0.2s ease;
-
-      &:hover {
-        border-color: rgba(255, 255, 255, 0.2);
-        color: #fff;
-      }
-
-      &:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
-      }
-
-      option {
-        background: #1e1e2d;
-        color: #fff;
-      }
-    }
-
     .filter-input {
       height: 36px;
       padding: 0 10px;

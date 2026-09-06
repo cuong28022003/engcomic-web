@@ -5,6 +5,7 @@ import { ModalComponent } from '@shared/components/modal/modal.component';
 import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 import { ImportReviewItemsPayload } from '../../models';
 import { ToastService } from '@core/services/toast.service';
+import { extractAndParseJson } from '@shared/utils/json-repair.util';
 
 @Component({
   selector: 'app-ai-review-import-modal',
@@ -17,7 +18,9 @@ export class AiReviewImportModalComponent {
   private toast = inject(ToastService);
 
   readonly isOpen = input<boolean>(false);
+  readonly isSubmitting = input<boolean>(false);
   readonly testName = input<string>('');
+  readonly filterLabel = input<string>('');
   readonly questionsToReview = input<Array<{
     questionNumber: number;
     part: number;
@@ -38,19 +41,33 @@ export class AiReviewImportModalComponent {
   });
 
   copied = signal<boolean>(false);
-  rawJsonInput = '';
+  rawJsonInput = signal<string>('');
   parseError = signal<string>('');
   isImporting = signal<boolean>(false);
+
+  readonly effectiveIsSubmitting = computed(() => this.isSubmitting() || this.isImporting());
 
   constructor() {
     effect(() => {
       if (this.isOpen()) {
         this.activeTab.set('prompt');
-        this.rawJsonInput = '';
+        this.rawJsonInput.set('');
         this.clearError();
         this.isImporting.set(false);
       }
     });
+
+    effect(() => {
+      if (!this.isSubmitting()) {
+        this.isImporting.set(false);
+      }
+    });
+  }
+
+  onJsonChange(value: string): void {
+    this.rawJsonInput.set(value);
+    this.clearError();
+    this.isImporting.set(false);
   }
 
   /** Danh sách câu cần phân tích */
@@ -72,10 +89,20 @@ export class AiReviewImportModalComponent {
     'AI sẽ đọc trực tiếp đề trong PDF và trả về JSON phân tích chuẩn xác.'
   ];
 
-  readonly metaBadges = computed<AiMetaBadge[]>(() => [
-    { icon: 'fa-solid fa-file-pdf', label: this.selectedTestName(), variant: 'primary' },
-    { icon: 'fa-solid fa-circle-question', label: `${this.reviewQuestions().length} câu cần phân tích`, variant: 'warning' }
-  ]);
+  readonly metaBadges = computed<AiMetaBadge[]>(() => {
+    const list: AiMetaBadge[] = [
+      { icon: 'fa-solid fa-file-pdf', label: this.selectedTestName(), variant: 'primary' }
+    ];
+    if (this.filterLabel()) {
+      list.push({ icon: 'fa-solid fa-filter', label: `Bộ lọc: ${this.filterLabel()}`, variant: 'info' });
+    }
+    list.push({
+      icon: 'fa-solid fa-circle-question',
+      label: `${this.reviewQuestions().length} câu (${this.filterLabel() || 'cần phân tích'})`,
+      variant: 'warning'
+    });
+    return list;
+  });
 
   readonly sampleReviewJson = JSON.stringify({
     items: [
@@ -106,28 +133,44 @@ export class AiReviewImportModalComponent {
     if (err) {
       return { status: 'invalid', errorMessage: err };
     }
-    const raw = this.rawJsonInput.trim();
+    const raw = this.rawJsonInput().trim();
     if (!raw) return null;
     try {
-      const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim());
-      const items = Array.isArray(parsed) ? parsed : parsed.items;
-      if (Array.isArray(items)) {
+      const parsed = extractAndParseJson(raw);
+      const items = Array.isArray(parsed) ? parsed : (parsed?.items || parsed?.questions);
+      if (Array.isArray(items) && items.length > 0) {
         return { status: 'valid', itemCount: items.length };
       }
-    } catch {}
-    return null;
+      return { status: 'invalid', errorMessage: 'JSON cần chứa mảng "items" các câu phân tích.' };
+    } catch (e: any) {
+      return { status: 'invalid', errorMessage: e.message || 'Cú pháp JSON chưa đúng.' };
+    }
   });
 
   readonly generatedPrompt = computed(() => {
     const list = this.reviewQuestions();
     const name = this.selectedTestName();
+    const filter = this.filterLabel();
+
+    if (list.length === 0) {
+      return `Hiện tại không có câu hỏi nào trong bộ lọc "${filter || 'hiện tại'}" để tạo prompt phân tích.`;
+    }
 
     const questionRows = list.map(q => {
-      const extra = q.flagged && q.isCorrect ? ' (câu tôi đánh dấu phân vân dù chọn đúng)' : '';
-      return `- Câu ${q.questionNumber} (Part ${q.part}): tôi chọn "${q.userAnswer || 'Bỏ qua'}", đáp án đúng "${q.correctAnswer}"${extra}`;
+      let statusNote = '';
+      if (!q.isCorrect) {
+        statusNote = q.userAnswer ? ' (tôi làm sai)' : ' (chưa làm/bỏ qua)';
+      } else if (q.flagged) {
+        statusNote = ' (làm đúng nhưng phân vân)';
+      } else {
+        statusNote = ' (làm đúng, phân tích từ vựng & cấu trúc hay)';
+      }
+      return `- Câu ${q.questionNumber} (Part ${q.part}): tôi chọn "${q.userAnswer || 'Bỏ qua'}", đáp án đúng "${q.correctAnswer}"${statusNote}`;
     }).join('\n');
 
-    return `Tôi vừa làm đề thi TOEIC "${name}" (đã đính kèm file PDF). Dưới đây là danh sách câu tôi làm sai hoặc phân vân, hãy đọc nội dung trong PDF đính kèm và phân tích chi tiết từng câu:
+    const filterIntro = filter ? `theo bộ lọc "${filter}"` : `cần phân tích`;
+
+    return `Tôi vừa làm đề thi TOEIC "${name}" (đã đính kèm file PDF). Dưới đây là danh sách các câu ${filterIntro}, hãy đọc nội dung trong PDF đính kèm và phân tích chi tiết từng câu:
 
 ${questionRows}
 
@@ -198,12 +241,11 @@ Lưu ý:
 
   onImport() {
     this.clearError();
-    const raw = this.rawJsonInput.trim();
+    const raw = this.rawJsonInput().trim();
     if (!raw) return;
 
     try {
-      const cleaned = raw.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = extractAndParseJson(raw);
 
       let items: any[] = [];
       if (Array.isArray(parsed)) {
@@ -248,10 +290,11 @@ Lưu ý:
 
   onClose() {
     this.activeTab.set('prompt');
-    this.rawJsonInput = '';
+    this.rawJsonInput.set('');
     this.clearError();
     this.isImporting.set(false);
     this.close.emit();
     this.closed.emit();
   }
 }
+
