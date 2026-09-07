@@ -13,6 +13,7 @@ import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@sh
 
 import { DeckApiService } from '@core/services/deck-api.service';
 import { AuthService } from '@core/services/auth.service';
+import { parseCleanJson } from '@shared/utils/json.util';
 
 export interface PreviewVocabItem {
   word: string;
@@ -209,7 +210,7 @@ Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema
     "part_of_speech": "noun|verb|adjective|adverb|preposition|conjunction|transition_word|phrasal_verb|idiom|collocation",
     "meaning_vi": "nghĩa tiếng Việt chính xác và ngắn gọn",
     "definition_en": "định nghĩa tiếng Anh ngắn gọn, súc tích",
-    "topic": "Tên chủ đề tiếng Anh (Title Case, 1-3 từ). Gợi ý: Daily Life, Travel, Food & Drinks, Shopping, Family & Friends, Health & Fitness, Business, Office & Workplace, Finance & Banking, Marketing & Sales, Technology & IT, Education, Environment & Nature, Science, Society & Law... Nếu từ vựng thuộc lĩnh vực chuyên biệt khác (ví dụ: Medicine, Sports, Aviation, Fashion...), hãy tự đặt tên chủ đề chính xác. Nếu là từ vựng đa dụng không thuộc riêng lĩnh vực nào, đặt là 'General Vocabulary'.",
+    "topic": "Tên chủ đề tiếng Anh (Title Case, 1-3 từ). Gợi ý: Daily Life, Travel, Food & Drinks, Shopping, Family & Friends, Health & Fitness, Business, Office & Workplace, Finance & Banking, Marketing & Sales, Technology & IT, Education, Environment & Nature, Science, Society & Law... Nếu là từ trừu tượng hoặc đa dụng, đặt là 'General Vocabulary'.",
     "usages": [
       {
         "category": "time|place|direction|cause_reason|purpose|contrast|condition|addition|result|manner|degree_extent|collocation|phrasal_verb|idiom|phrase",
@@ -233,16 +234,15 @@ Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema
 QUY TẮC QUAN TRỌNG:
 1. BẮT BUỘC QUY VỀ TỪ NGUYÊN MẪU (LEMMA / BASE FORM):
    - Trường "word" PHẢI LUÔN LÀ DẠNG TỪ NGUYÊN MẪU / TỪ GỐC (Base form / Infinitive / Singular form).
-   - Ví dụ: Người dùng note "reported" / "reporting" -> "word" phải là "report"; "decisions" -> "decision"; "accommodated" -> "accommodate"; "faster" -> "fast".
-   - Nếu là cụm từ (collocation, phrasal verb, idiom), đưa động từ trong cụm về dạng nguyên mẫu (VD: "looked forward to" -> "look forward to", "taking into account" -> "take into account").
-2. BẮT BUỘC: MỌI TỪ VỰNG (dù là Danh từ, Động từ, Tính từ, Trạng từ, Giới từ, Liên từ hay Cụm từ) ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
-3. QUY TẮC GÁN CHỦ ĐỀ ("topic"):
-   - Viết hoa chữ cái đầu mỗi từ (Title Case), ngắn gọn bằng tiếng Anh (1-3 từ, VD: "Travel", "Technology & IT", "Medicine").
-   - Nếu từ vựng có thể xếp vào các chủ đề quen thuộc (TOEIC / IELTS / Đời sống), ưu tiên chọn từ danh sách gợi ý để đồng bộ bộ lọc.
-   - Nếu từ vựng thuộc chuyên ngành/lĩnh vực khác ngoài danh sách (Y tế, Hàng không, Thể thao, Thời trang...), HÃY TỰ DO ĐẶT TÊN CHỦ ĐỀ PHÙ HỢP (hệ thống sẽ tự động tổng hợp chủ đề mới vào danh mục lọc của người dùng).
-   - Nếu là từ trừu tượng hoặc từ ngữ pháp đa dụng, đặt là "General Vocabulary".
+   - Ví dụ: "reported" -> "report"; "decisions" -> "decision"; "looked forward to" -> "look forward to".
+2. BẮT BUỘC: MỌI TỪ VỰNG ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
+3. QUY TẮC GÁN CHỦ ĐỀ ("topic"): Viết hoa chữ cái đầu mỗi từ (Title Case), ngắn gọn bằng tiếng Anh (1-3 từ).
 4. Mọi câu ví dụ ngữ cảnh minh họa phải nằm trực tiếp bên trong danh sách "examples" của từng cấu trúc trong "usages".
-5. Chỉ trả về JSON array thuần túy trong cặp ngoặc vuông [ ... ], không bao bọc thêm bất kỳ lời giải thích nào.`;
+
+=== QUY TẮC BẮT BUỘC ĐỂ TRÁNH LỖI CÚ PHÁP JSON (ZERO-ERROR PROMPT): ===
+1. Chỉ trả về DUY NHẤT một JSON array thuần hợp lệ trong cặp ngoặc vuông [ ... ], KHÔNG thêm bất kỳ lời chào, giải thích hoặc markdown block nào.
+2. QUY TẮC DẤU TRÍCH DẪN: Trong các chuỗi "meaning_vi", "definition_en", "structure", "note", "examples", TUYỆT ĐỐI KHÔNG dùng dấu ngoặc kép đôi " để trích dẫn từ. BẮT BUỘC dùng dấu ngoặc đơn '...' (Ví dụ: 'take action' thay vì "take action").
+3. Đảm bảo cấu trúc JSON hợp lệ, các phần tử ngăn cách bởi dấu phẩy ,, không có dấu phẩy thừa ở cuối.`;
 
   generatedPrompt = signal<string>('');
 
@@ -435,7 +435,7 @@ QUY TẮC QUAN TRỌNG:
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = parseCleanJson(raw);
       const arr = Array.isArray(parsed) ? parsed : [parsed];
 
       const items: PreviewVocabItem[] = arr.map((entry: any) => {
@@ -488,7 +488,7 @@ QUY TẮC QUAN TRỌNG:
     // If in Edit Mode and editing 1 card:
     if (currentCard?.id && this.previewItems().length === 1) {
       try {
-        const parsed = JSON.parse(cleaned);
+        const parsed = parseCleanJson(cleaned);
         const item = Array.isArray(parsed) ? parsed[0] : parsed;
 
         const payload: Partial<Card> = {

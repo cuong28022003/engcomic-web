@@ -6,6 +6,7 @@ import { AiImportWorkspaceComponent, AiPromptPreset, AiValidationStatus } from '
 import { ToastService } from '@core/services/toast.service';
 import { GrammarApiService } from '@core/services/grammar-api.service';
 import { GrammarPoint, GrammarExample, GRAMMAR_CATEGORIES } from '../../models/grammar.model';
+import { parseCleanJson } from '@shared/utils/json.util';
 
 type ModalTab = 'manual' | 'import_json';
 
@@ -257,9 +258,11 @@ Nhóm category phù hợp: [${preset.category}].
   }
 ]
 
-YÊU CẦU ĐẦU RA:
-1. Trả về DUY NHẤT một JSON array thuần hợp lệ (KHÔNG kèm lời dẫn, KHÔNG bọc thêm giải thích ngoài JSON).
-2. Chuẩn hóa đầy đủ các trường summary, usages, common_mistakes, comparisons và câu ví dụ kèm bản dịch tiếng Việt.`;
+=== QUY TẮC BẮT BUỘC ĐỂ TRÁNH LỖI CÚ PHÁP JSON (ZERO-ERROR PROMPT): ===
+1. Chỉ trả về DUY NHẤT một JSON array thuần hợp lệ trong cặp ngoặc vuông [ ... ] (KHÔNG kèm lời dẫn, KHÔNG bọc thêm bất kỳ văn bản nào ngoài JSON).
+2. QUY TẮC DẤU TRÍCH DẪN (QUAN TRỌNG NHẤT): Trong các chuỗi "summary", "title", "structure", "explanation", "note", "common_mistakes", "comparisons", TUYỆT ĐỐI KHÔNG dùng dấu ngoặc kép đôi " để trích dẫn từ hoặc câu. BẮT BUỘC dùng dấu ngoặc đơn '...' (Ví dụ: 'since/for' thay vì "since/for") để không làm hỏng cú pháp JSON.
+3. Đảm bảo cấu trúc JSON hợp lệ: keys bọc trong ngoặc kép ", các phần tử ngăn cách bởi dấu phẩy ,, không có dấu phẩy thừa ở cuối.
+4. Chuẩn hóa đầy đủ các trường summary, usages, common_mistakes, comparisons và câu ví dụ kèm bản dịch tiếng Việt.`;
   });
 
   // Real-time JSON parser & validator
@@ -274,8 +277,7 @@ YÊU CẦU ĐẦU RA:
     }
 
     try {
-      const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = parseCleanJson(raw);
       const items = Array.isArray(parsed) ? parsed : (parsed.items || [parsed]);
 
       if (!Array.isArray(items) || items.length === 0) {

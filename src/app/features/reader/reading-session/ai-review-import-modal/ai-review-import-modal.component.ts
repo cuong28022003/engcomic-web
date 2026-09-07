@@ -5,7 +5,7 @@ import { ModalComponent } from '@shared/components/modal/modal.component';
 import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
 import { ImportReviewItemsPayload } from '../../models';
 import { ToastService } from '@core/services/toast.service';
-import { extractAndParseJson } from '@shared/utils/json-repair.util';
+import { parseCleanJson } from '@shared/utils/json.util';
 
 @Component({
   selector: 'app-ai-review-import-modal',
@@ -136,7 +136,7 @@ export class AiReviewImportModalComponent {
     const raw = this.rawJsonInput().trim();
     if (!raw) return null;
     try {
-      const parsed = extractAndParseJson(raw);
+      const parsed = parseCleanJson(raw);
       const items = Array.isArray(parsed) ? parsed : (parsed?.items || parsed?.questions);
       if (Array.isArray(items) && items.length > 0) {
         return { status: 'valid', itemCount: items.length };
@@ -165,7 +165,7 @@ export class AiReviewImportModalComponent {
       } else {
         statusNote = ' (làm đúng, phân tích từ vựng & cấu trúc hay)';
       }
-      return `- Câu ${q.questionNumber} (Part ${q.part}): tôi chọn "${q.userAnswer || 'Bỏ qua'}", đáp án đúng "${q.correctAnswer}"${statusNote}`;
+      return `- Câu ${q.questionNumber} (Part ${q.part}): tôi chọn '${q.userAnswer || 'Bỏ qua'}', đáp án đúng '${q.correctAnswer}'${statusNote}`;
     }).join('\n');
 
     const filterIntro = filter ? `theo bộ lọc "${filter}"` : `cần phân tích`;
@@ -174,8 +174,7 @@ export class AiReviewImportModalComponent {
 
 ${questionRows}
 
-Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bất kỳ văn bản giải thích nào ngoài JSON, không dùng markdown code block):
-
+=== SCHEMA JSON YÊU CẦU: ===
 {
   "items": [
     {
@@ -200,36 +199,27 @@ Với mỗi câu, hãy trả về JSON theo đúng schema sau (không thêm bấ
   ]
 }
 
-Lưu ý:
-- "key_vocab": Đọc kỹ toàn bộ đoạn trích (passage), câu hỏi và TẤT CẢ 4 đáp án A, B, C, D trong file PDF để trích xuất triệt để các từ/cụm từ quan trọng cho kỳ thi TOEIC:
-  1. Phạm vi quét bắt buộc:
-     - Part 5 (Câu đơn): Quét câu hỏi và CẢ 4 ĐÁP ÁN (kể cả các đáp án sai/gây nhiễu vì chúng là từ vựng TOEIC thực chiến). Mục tiêu: 3 - 6 từ/cụm từ.
-     - Part 6 & 7 (Đoạn văn/Đọc hiểu): Quét sâu toàn bộ đoạn trích, câu hỏi, các đáp án và đặc biệt là các cặp từ Paraphrase (từ trong bài ↔ từ trong đáp án). Mục tiêu: 4 - 8 từ/cụm từ.
-  2. Các dạng từ ưu tiên trích xuất:
-     - Collocation & Cụm từ cố định (VD: in accordance with, subject to change, take advantage of, place an order).
-     - Phrasal verbs, Liên từ / Trạng từ liên kết hay gặp trong đề (VD: nevertheless, preliminary, tentative, adhere to, comply with).
-     - Từ vựng công sở, kinh doanh, hợp đồng, nhân sự, giao nhận, du lịch, bảo dưỡng, tài chính.
-     - Các từ có word-family dễ nhầm (VD: rely/reliable/reliance) hoặc cặp từ dễ nhầm (VD: personnel/personal, considerate/considerable).
-  3. Yêu cầu:
-     - Bỏ qua từ sơ cấp thông thường (a, the, go, have, good, table...).
-     - Ưu tiên từ xuất hiện nhiều trong đề thi TOEIC thật, sắp xếp từ quan trọng nhất lên đầu.
-     - "meaning_vi": Nghĩa tiếng Việt chính xác và sát theo ngữ cảnh bài thi, không dịch nghĩa từ điển chung chung.
-- "explanation": Trình bày ngắn gọn, rõ ràng, đi thẳng vào trọng tâm (khoảng 2-3 câu):
-  1. Nêu lý do cốt lõi vì sao đáp án đúng là đúng (dẫn chứng cấu trúc ngữ pháp, từ loại, sự hòa hợp hoặc trích dẫn từ khóa paraphrase trong bài đọc).
-  2. Phân tích tùy theo trường hợp làm bài:
-     - Nếu người làm chọn sai: Chỉ ra ngắn gọn lý do vì sao đáp án đó sai hoặc bị bẫy ở điểm nào.
-     - Nếu người làm chọn đúng nhưng phân vân: Khẳng định dấu hiệu nhận biết mấu chốt để tự tin chọn và giải tỏa yếu tố gây do dự/nhiễu.
-     - Nếu người làm bỏ qua (chưa chọn): Chỉ ra manh mối giúp nhận biết nhanh đáp án đúng trong đề.
-  - Dùng câu ngắn, súc tích, tránh lặp lại nguyên văn đề bài hay viết lan man.
-- "error_type" chỉ được nhận 1 trong các giá trị: "vocab", "grammar", "inference", "detail_missed", "trap_answer", "time_pressure".
-- Chỉ trả về JSON hợp lệ, đúng cấu trúc trên, không có văn bản nào khác trước hoặc sau JSON.`;
+=== NGUYÊN TẮC PHÂN TÍCH: ===
+1. "key_vocab": Đọc kỹ đoạn trích (passage), câu hỏi và TẤT CẢ 4 đáp án A, B, C, D để trích xuất các từ/cụm từ quan trọng cho TOEIC:
+   - Part 5: Quét câu hỏi và CẢ 4 ĐÁP ÁN (3 - 6 từ/cụm từ).
+   - Part 6 & 7: Quét toàn bộ đoạn trích, câu hỏi, đáp án và cặp từ Paraphrase (4 - 8 từ/cụm từ).
+   - Ưu tiên Collocations, Phrasal verbs, Liên từ/Trạng từ liên kết, từ vựng công sở/kinh doanh/hợp đồng.
+   - Bỏ qua từ sơ cấp thông thường. "meaning_vi" phải chuẩn theo ngữ cảnh bài thi.
+2. "explanation": Ngắn gọn (khoảng 2-3 câu), nêu rõ lý do đáp án đúng và chỉ ra điểm bẫy/nhầm lẫn.
+3. "error_type" chỉ nhận 1 trong các giá trị: "vocab", "grammar", "inference", "detail_missed", "trap_answer", "time_pressure".
+
+=== QUY TẮC BẮT BUỘC ĐỂ TRÁNH LỖI CÚ PHÁP JSON (ZERO-ERROR PROMPT): ===
+1. Chỉ trả về DUY NHẤT một chuỗi JSON hợp lệ (bắt đầu bằng { và kết thúc bằng }).
+2. KHÔNG bọc trong markdown code block (\`\`\`json), KHÔNG thêm bất kỳ lời chào hay câu chữ nào ở trước hoặc sau JSON.
+3. QUY TẮC DẤU TRÍCH DẪN (QUAN TRỌNG NHẤT): Trong các chuỗi "explanation", "question_text", "passage_excerpt", "tip", TUYỆT ĐỐI KHÔNG dùng dấu ngoặc kép đôi " để trích dẫn từ hoặc cụm từ. BẮT BUỘC dùng dấu ngoặc đơn '...' (Ví dụ: viết 'postpone' thay vì "postpone") để không làm hỏng cú pháp JSON.
+4. Đảm bảo đúng định dạng JSON: tất cả keys phải bọc trong ngoặc kép ", các phần tử ngăn cách bởi dấu phẩy ,, không có dấu phẩy thừa ở phần tử cuối cùng.
+5. Không tự ý xuống dòng (newline) bên trong một chuỗi ký tự.`;
   });
 
   copyPrompt() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(this.generatedPrompt()).then(() => {
         this.copied.set(true);
-        this.toast.success('Đã sao chép AI Prompt vào Clipboard!');
         setTimeout(() => this.copied.set(false), 3000);
       });
     }
@@ -245,7 +235,7 @@ Lưu ý:
     if (!raw) return;
 
     try {
-      const parsed = extractAndParseJson(raw);
+      const parsed = parseCleanJson(raw);
 
       let items: any[] = [];
       if (Array.isArray(parsed)) {

@@ -2,7 +2,7 @@ import { Component, input, model, output, signal, computed } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProgressStepperComponent } from '../progress-stepper/progress-stepper.component';
-import { GlassPanelComponent } from '../glass-panel/glass-panel.component';
+import { parseCleanJson } from '@shared/utils/json.util';
 
 export interface AiPromptPreset {
   key: string;
@@ -146,8 +146,10 @@ export class AiImportWorkspaceComponent {
     const raw = this.jsonText().trim();
     if (!raw) return;
     try {
-      const parsed = JSON.parse(raw);
+      const parsed = parseCleanJson(raw);
       this.jsonText.set(JSON.stringify(parsed, null, 2));
-    } catch {}
+    } catch {
+      // Keep existing content if not valid JSON
+    }
   }
 }

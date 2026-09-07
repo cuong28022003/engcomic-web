@@ -7,6 +7,7 @@ import { PracticePromptResponse, ImportPracticeJsonResponse } from '@models/inde
 import { ModalComponent } from '@shared/components/modal/modal.component';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@shared/components/ai-import-workspace/ai-import-workspace.component';
+import { parseCleanJson } from '@shared/utils/json.util';
 
 export interface PreviewExerciseEntry {
   word: string;
@@ -164,8 +165,7 @@ export class ExerciseImportModalComponent {
     }
 
     try {
-      let cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = parseCleanJson(raw);
       if (!Array.isArray(parsed)) {
         throw new Error('Dữ liệu JSON phải là một mảng danh sách bài tập (Array [...])');
       }
