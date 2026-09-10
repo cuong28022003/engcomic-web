@@ -147,6 +147,12 @@
           background: rgba(239, 68, 68, 0.2);
           color: #f87171;
         }
+
+        &.vocab-pill {
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
       }
     }
   }
@@ -593,6 +599,234 @@
             border: 1px solid rgba(192, 132, 252, 0.25);
             .box-label { color: #c084fc; }
           }
+        }
+      }
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════ */
+  /* ── 6. TYPICAL VOCABULARY TAB (MODERN GLASSMORPHIC CLOUD & CARDS)─ */
+  /* ══════════════════════════════════════════════════════════════════ */
+  .tab-pane-vocabulary {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    .vocab-tab-header {
+      background: rgba(18, 24, 38, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.95rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      .vocab-header-info {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+
+        .header-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(16, 185, 129, 0.15);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          color: #34d399;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.05rem;
+          flex-shrink: 0;
+        }
+
+        .header-texts {
+          .header-title {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #f1f5f9;
+          }
+
+          .header-desc {
+            margin: 0.15rem 0 0;
+            font-size: 0.78rem;
+            color: #94a3b8;
+          }
+        }
+      }
+
+      .vocab-header-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+
+        .stat-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.3rem 0.65rem;
+          border-radius: 20px;
+          font-size: 0.75rem;
+
+          strong {
+            color: #ffffff;
+            font-weight: 700;
+          }
+
+          &.words-count {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+          }
+
+          &.vault-count {
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            color: #c084fc;
+          }
+        }
+      }
+    }
+
+    .typical-words-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .section-label {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #cbd5e1;
+
+        .highlight-yellow {
+          color: #fbbf24;
+        }
+      }
+
+      .typical-words-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+
+        .typical-word-chip {
+          background: rgba(30, 41, 59, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 0.35rem 0.85rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          user-select: none;
+
+          .word-text {
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            letter-spacing: 0.01em;
+          }
+
+          .btn-audio-mini {
+            background: transparent;
+            border: none;
+            color: #38bdf8;
+            padding: 0;
+            cursor: pointer;
+            font-size: 0.76rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s ease;
+
+            &:hover {
+              transform: scale(1.2);
+              color: #7dd3fc;
+            }
+          }
+
+          &:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+          }
+        }
+      }
+    }
+
+    .vault-matched-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 0.25rem;
+
+      .vault-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 0.45rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          font-size: 0.86rem;
+          font-weight: 700;
+          color: #e2e8f0;
+
+          .highlight-purple {
+            color: #c084fc;
+          }
+
+          strong {
+            color: #c084fc;
+          }
+        }
+
+        .vault-badge {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: #94a3b8;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 0.15rem 0.5rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+      }
+
+      .vault-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 0.85rem;
+      }
+
+      .vault-empty-compact {
+        background: rgba(18, 24, 38, 0.4);
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        color: #94a3b8;
+
+        i {
+          font-size: 1.5rem;
+          color: #64748b;
+          margin-bottom: 0.45rem;
+        }
+
+        p {
+          margin: 0;
+          font-size: 0.82rem;
+          line-height: 1.45;
+          color: #94a3b8;
         }
       }
     }

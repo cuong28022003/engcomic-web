@@ -126,6 +126,19 @@
         </div>
       </div>
 
+      <!-- Row 5: Typical Words -->
+      <div class="form-group">
+        <label class="form-label">Từ vựng tiêu biểu:</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Cách nhau bởi dấu phẩy: since, for, already, yet, in, on, at..."
+          [ngModel]="typicalWordsStr()"
+          (ngModelChange)="typicalWordsStr.set($event)"
+          name="typicalWords"
+        />
+      </div>
+
       <!-- Row 5: Common Mistake -->
       <div class="form-group">
         <label class="form-label">Lỗi thường gặp:</label>

@@ -14,6 +14,7 @@ import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@sh
 import { DeckApiService } from '@core/services/deck-api.service';
 import { AuthService } from '@core/services/auth.service';
 import { parseCleanJson } from '@shared/utils/json.util';
+import { POS_FORM_SELECT_OPTIONS, POS_PROMPT_SCHEMA_KEYS } from '@shared/constants/part-of-speech.constant';
 
 export interface PreviewVocabItem {
   word: string;
@@ -157,18 +158,7 @@ export class VocabImportModalComponent {
 
   promptCopied = signal<boolean>(false);
 
-  readonly posOptions: FormSelectOption[] = [
-    { label: 'Danh từ (noun)', value: 'noun' },
-    { label: 'Động từ (verb)', value: 'verb' },
-    { label: 'Tính từ (adjective)', value: 'adjective' },
-    { label: 'Trạng từ (adverb)', value: 'adverb' },
-    { label: 'Giới từ (preposition)', value: 'preposition' },
-    { label: 'Liên từ (conjunction)', value: 'conjunction' },
-    { label: 'Trạng từ liên kết (transition word)', value: 'transition_word' },
-    { label: 'Cụm động từ (phrasal verb)', value: 'phrasal_verb' },
-    { label: 'Thành ngữ (idiom)', value: 'idiom' },
-    { label: 'Cụm từ (collocation)', value: 'collocation' }
-  ];
+  readonly posOptions: FormSelectOption[] = POS_FORM_SELECT_OPTIONS;
 
   readonly categoryOptions = [
     { value: '', label: '-- Không phân nhóm --' },
@@ -207,7 +197,7 @@ Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema
   {
     "word": "từ hoặc cụm từ tiếng Anh ở dạng nguyên mẫu (base form / lemma, VD: 'reported' -> 'report', 'decisions' -> 'decision')",
     "ipa": "/phiên_âm_IPA/",
-    "part_of_speech": "noun|verb|adjective|adverb|preposition|conjunction|transition_word|phrasal_verb|idiom|collocation",
+    "part_of_speech": "${POS_PROMPT_SCHEMA_KEYS}",
     "meaning_vi": "nghĩa tiếng Việt chính xác và ngắn gọn",
     "definition_en": "định nghĩa tiếng Anh ngắn gọn, súc tích",
     "topic": "Tên chủ đề tiếng Anh (Title Case, 1-3 từ). Gợi ý: Daily Life, Travel, Food & Drinks, Shopping, Family & Friends, Health & Fitness, Business, Office & Workplace, Finance & Banking, Marketing & Sales, Technology & IT, Education, Environment & Nature, Science, Society & Law... Nếu là từ trừu tượng hoặc đa dụng, đặt là 'General Vocabulary'.",
@@ -227,7 +217,8 @@ Hãy phân tích và trả về JSON array, mỗi phần tử theo đúng schema
     ],
     "relations": [
       { "text": "từ liên quan", "type": "family|collocation|synonym", "pos": "từ loại nếu là family" }
-    ]
+    ],
+    "tags": ["grammar:prepositions"]
   }
 ]
 
@@ -238,6 +229,14 @@ QUY TẮC QUAN TRỌNG:
 2. BẮT BUỘC: MỌI TỪ VỰNG ĐỀU PHẢI CÓ trường "usages" (tối thiểu 1 hoặc nhiều cấu trúc cách dùng thực tế, không được để trống).
 3. QUY TẮC GÁN CHỦ ĐỀ ("topic"): Viết hoa chữ cái đầu mỗi từ (Title Case), ngắn gọn bằng tiếng Anh (1-3 từ).
 4. Mọi câu ví dụ ngữ cảnh minh họa phải nằm trực tiếp bên trong danh sách "examples" của từng cấu trúc trong "usages".
+5. QUY TẮC PHÂN LOẠI CHỨC NĂNG NGỮ PHÁP ("tags"):
+   - CHỈ gán tag định danh ngữ pháp (bắt đầu bằng tiền tố 'grammar:') khi từ có QUY TẮC HOẶC HÀNH VI NGỮ PHÁP ĐẶC THÙ (không gán cho từ vựng miêu tả chung chung):
+     + Tính từ / Động từ đi kèm giới từ cố định (VD: 'responsible for', 'interested in', 'depend on', 'accused of') -> ["grammar:prepositions", "grammar:adjective_preposition"]
+     + Động từ đi kèm V-ing / To-V (VD: 'enjoy', 'avoid', 'decide', 'manage') -> ["grammar:gerunds_infinitives"]
+     + Tính từ thể giả định (VD: 'essential', 'vital', 'necessary') -> ["grammar:subjunctive_wish"]
+     + Liên từ & Trạng từ liên kết (VD: 'although', 'however', 'therefore', 'in addition') -> ["grammar:conjunctions"]
+     + Cụm động từ (VD: 'look forward to', 'run out of', 'carry out') -> ["grammar:phrasal_verbs"]
+   - Nếu là từ vựng miêu tả thông thường (VD: 'beautiful', 'delicious', 'happy', 'apple', 'chair') KHÔNG có quy tắc ngữ pháp đặc biệt -> BẮT BUỘC để mảng rỗng: "tags": []
 
 === QUY TẮC BẮT BUỘC ĐỂ TRÁNH LỖI CÚ PHÁP JSON (ZERO-ERROR PROMPT): ===
 1. Chỉ trả về DUY NHẤT một JSON array thuần hợp lệ trong cặp ngoặc vuông [ ... ], KHÔNG thêm bất kỳ lời chào, giải thích hoặc markdown block nào.

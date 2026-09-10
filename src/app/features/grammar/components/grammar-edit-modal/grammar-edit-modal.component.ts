@@ -20,117 +20,123 @@ interface PromptPreset {
 const PROMPT_PRESETS: PromptPreset[] = [
   {
     key: 'all',
-    label: '✨ Tổng hợp toàn diện (18 Chủ đề)',
-    category: 'tenses, conditionals, passive_voice, relative_clauses, phrasal_verbs, conjunctions, modal_verbs, comparisons, gerunds_infinitives, parts_of_speech, subject_verb_agreement',
-    desc: 'tất cả 18 chủ đề ngữ pháp tiếng Anh cốt lõi từ căn bản đến nâng cao'
+    label: '✨ Tổng hợp toàn diện (19 Chủ đề)',
+    category: 'parts_of_speech, tenses, sentence_structure, subject_verb_agreement, passive_voice, conditionals, reported_speech, modal_verbs, gerunds_infinitives, comparisons, prepositions, conjunctions, articles_quantifiers, phrasal_verbs, relative_clauses, inversion, cleft_sentences, parallel_structure, subjunctive_wish',
+    desc: 'tất cả 19 chủ đề ngữ pháp tiếng Anh cốt lõi từ căn bản đến nâng cao theo chuẩn Cambridge & TOEIC/IELTS'
   },
   {
     key: 'parts_of_speech',
-    label: '🔤 1. Từ loại',
+    label: '🔤 1. Từ loại (Parts of Speech)',
     category: 'parts_of_speech',
     desc: 'từ loại tiếng Anh (Danh từ đếm được/không đếm được, Đại từ nhân xưng/sở hữu/phản thân, Động từ thường/liên kết, Tính từ, Trạng từ, Thán từ)'
   },
   {
     key: 'tenses',
-    label: '⏳ 2. 12 Thì cơ bản',
+    label: '⏳ 2. 12 Thì cơ bản (Tenses)',
     category: 'tenses',
     desc: '12 thì cơ bản (Hiện tại đơn/tiếp diễn/hoàn thành/hoàn thành tiếp diễn, Quá khứ đơn/tiếp diễn/hoàn thành, Tương lai đơn/gần be going to/hoàn thành)'
   },
   {
     key: 'sentence_structure',
-    label: '📐 3. Cấu trúc câu',
+    label: '📐 3. Cấu trúc câu (Sentence Structure)',
     category: 'sentence_structure',
-    desc: 'cấu trúc câu đơn, câu ghép, câu phức, câu phức-ghép, trật tự từ, câu hỏi Yes/No, Wh-question, câu hỏi đuôi (tag questions)'
+    desc: 'cấu trúc câu đơn, câu ghép, câu phức, câu phức-ghép, trật tự từ S-V-O, câu hỏi Yes/No, Wh-question, câu hỏi đuôi (tag questions)'
+  },
+  {
+    key: 'subject_verb_agreement',
+    label: '🤝 4. Hòa hợp Chủ ngữ - Động từ',
+    category: 'subject_verb_agreement',
+    desc: 'quy tắc hòa hợp giữa chủ ngữ và động từ, chủ ngữ có each/every/neither/either, danh từ tập hợp, cụm từ chèn giữa (as well as, together with)'
   },
   {
     key: 'passive_voice',
-    label: '🛡️ 4. Câu bị động',
+    label: '🛡️ 5. Câu bị động (Passive Voice)',
     category: 'passive_voice',
-    desc: 'câu bị động theo từng thì, bị động với động từ khuyết thiếu (modal verbs), bị động 2 tân ngữ, câu mệnh lệnh bị động'
+    desc: 'câu bị động theo từng thì, bị động với động từ khuyết thiếu (modal verbs), bị động 2 tân ngữ, bị động đặc biệt (câu truyền khiến have/get, câu mệnh lệnh)'
   },
   {
     key: 'conditionals',
-    label: '🔀 5. Câu điều kiện',
+    label: '🔀 6. Câu điều kiện (Conditionals)',
     category: 'conditionals',
-    desc: 'câu điều kiện loại 0, 1, 2, 3, câu điều kiện hỗn hợp (mixed conditionals), cấu trúc unless, provided that, in case'
+    desc: 'câu điều kiện loại 0, 1, 2, 3, câu điều kiện hỗn hợp (mixed conditionals), cấu trúc unless, provided that, in case, as long as'
   },
   {
     key: 'reported_speech',
-    label: '💬 6. Câu tường thuật',
+    label: '💬 7. Câu tường thuật (Reported Speech)',
     category: 'reported_speech',
-    desc: 'câu gián tiếp, quy tắc lùi thì (backshift), tường thuật câu hỏi, câu mệnh lệnh, lời khuyên và đề nghị'
-  },
-  {
-    key: 'relative_clauses',
-    label: '🔗 7. Mệnh đề quan hệ',
-    category: 'relative_clauses',
-    desc: 'đại từ/trạng từ quan hệ (who, whom, which, that, whose, where, when), mệnh đề xác định/không xác định, rút gọn mệnh đề quan hệ (V-ing / V3/ed)'
-  },
-  {
-    key: 'gerunds_infinitives',
-    label: '📝 8. Danh động từ & Động từ nguyên mẫu',
-    category: 'gerunds_infinitives',
-    desc: 'danh động từ (V-ing) vs động từ nguyên mẫu (To-V), cấu trúc prefer/would rather, used to vs be/get used to'
+    desc: 'câu gián tiếp, quy tắc lùi thì (backshift), chuyển đổi trạng từ thời gian/nơi chốn, tường thuật câu hỏi, câu mệnh lệnh, lời khuyên và đề nghị'
   },
   {
     key: 'modal_verbs',
-    label: '⚡ 9. Động từ khuyết thiếu',
+    label: '⚡ 8. Động từ khuyết thiếu (Modal Verbs)',
     category: 'modal_verbs',
     desc: 'can/could, may/might, must/have to, should/ought to, will/would, modal perfect (must have, should have, could have + V3)'
   },
   {
+    key: 'gerunds_infinitives',
+    label: '📝 9. Danh động từ & To-V',
+    category: 'gerunds_infinitives',
+    desc: 'danh động từ (V-ing) vs động từ nguyên mẫu (To-V), các động từ theo sau bởi V-ing hoặc To-V mang nghĩa khác nhau (remember, stop, try...), cấu trúc used to vs be/get used to'
+  },
+  {
     key: 'comparisons',
-    label: '⚖️ 10. Câu so sánh',
+    label: '⚖️ 10. Câu so sánh (Comparisons)',
     category: 'comparisons',
-    desc: 'so sánh hơn, so sánh nhất, so sánh bằng (as...as), cấu trúc càng... càng (the more... the more), so sánh bội số'
+    desc: 'so sánh hơn, so sánh nhất, so sánh bằng (as...as), cấu trúc càng... càng (the more... the more), so sánh bội số (twice as...as)'
+  },
+  {
+    key: 'prepositions',
+    label: '🧭 11. Giới từ (Prepositions)',
+    category: 'prepositions',
+    desc: 'giới từ chỉ thời gian (in, on, at, since, for, during), nơi chốn/vị trí (in, on, at, under, between), chuyển động (to, into, across) và giới từ đi kèm tính từ/động từ/danh từ'
+  },
+  {
+    key: 'conjunctions',
+    label: '🪧 12. Liên từ & Trạng từ liên kết',
+    category: 'conjunctions',
+    desc: 'liên từ kết hợp FANBOYS, liên từ phụ thuộc nguyên nhân/kết quả (because, since, so), tương phản (although, despite), trạng từ liên kết (however, therefore, furthermore, nevertheless)'
   },
   {
     key: 'articles_quantifiers',
-    label: '📦 11. Mạo từ & Lượng từ',
+    label: '📦 13. Mạo từ & Lượng từ',
     category: 'articles_quantifiers',
     desc: 'mạo từ a/an/the/zero article, lượng từ some/any, much/many, few/little, all/every/each, this/that/these/those'
   },
   {
     key: 'phrasal_verbs',
-    label: '🛣️ 12. Cụm động từ & Giới từ',
+    label: '🛣️ 14. Cụm động từ & Cụm từ cố định',
     category: 'phrasal_verbs',
-    desc: 'cụm động từ thông dụng (look for, give up, take over...), giới từ đi kèm tính từ/động từ, giới từ thời gian/nơi chốn (in, on, at)'
+    desc: 'cụm động từ thông dụng (look forward to, give up, carry out, put off...), collocations công sở/TOEIC và thành ngữ phổ biến'
   },
   {
-    key: 'subject_verb_agreement',
-    label: '🤝 13. Hòa hợp chủ ngữ - động từ',
-    category: 'subject_verb_agreement',
-    desc: 'quy tắc hòa hợp giữa chủ ngữ và động từ, chủ ngữ có each/every/neither/either, danh từ tập hợp, cụm từ chèn giữa'
+    key: 'relative_clauses',
+    label: '🔗 15. Mệnh đề quan hệ (Relative Clauses)',
+    category: 'relative_clauses',
+    desc: 'đại từ/trạng từ quan hệ (who, whom, which, that, whose, where, when, why), mệnh đề xác định/không xác định, rút gọn mệnh đề quan hệ (V-ing / V3/ed / To-V)'
   },
   {
     key: 'inversion',
-    label: '🔄 14. Câu đảo ngữ',
+    label: '🔄 16. Câu đảo ngữ (Inversion)',
     category: 'inversion',
-    desc: 'đảo ngữ với trạng từ phủ định (Never, Rarely, Seldom, Not only... but also, No sooner... than), đảo ngữ câu điều kiện'
+    desc: 'đảo ngữ với trạng từ phủ định (Never, Rarely, Seldom, Hardly... when, No sooner... than, Not only... but also), đảo ngữ câu điều kiện'
   },
   {
     key: 'cleft_sentences',
-    label: '🎯 15. Câu nhấn mạnh',
+    label: '🎯 17. Câu nhấn mạnh (Cleft Sentences)',
     category: 'cleft_sentences',
-    desc: 'câu chẻ nhấn mạnh (It is/was... that/who, What... is/was), dùng trợ động từ do/does/did để nhấn mạnh'
-  },
-  {
-    key: 'conjunctions',
-    label: '🪧 16. Liên từ & Từ nối',
-    category: 'conjunctions',
-    desc: 'liên từ chỉ nguyên nhân/kết quả (because, since, so, therefore), tương phản (although, despite, however), bổ sung (furthermore, in addition)'
+    desc: 'câu chẻ nhấn mạnh (It is/was... that/who, What... is/was), dùng trợ động từ do/does/did để nhấn mạnh động từ thường'
   },
   {
     key: 'parallel_structure',
-    label: '⏸️ 17. Cấu trúc song song',
+    label: '⏸️ 18. Cấu trúc song song (Parallelism)',
     category: 'parallel_structure',
-    desc: 'cấu trúc song song trong liệt kê, câu ghép, với liên từ tương quan both...and, either...or, neither...nor, not only...but also'
+    desc: 'cấu trúc song song trong liệt kê danh sách, các vế câu ghép, với liên từ tương quan both...and, either...or, neither...nor, not only...but also'
   },
   {
     key: 'subjunctive_wish',
-    label: '🌙 18. Câu ước & Thể giả định',
+    label: '🌙 19. Câu ước & Thể giả định',
     category: 'subjunctive_wish',
-    desc: 'câu ước với Wish / If only (quá khứ, hiện tại, tương lai), thể giả định (It is essential/vital that S + V0)'
+    desc: 'câu ước với Wish / If only (quá khứ, hiện tại, tương lai), thể giả định hiện tại (It is essential/vital/recommended that S + V0)'
   }
 ];
 
@@ -168,6 +174,7 @@ export class GrammarEditModalComponent {
   readonly signalWordsStr = signal<string>('');
   readonly commonMistake = signal<string>('');
   readonly searchKeywordsStr = signal<string>('');
+  readonly typicalWordsStr = signal<string>('');
   readonly examples = signal<GrammarExample[]>([{ text: '', note: '' }]);
 
   // JSON Import Signals
@@ -254,6 +261,7 @@ Nhóm category phù hợp: [${preset.category}].
         "target_example": "I lost my key yesterday. (Chỉ kể sự việc hôm qua)"
       }
     ],
+    "typical_words": ["since", "for", "already", "yet", "just", "ever", "never"],
     "search_keywords": ["hiện tại hoàn thành", "present perfect", "since for", "12 thì"]
   }
 ]
@@ -370,6 +378,7 @@ Nhóm category phù hợp: [${preset.category}].
         this.signalWordsStr.set((p.signalWords || []).join(', '));
         this.commonMistake.set(p.commonMistake || '');
         this.searchKeywordsStr.set((p.searchKeywords || []).join(', '));
+        this.typicalWordsStr.set((p.typicalWords || []).join(', '));
         this.examples.set(p.examples && p.examples.length > 0 ? p.examples.map(e => ({ ...e })) : [{ text: '', note: '' }]);
       } else {
         this.resetForm();
@@ -452,6 +461,7 @@ Nhóm category phù hợp: [${preset.category}].
     this.signalWordsStr.set('');
     this.commonMistake.set('');
     this.searchKeywordsStr.set('');
+    this.typicalWordsStr.set('');
     this.examples.set([{ text: '', note: '' }]);
     this.importJsonContent.set('');
     this.selectedPreset.set('all');
@@ -503,6 +513,11 @@ Nhóm category phù hợp: [${preset.category}].
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
+    const typicalWords = this.typicalWordsStr()
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
     const validExamples = this.examples().filter(e => e.text && e.text.trim().length > 0);
 
     const payload: Partial<GrammarPoint> = {
@@ -513,7 +528,8 @@ Nhóm category phù hợp: [${preset.category}].
       signalWords: signalWords,
       commonMistake: this.commonMistake().trim(),
       examples: validExamples,
-      searchKeywords: searchKeywords
+      searchKeywords: searchKeywords,
+      typicalWords: typicalWords
     };
 
     this.saving.set(true);

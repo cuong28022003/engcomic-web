@@ -270,14 +270,58 @@ export function isCardMatchingPosGroup(cardPos?: string, groupPosKey?: string): 
   const p = cardPos.trim().toLowerCase();
   switch (groupPosKey) {
     case 'preposition':
-      return p === 'preposition' || p === 'prep';
+    case 'prepositions':
+      return p === 'preposition' || p === 'prepositions' || p === 'prep';
     case 'conjunction':
-      return p === 'conjunction' || p === 'conj';
+    case 'conjunctions':
+      return p === 'conjunction' || p === 'conjunctions' || p === 'conj';
     case 'transition_word':
+    case 'transitions':
       return p === 'transition_word' || p === 'transition' || p === 'transition_adverb' || p === 'conjunctive_adverb';
     case 'collocation_idiom':
-      return ['collocation', 'phrasal_verb', 'idiom', 'phrase'].includes(p);
+    case 'phrasal_verbs':
+      return ['collocation', 'collocations', 'phrasal_verb', 'phrasal_verbs', 'idiom', 'phrase'].includes(p);
     default:
       return p === groupPosKey.toLowerCase();
   }
 }
+
+/**
+ * Tìm kiếm danh sách từ vựng tiêu biểu từ cấu hình Ngữ pháp chức năng (USAGE_CATEGORY_GROUPS)
+ * tương ứng với thông tin của một điểm ngữ pháp.
+ */
+export function findMatchingUsageWords(point?: { topic?: string; category?: string; searchKeywords?: string[] } | null): string[] {
+  if (!point) return [];
+  const words = new Set<string>();
+
+  const targetText = [
+    point.topic || '',
+    point.category || '',
+    ...(point.searchKeywords || [])
+  ].join(' ').toLowerCase();
+
+  for (const grp of USAGE_CATEGORY_GROUPS) {
+    const isGroupMatch =
+      targetText.includes(grp.posKey.toLowerCase()) ||
+      targetText.includes(grp.labelEn.toLowerCase()) ||
+      targetText.includes(grp.labelVi.toLowerCase()) ||
+      (grp.posKey === 'preposition' && targetText.includes('prepositions')) ||
+      (grp.posKey === 'conjunction' && targetText.includes('conjunctions')) ||
+      (grp.posKey === 'collocation_idiom' && (targetText.includes('phrasal_verbs') || targetText.includes('phrasal_verb') || targetText.includes('collocation')));
+
+    for (const cat of grp.categories) {
+      const isCatMatch =
+        isGroupMatch ||
+        targetText.includes(cat.key.toLowerCase()) ||
+        targetText.includes(cat.labelEn.toLowerCase()) ||
+        targetText.includes(cat.labelVi.toLowerCase());
+
+      if (isCatMatch && cat.commonWords && cat.commonWords.length > 0) {
+        cat.commonWords.forEach(w => words.add(w.trim()));
+      }
+    }
+  }
+
+  return Array.from(words);
+}
+

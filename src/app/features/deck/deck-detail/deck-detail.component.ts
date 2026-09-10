@@ -20,6 +20,7 @@ import { FormInputComponent } from '@shared/components/form-input/form-input.com
 import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-filter-bar.component';
 import { FilterSelectComponent } from '@shared/components/filter-select/filter-select.component';
 import { PracticeSetupModalComponent, PracticeMode } from '@shared/components/practice-setup-modal/practice-setup-modal.component';
+import { getPosDisplayName, POS_SORT_ORDER } from '@shared/constants/part-of-speech.constant';
 
 @Component({
   selector: 'app-deck-detail',
@@ -74,35 +75,15 @@ export class DeckDetailComponent implements OnInit {
       countMap.set(key, (countMap.get(key) || 0) + 1);
     }
 
-    const posLabels: Record<string, string> = {
-      noun: 'Danh từ (Noun)',
-      verb: 'Động từ (Verb)',
-      adjective: 'Tính từ (Adjective)',
-      adverb: 'Trạng từ (Adverb)',
-      preposition: 'Giới từ (Preposition)',
-      conjunction: 'Liên từ (Conjunction)',
-      pronoun: 'Đại từ (Pronoun)',
-      phrasal_verb: 'Cụm động từ (Phrasal Verb)',
-      collocation: 'Cụm từ (Collocation)',
-      idiom: 'Thành ngữ (Idiom)',
-      phrase: 'Cụm từ (Phrase)',
-      transition_word: 'Trạng từ liên kết',
-      interjection: 'Thán từ (Interjection)',
-    };
-
     const result: Array<{ key: string; label: string; count: number }> = [];
     countMap.forEach((count, key) => {
-      let label = posLabels[key];
-      if (!label) {
-        label = key === 'unknown' ? 'Chưa phân loại' : key.charAt(0).toUpperCase() + key.slice(1);
-      }
+      const label = getPosDisplayName(key);
       result.push({ key, label, count });
     });
 
-    const order = ['noun', 'verb', 'adjective', 'adverb', 'preposition', 'conjunction', 'phrasal_verb', 'collocation', 'idiom', 'phrase', 'pronoun', 'interjection', 'transition_word', 'unknown'];
     return result.sort((a, b) => {
-      const idxA = order.indexOf(a.key);
-      const idxB = order.indexOf(b.key);
+      const idxA = POS_SORT_ORDER.indexOf(a.key);
+      const idxB = POS_SORT_ORDER.indexOf(b.key);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       if (idxA !== -1) return -1;
       if (idxB !== -1) return 1;

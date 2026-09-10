@@ -71,18 +71,9 @@ export const PRESET_VOCAB_TOPICS: VocabTopicCategory[] = [
   }
 ];
 
-export const PART_OF_SPEECH_OPTIONS = [
-  { key: '', label: 'Tất cả từ loại' },
-  { key: 'noun', label: 'Danh từ (Noun)' },
-  { key: 'verb', label: 'Động từ (Verb)' },
-  { key: 'adjective', label: 'Tính từ (Adjective)' },
-  { key: 'adverb', label: 'Trạng từ (Adverb)' },
-  { key: 'preposition', label: 'Giới từ (Preposition)' },
-  { key: 'conjunction', label: 'Liên từ (Conjunction)' },
-  { key: 'pronoun', label: 'Đại từ (Pronoun)' },
-  { key: 'phrase', label: 'Cụm từ / Thành ngữ (Phrase/Idiom)' },
-  { key: 'interjection', label: 'Thán từ (Interjection)' },
-];
+import { POS_DASHBOARD_FILTER_OPTIONS } from '@shared/constants/part-of-speech.constant';
+
+export const PART_OF_SPEECH_OPTIONS = POS_DASHBOARD_FILTER_OPTIONS;
 
 @Component({
   selector: 'app-vocab-dashboard',

@@ -1,9 +1,26 @@
 import { CardExercisePackage } from './practice.model';
 
+export type PartOfSpeech =
+  | 'noun'
+  | 'verb'
+  | 'adjective'
+  | 'adverb'
+  | 'pronoun'
+  | 'determiner'
+  | 'preposition'
+  | 'conjunction'
+  | 'transition_word'
+  | 'interjection'
+  | 'phrasal_verb'
+  | 'idiom'
+  | 'collocation'
+  | 'phrase'
+  | string;
+
 export interface WordRelation {
   text: string;             // từ liên quan
   type: 'family' | 'collocation' | 'synonym';
-  pos?: string;             // noun | verb | adjective | adverb (chỉ cho family)
+  pos?: string;             // noun | verb | adjective | adverb | pronoun | determiner (cho family)
   relatedCardId?: string;   // null nếu chưa auto-link
   // Backward compatibility
   relatedText?: string;
@@ -43,6 +60,9 @@ export interface Card {
   relations?: WordRelation[];
   usages?: WordUsage[];
   comparisonGroup?: string;
+  tags?: string[];
+  personalNote?: string;
+  myExample?: string;
   // SRS & Mastery fields
   stage?: number;           // 0–5
   masteryLevel?: number;    // 1–4

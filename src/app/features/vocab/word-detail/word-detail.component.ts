@@ -12,6 +12,7 @@ import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcru
 import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { GlassPanelComponent } from '@shared/components/glass-panel/glass-panel.component';
 import { USAGE_CATEGORY_GROUPS } from '../config/usage-categories.config';
+import { getPosShortLabel, getPosFullLabel, getPosCssClass } from '@shared/constants/part-of-speech.constant';
 
 export interface UsageCategoryMeta {
   key: string;
@@ -212,40 +213,15 @@ export class WordDetailComponent implements OnInit, OnDestroy {
   }
 
   getPosLabel(pos?: string): string {
-    const map: Record<string, string> = {
-      noun: 'n',
-      verb: 'v',
-      adjective: 'adj',
-      adverb: 'adv',
-      preposition: 'prep',
-      conjunction: 'conj',
-      idiom: 'idiom',
-      phrasal_verb: 'phr v',
-    };
-    return pos ? (map[pos.toLowerCase()] ?? pos) : '';
+    return getPosShortLabel(pos);
   }
 
   getPosFullLabel(pos?: string): string {
-    const map: Record<string, string> = {
-      noun: 'Danh từ (n)',
-      verb: 'Động từ (v)',
-      adjective: 'Tính từ (adj)',
-      adverb: 'Trạng từ (adv)',
-      preposition: 'Giới từ (prep)',
-      conjunction: 'Liên từ (conj)',
-      phrase: 'Cụm từ',
-      idiom: 'Thành ngữ (idiom)',
-    };
-    return pos ? (map[pos.toLowerCase()] ?? pos) : 'Từ vựng';
+    return getPosFullLabel(pos);
   }
 
   getPosClass(pos?: string): string {
-    const p = (pos || '').toLowerCase();
-    if (p.includes('noun') || p === 'n') return 'pos-noun';
-    if (p.includes('verb') || p === 'v') return 'pos-verb';
-    if (p.includes('adj') || p === 'a') return 'pos-adj';
-    if (p.includes('adv')) return 'pos-adv';
-    return 'pos-other';
+    return getPosCssClass(pos);
   }
 
   getStatusClass(status?: string): string {

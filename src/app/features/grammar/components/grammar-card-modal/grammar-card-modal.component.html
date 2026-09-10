@@ -45,7 +45,7 @@
       </div>
 
       <!-- ── 2. CLEAN TABS (IF MULTIPLE SECTIONS EXIST) ── -->
-      @if (allPitfalls().length > 0 || comparisonsList().length > 0) {
+      @if (allPitfalls().length > 0 || comparisonsList().length > 0 || hasTypicalWords()) {
         <div class="modal-tabs-nav">
           <button
             type="button"
@@ -59,6 +59,19 @@
               <span class="tab-count-pill">{{ (point.usages?.length || 0) + standaloneExamples().length }}</span>
             }
           </button>
+
+          @if (hasTypicalWords()) {
+            <button
+              type="button"
+              class="modal-tab-btn"
+              [class.active]="activeTab() === 'vocabulary'"
+              (click)="setActiveTab('vocabulary')"
+            >
+              <i class="fa-solid fa-tags"></i>
+              <span>Từ Vựng Tiêu Biểu</span>
+              <span class="tab-count-pill vocab-pill">{{ typicalWordsList().length }}</span>
+            </button>
+          }
 
           @if (allPitfalls().length > 0) {
             <button
@@ -288,6 +301,95 @@
                       }
                     </div>
                   }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        <!-- ── TAB: TYPICAL VOCABULARY & WORDS ───────────────────────── -->
+        <!-- ══════════════════════════════════════════════════════════════ -->
+        @if (activeTab() === 'vocabulary') {
+          <div class="tab-pane-vocabulary">
+            <!-- 1. Intro / Context Card -->
+            <div class="vocab-tab-header">
+              <div class="vocab-header-info">
+                <div class="header-icon">
+                  <i class="fa-solid fa-tags"></i>
+                </div>
+                <div class="header-texts">
+                  <h4 class="header-title">Từ Vựng & Dấu Hiệu Tiêu Biểu</h4>
+                  <p class="header-desc">
+                    Tổng hợp các từ vựng, giới từ, liên từ hoặc từ nhận biết đặc trưng thường xuất hiện với điểm ngữ pháp này.
+                  </p>
+                </div>
+              </div>
+              <div class="vocab-header-stats">
+                <span class="stat-pill words-count">
+                  <i class="fa-solid fa-layer-group"></i>
+                  <strong>{{ typicalWordsList().length }}</strong> từ tiêu biểu
+                </span>
+                @if (matchedVaultCards().length > 0) {
+                  <span class="stat-pill vault-count">
+                    <i class="fa-solid fa-vault"></i>
+                    <strong>{{ matchedVaultCards().length }}</strong> trong kho từ
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- 2. Typical Words Grid / Cloud -->
+            @if (typicalWordsList().length > 0) {
+              <div class="typical-words-section">
+                <div class="section-label">
+                  <i class="fa-solid fa-lightbulb highlight-yellow"></i>
+                  <span>Danh sách từ & cụm từ tiêu biểu (Bấm để nghe phát âm):</span>
+                </div>
+                <div class="typical-words-cloud">
+                  @for (word of typicalWordsList(); track word) {
+                    <div class="typical-word-chip" (click)="playAudio(word, $event)" title="Bấm để nghe phát âm (US)">
+                      <span class="word-text">{{ word }}</span>
+                      <button type="button" class="btn-audio-mini" (click)="playAudio(word, $event)">
+                        <i class="fa-solid fa-volume-high"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- 3. Matched Cards in User's Vault -->
+            <div class="vault-matched-section">
+              <div class="vault-section-header">
+                <div class="section-title">
+                  <i class="fa-solid fa-vault highlight-purple"></i>
+                  <span>Từ vựng liên quan trong kho của bạn (<strong>{{ matchedVaultCards().length }}</strong>)</span>
+                </div>
+                @if (matchedVaultCards().length > 0) {
+                  <span class="vault-badge">Từ kho cá nhân</span>
+                }
+              </div>
+
+              @if (matchedVaultCards().length > 0) {
+                <div class="vault-cards-grid">
+                  @for (card of matchedVaultCards(); track card.id) {
+                    <app-vocab-card
+                      [card]="card"
+                      layout="grid"
+                      [showCheckbox]="false"
+                      [showDeckBadge]="true"
+                      (cardClick)="onVocabCardClick($event)"
+                    ></app-vocab-card>
+                  }
+                </div>
+              } @else {
+                <div class="vault-empty-compact">
+                  <i class="fa-solid fa-folder-open"></i>
+                  <p>
+                    Bạn chưa lưu từ vựng nào thuộc nhóm này vào kho cá nhân.
+                    Khi học từ mới, hãy thêm vào bộ thẻ để cùng ôn tập!
+                  </p>
                 </div>
               }
             </div>
