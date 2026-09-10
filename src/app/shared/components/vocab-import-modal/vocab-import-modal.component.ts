@@ -13,6 +13,7 @@ import { AiImportWorkspaceComponent, AiMetaBadge, AiValidationStatus } from '@sh
 
 import { DeckApiService } from '@core/services/deck-api.service';
 import { AuthService } from '@core/services/auth.service';
+import { PendingCountService } from '@core/services/pending-count.service';
 import { parseCleanJson } from '@shared/utils/json.util';
 import { POS_FORM_SELECT_OPTIONS, POS_PROMPT_SCHEMA_KEYS } from '@shared/constants/part-of-speech.constant';
 
@@ -47,6 +48,7 @@ export interface PreviewVocabItem {
 export class VocabImportModalComponent {
   private cardApi = inject(CardApiService);
   private pendingApi = inject(PendingItemApiService);
+  private pendingCountService = inject(PendingCountService);
   private deckApi = inject(DeckApiService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
@@ -523,15 +525,17 @@ QUY TẮC QUAN TRỌNG:
       }
     }
 
+    const promptWords = this.extractPromptWords();
+
     // Default: Batch import
-    this.cardApi.batchImport({ jsonContent: cleaned, deckId: dId }).subscribe({
+    this.cardApi.batchImport({ jsonContent: cleaned, deckId: dId, promptWords }).subscribe({
       next: (res: BatchImportResult) => {
         this.isImporting.set(false);
-        this.importResult.set(res);
-        this.importStep.set('result');
         const importedCount = res.imported ? res.imported.length : 0;
         this.toast.success(`Đã thêm thành công ${importedCount} từ vựng vào kho!`);
+        this.pendingCountService.refresh();
         this.vocabAdded.emit({ count: importedCount, deckId: dId });
+        this.onClose();
       },
       error: (err) => {
         this.isImporting.set(false);
@@ -708,6 +712,33 @@ QUY TẮC QUAN TRỌNG:
     this.manualTopic.set('');
     this.manualDeckId.set('');
     this.manualUsages.set([]);
+  }
+
+  private extractPromptWords(): string[] {
+    const rawTokens = this.wordListText
+      ? this.wordListText.split(/[\n\r]+/).flatMap(line => line.split(/[,;]+(?!\s*[a-z0-9]+\))/i))
+      : [];
+
+    const promptWordsSet = new Set<string>();
+    rawTokens.forEach(t => {
+      const trimmed = t.trim();
+      if (trimmed) promptWordsSet.add(trimmed);
+    });
+
+    // Đối chiếu và giữ nguyên vẹn các từ gốc từ Word Collector (initialWords & collectorPendingWords)
+    const allCollectorWords = [
+      ...(this.initialWords() || []),
+      ...(this.collectorPendingWords() || [])
+    ];
+    const lowerWordList = (this.wordListText || '').toLowerCase();
+    allCollectorWords.forEach(cw => {
+      const cleanCw = cw.trim().toLowerCase().replace(/^[.,;:!?"'()]+|[.,;:!?"'()]+$/g, '');
+      if (cleanCw && lowerWordList.includes(cleanCw)) {
+        promptWordsSet.add(cw.trim());
+      }
+    });
+
+    return Array.from(promptWordsSet);
   }
 
   onClose(): void {

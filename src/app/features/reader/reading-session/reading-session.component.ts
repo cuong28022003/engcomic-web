@@ -13,6 +13,7 @@ import { TestSessionService } from '../services/test-session.service';
 import { GradedQuestion, SubmitSessionPayload, SubmitSessionResponse, TestDetail, TimeTargetConfig, ToeicAttempt } from '../models';
 
 import { PartStrategyPopoverComponent } from './part-strategy-popover/part-strategy-popover.component';
+import { PacingStopwatchComponent } from './pacing-stopwatch/pacing-stopwatch.component';
 import { ToastService } from '@core/services/toast.service';
 import { UserStatsApiService } from '@core/services/user-stats-api.service';
 import { UserStateService } from '@core/services/user-state.service';
@@ -26,6 +27,7 @@ import { UserStateService } from '@core/services/user-state.service';
     PdfViewerComponent, 
     AnswerSheetComponent, 
     PartStrategyPopoverComponent,
+    PacingStopwatchComponent,
     PreTestConfigModalComponent,
     ResumeAttemptModalComponent,
     AttemptHistoryModalComponent,

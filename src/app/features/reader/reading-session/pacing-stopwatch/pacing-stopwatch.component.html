@@ -1,0 +1,166 @@
+<div class="stopwatch-container">
+  <!-- 1. Trigger / Compact Live Pill on Topbar -->
+  <div 
+    class="stopwatch-pill" 
+    [class.running]="isRunning()"
+    [class.finished]="isFinished()"
+    [class.urgency-warning]="urgencyLevel() === 'warning'"
+    [class.urgency-danger]="urgencyLevel() === 'danger'"
+    [class.urgency-finished]="urgencyLevel() === 'finished'"
+    [class.expanded]="isExpanded()"
+    (click)="toggleExpand()"
+    title="Nhấn để mở / cài đặt đồng hồ canh tốc độ làm bài"
+  >
+    <div class="pill-icon">
+      @if (isRunning()) {
+        <i class="fa-solid fa-stopwatch fa-spin-pulse"></i>
+      } @else if (isFinished()) {
+        <i class="fa-solid fa-bell fa-shake"></i>
+      } @else {
+        <i class="fa-solid fa-stopwatch"></i>
+      }
+    </div>
+
+    <div class="pill-body">
+      <span class="pill-label">Pacing</span>
+      <span class="pill-time">{{ formattedTime() }}</span>
+    </div>
+
+    <!-- Mini Progress Line Underneath -->
+    <div class="pill-progress-bg">
+      <div 
+        class="pill-progress-fill" 
+        [style.width.%]="progressPercent()"
+      ></div>
+    </div>
+  </div>
+
+  <!-- 2. Expanded Control Popover Panel -->
+  @if (isExpanded()) {
+    <div class="stopwatch-popover glass-panel">
+      <!-- Popover Header -->
+      <div class="popover-header">
+        <div class="header-title">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Đồng Hồ Canh Tốc Độ</span>
+        </div>
+        <button type="button" class="btn-close" (click)="closePanel()" title="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Main Big Digital LED Display -->
+      <div 
+        class="led-display-card"
+        [class.urgency-warning]="urgencyLevel() === 'warning'"
+        [class.urgency-danger]="urgencyLevel() === 'danger'"
+        [class.urgency-finished]="urgencyLevel() === 'finished'"
+      >
+        <div class="led-digits">
+          <span class="digit-box">{{ formattedMinutes() }}</span>
+          <span class="colon">:</span>
+          <span class="digit-box">{{ formattedSeconds() }}</span>
+        </div>
+
+        @if (isFinished()) {
+          <div class="status-chip finished">
+            <i class="fa-solid fa-circle-exclamation"></i> Hết giờ chặng này!
+          </div>
+        } @else if (isRunning()) {
+          <div class="status-chip running">
+            <span class="pulse-dot"></span> Đang đếm ngược...
+          </div>
+        } @else {
+          <div class="status-chip paused">
+            <i class="fa-solid fa-pause"></i> Sẵn sàng / Tạm dừng
+          </div>
+        }
+
+        <!-- Pacing Progress Bar -->
+        <div class="timer-progress-track">
+          <div 
+            class="timer-progress-fill"
+            [style.width.%]="progressPercent()"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Quick Presets for TOEIC Parts -->
+      <div class="section-presets">
+        <div class="section-label">
+          <span>Gợi ý mốc thời gian TOEIC:</span>
+        </div>
+        <div class="presets-grid">
+          @for (p of presets; track p.seconds) {
+            <button 
+              type="button" 
+              class="preset-chip"
+              [class.active]="totalDurationSeconds() === p.seconds"
+              (click)="selectPreset(p)"
+              [title]="p.partTip || ''"
+            >
+              <span class="chip-time">{{ p.label }}</span>
+              @if (p.partTip) {
+                <span class="chip-tip">{{ p.partTip }}</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Adjust Fine-Tuning Controls -->
+      <div class="adjust-bar">
+        <span class="adjust-label">Chỉnh nhanh:</span>
+        <div class="adjust-actions">
+          <button 
+            type="button" 
+            class="btn-adjust" 
+            (click)="adjustDuration(-30)" 
+            [disabled]="isRunning() || remainingSeconds() <= 30"
+          >
+            -30s
+          </button>
+          <button 
+            type="button" 
+            class="btn-adjust" 
+            (click)="adjustDuration(30)" 
+            [disabled]="isRunning() || remainingSeconds() >= 3570"
+          >
+            +30s
+          </button>
+          <button 
+            type="button" 
+            class="btn-adjust" 
+            (click)="adjustDuration(60)" 
+            [disabled]="isRunning() || remainingSeconds() >= 3540"
+          >
+            +1m
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Action Controls -->
+      <div class="popover-actions">
+        @if (!isRunning()) {
+          <button type="button" class="btn-ctrl btn-start" (click)="start()">
+            <i class="fa-solid fa-play"></i> Bắt đầu
+          </button>
+        } @else {
+          <button type="button" class="btn-ctrl btn-pause" (click)="pause()">
+            <i class="fa-solid fa-pause"></i> Tạm dừng
+          </button>
+        }
+
+        <button type="button" class="btn-ctrl btn-reset" (click)="reset()" title="Đặt lại về ban đầu">
+          <i class="fa-solid fa-rotate-left"></i> Đặt lại
+        </button>
+      </div>
+
+      <!-- Hint Footer -->
+      <div class="popover-footer">
+        <i class="fa-solid fa-lightbulb"></i>
+        <span>Đồng hồ độc lập giúp tự canh nhịp độ từng câu / từng đoạn mà không ảnh hưởng đến bài thi.</span>
+      </div>
+    </div>
+  }
+</div>

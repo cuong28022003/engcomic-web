@@ -24,6 +24,7 @@ export interface DashboardResponse {
 export interface BatchImportRequest {
   jsonContent: string;
   deckId?: string;
+  promptWords?: string[];
 }
 
 export interface BatchImportError {
