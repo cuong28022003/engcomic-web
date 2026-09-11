@@ -11,6 +11,7 @@ import { ToastService } from '@core/services/toast.service';
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components/breadcrumb/breadcrumb.component';
 import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { GlassPanelComponent } from '@shared/components/glass-panel/glass-panel.component';
+import { WordMiniChipComponent } from '@shared/components/word-mini-chip/word-mini-chip.component';
 import { USAGE_CATEGORY_GROUPS } from '../config/usage-categories.config';
 import { getPosShortLabel, getPosFullLabel, getPosCssClass } from '@shared/constants/part-of-speech.constant';
 
@@ -27,7 +28,7 @@ type RelationTab = 'family' | 'collocation' | 'synonym';
 @Component({
   selector: 'app-word-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, BreadcrumbComponent, LoadingComponent, GlassPanelComponent],
+  imports: [CommonModule, RouterModule, BreadcrumbComponent, LoadingComponent, GlassPanelComponent, WordMiniChipComponent],
   templateUrl: './word-detail.component.html',
   styleUrls: ['./word-detail.component.scss'],
 })

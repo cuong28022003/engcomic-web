@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api',
+  comicAppUrl: 'http://localhost:3000',
   firebaseConfig: {
     apiKey: 'AIzaSyA0Psy4GpZ_ls5yzpspQg5q5BMdSLbVyuQ',
     authDomain: 'story-e3425.firebaseapp.com',

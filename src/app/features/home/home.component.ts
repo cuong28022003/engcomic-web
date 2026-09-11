@@ -1,530 +1,349 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { ComicApiService } from '@core/services/comic-api.service';
+import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { AuthService } from '@core/services/auth.service';
+import { UserStateService } from '@core/services/user-state.service';
+import { CardApiService } from '@core/services/card-api.service';
+import { GrammarApiService } from '@core/services/grammar-api.service';
+import { ReaderApiService } from '../reader/services/reader-api.service';
 import { UserStatsApiService } from '@core/services/user-stats-api.service';
-import { ComicCardComponent } from '@shared/components/comic-card/comic-card.component';
-import { Comic, LeaderboardEntry } from '@models/index';
-import { ComicGenres } from '@shared/constants/genres';
+import { ComicApiService } from '@core/services/comic-api.service';
+import { EcosystemService } from '@core/services/ecosystem.service';
+import { PronunciationService } from '@core/services/pronunciation.service';
+import { AvatarFrameComponent } from '@shared/components/avatar-frame/avatar-frame.component';
+import { VocabSearchModalComponent } from '@shared/components/vocab-search-modal/vocab-search-modal.component';
+import { GrammarSearchModalComponent } from '../grammar/components/grammar-search-modal/grammar-search-modal.component';
+import { GrammarCardModalComponent } from '../grammar/components/grammar-card-modal/grammar-card-modal.component';
+import { CurrentUser, UserStats, LeaderboardEntry, Comic } from '@models/index';
+import { TestSummary } from '../reader/models';
+import { GrammarPoint } from '../grammar/models/grammar.model';
+
+export interface SampleVocab {
+  word: string;
+  ipa: string;
+  pos: string;
+  meaning: string;
+  collocation: string;
+  example: string;
+}
+
+export interface FeaturedGachaCharacter {
+  name: string;
+  title: string;
+  anime: string;
+  rarity: 'SSR' | 'SR' | 'R';
+  stars: number;
+  combatPower: string;
+  badgeClass: string;
+  frameId: string;
+  avatarUrl: string;
+}
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, ComicCardComponent],
-  template: `
-    <div class="home-container">
-      <!-- Hero Banner Section -->
-      <section class="hero-section glass-panel">
-        <div class="hero-content">
-          <span class="hero-badge badge badge-primary">
-            <i class="fa-solid fa-sparkles"></i> Nâng tầm tiếng Anh với truyện tranh
-          </span>
-          <h1 class="hero-title">
-            Vừa Đọc Truyện Hay, <br/>
-            <span class="gradient-text">Vừa Luyện Tiếng Anh Tự Nhiên</span>
-          </h1>
-          <p class="hero-desc">
-            Khám phá hàng ngàn bộ truyện tranh lôi cuốn với hệ thống dịch thông minh 1-chạm, lưu từ vựng vào bộ thẻ nhớ Spaced Repetition và thách đấu cùng bạn bè.
-          </p>
-          <div class="hero-actions">
-            <a routerLink="/reader" class="btn-primary">
-              <i class="fa-solid fa-file-lines"></i> Luyện đề TOEIC
-            </a>
-            <a routerLink="/vocab" class="btn-secondary">
-              <i class="fa-solid fa-brain"></i> Kho từ vựng
-            </a>
-            <a routerLink="/deck" class="btn-secondary">
-              <i class="fa-solid fa-layer-group"></i> Thẻ Flashcards
-            </a>
-          </div>
-        </div>
-
-        <div class="hero-visual">
-          <div class="floating-card stat-card">
-            <i class="fa-solid fa-bolt icon"></i>
-            <div>
-              <p class="num">5,000+</p>
-              <p class="lbl">Từ vựng tra mỗi ngày</p>
-            </div>
-          </div>
-          <div class="floating-card game-card">
-            <i class="fa-solid fa-brain icon"></i>
-            <div>
-              <p class="num">AI Review</p>
-              <p class="lbl">Phân tích lỗi sai thông minh</p>
-            </div>
-          </div>
-          <img src="assets/image/banner-home.png" alt="EngComic Hero" class="hero-img" (error)="onHeroImgError($event)" />
-        </div>
-      </section>
-
-      <!-- Quick Genre Pills -->
-      <div class="genres-bar">
-        @for (genre of genres.slice(0, 8); track genre) {
-          <a [routerLink]="['/search']" [queryParams]="{ genre: genre }" class="genre-pill">
-            {{ genre }}
-          </a>
-        }
-        <a routerLink="/search" class="genre-pill view-all">Tất cả thể loại →</a>
-      </div>
-
-      <!-- Main Content Layout -->
-      <div class="home-main-layout">
-        <!-- Left / Center: Comic Listings -->
-        <div class="comics-column">
-          <!-- Hot Comics -->
-          <section class="section-block">
-            <div class="section-header">
-              <div class="title-wrap">
-                <i class="fa-solid fa-fire title-icon hot-icon"></i>
-                <h2>Tài Liệu Nổi Bật</h2>
-              </div>
-              <a routerLink="/reader" class="view-more">Xem tất cả đề thi →</a>
-            </div>
-
-            @if (loadingHot) {
-              <div class="loading-grid">
-                <div class="skeleton-card" *ngFor="let i of [1,2,3,4]"></div>
-              </div>
-            } @else {
-              <div class="comic-grid">
-                @for (comic of hotComics; track comic.id) {
-                  <app-comic-card [comic]="comic"></app-comic-card>
-                }
-              </div>
-            }
-          </section>
-
-          <!-- Recent Comics -->
-          <section class="section-block">
-            <div class="section-header">
-              <div class="title-wrap">
-                <i class="fa-solid fa-clock-rotate-left title-icon recent-icon"></i>
-                <h2>Kho Đề & Truyện Mới</h2>
-              </div>
-              <a routerLink="/reader" class="view-more">Khám phá ngay →</a>
-            </div>
-
-            @if (loadingRecent) {
-              <div class="loading-grid">
-                <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
-              </div>
-            } @else {
-              <div class="comic-grid">
-                @for (comic of recentComics; track comic.id) {
-                  <app-comic-card [comic]="comic"></app-comic-card>
-                }
-              </div>
-            }
-          </section>
-        </div>
-
-        <!-- Right Sidebar: Leaderboard & Quick Action CTA -->
-        <aside class="sidebar-column">
-          <!-- Top Readers Widget -->
-          <div class="sidebar-widget glass-panel">
-            <div class="widget-header">
-              <h3><i class="fa-solid fa-trophy trophy-icon"></i> Top Học Giả</h3>
-              <a routerLink="/leaderboard" class="widget-link">Toàn bộ</a>
-            </div>
-
-            <div class="leaderboard-list">
-              @for (user of topUsers; track user.userId; let idx = $index) {
-                <a [routerLink]="['/user', user.userId, 'profile']" class="leaderboard-item">
-                  <div class="rank-num" [ngClass]="'rank-' + (idx + 1)">#{{ idx + 1 }}</div>
-                  <img
-                    [src]="user.avatarUrl || 'assets/image/avt.png'"
-                    alt="User"
-                    class="user-avatar"
-                    (error)="onAvatarError($event, user.username)"
-                  />
-                  <div class="user-meta">
-                    <p class="name">{{ user.username }}</p>
-                    <span class="xp-val"><i class="fa-solid fa-bolt"></i> {{ user.xp | number }} XP</span>
-                  </div>
-                </a>
-              }
-            </div>
-          </div>
-
-          <!-- Feature Promo Card -->
-          <div class="sidebar-widget promo-widget">
-            <div class="promo-badge"><i class="fa-solid fa-file-lines"></i> Luyện Thi</div>
-            <h4>Luyện Đề TOEIC Online</h4>
-            <p>Phòng thi chia đôi màn hình PDF chuẩn quốc tế, tự động chấm điểm và phân tích câu sai bằng AI.</p>
-            <a routerLink="/reader" class="btn-primary btn-sm">Làm đề ngay</a>
-          </div>
-        </aside>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .home-container {
-      display: flex;
-      flex-direction: column;
-      gap: 36px;
-    }
-
-    /* Hero Section */
-    .hero-section {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      align-items: center;
-      gap: 40px;
-      padding: 48px 40px;
-      border-radius: var(--radius-lg);
-      position: relative;
-      overflow: hidden;
-      background: radial-gradient(circle at 10% 20%, rgba(255, 51, 119, 0.12) 0%, rgba(22, 25, 38, 0.9) 90%);
-    }
-
-    .hero-badge {
-      margin-bottom: 18px;
-    }
-
-    .hero-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      line-height: 1.2;
-      margin-bottom: 16px;
-      color: #fff;
-    }
-
-    .gradient-text {
-      background: var(--primary-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-desc {
-      font-size: 1rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 28px;
-      max-width: 520px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 16px;
-    }
-
-    .hero-visual {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .hero-img {
-      max-width: 100%;
-      height: 280px;
-      object-fit: contain;
-      filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
-    }
-
-    .floating-card {
-      position: absolute;
-      background: rgba(22, 25, 38, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      animation: float 4s ease-in-out infinite alternate;
-    }
-
-    .stat-card {
-      top: 10px;
-      left: -20px;
-      .icon { color: #f59e0b; font-size: 1.4rem; }
-    }
-
-    .game-card {
-      bottom: 10px;
-      right: -20px;
-      animation-delay: 2s;
-      .icon { color: #a855f7; font-size: 1.4rem; }
-    }
-
-    .floating-card .num { font-weight: 700; font-size: 0.95rem; }
-    .floating-card .lbl { font-size: 0.75rem; color: var(--text-muted); }
-
-    @keyframes float {
-      from { transform: translateY(0); }
-      to { transform: translateY(-10px); }
-    }
-
-    /* Genres Bar */
-    .genres-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-    }
-
-    .genre-pill {
-      padding: 8px 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-full);
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-
-    .genre-pill:hover {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-      color: #fff;
-    }
-
-    .genre-pill.view-all {
-      color: var(--primary-color);
-      border-color: rgba(255, 51, 119, 0.3);
-    }
-
-    /* Layout Columns */
-    .home-main-layout {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 32px;
-      align-items: start;
-    }
-
-    .comics-column {
-      display: flex;
-      flex-direction: column;
-      gap: 40px;
-    }
-
-    .section-block {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .title-wrap h2 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .title-icon {
-      font-size: 1.25rem;
-    }
-
-    .hot-icon { color: #f97316; }
-    .recent-icon { color: #38bdf8; }
-
-    .view-more {
-      color: var(--primary-color);
-      font-size: 0.88rem;
-      font-weight: 600;
-    }
-
-    /* Sidebar */
-    .sidebar-column {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .sidebar-widget {
-      padding: 20px;
-      border-radius: var(--radius-md);
-    }
-
-    .widget-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .widget-header h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .trophy-icon { color: #ffb800; }
-    .widget-link { font-size: 0.82rem; color: var(--primary-color); }
-
-    .leaderboard-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .leaderboard-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
-      transition: background 0.15s;
-    }
-
-    .leaderboard-item:hover {
-      background: var(--bg-card-hover);
-    }
-
-    .rank-num {
-      font-weight: 800;
-      font-size: 0.85rem;
-      width: 24px;
-      color: var(--text-dim);
-    }
-
-    .rank-1 { color: #ffb800; font-size: 1rem; }
-    .rank-2 { color: #94a3b8; font-size: 0.95rem; }
-    .rank-3 { color: #cd7f32; font-size: 0.9rem; }
-
-    .user-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .user-meta .name {
-      font-weight: 600;
-      font-size: 0.88rem;
-    }
-
-    .xp-val {
-      font-size: 0.78rem;
-      color: #38bdf8;
-    }
-
-    .promo-widget {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .promo-badge {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #a5b4fc;
-      text-transform: uppercase;
-    }
-
-    .promo-widget h4 { font-size: 1.1rem; color: #fff; }
-    .promo-widget p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-
-    /* Skeletons */
-    .loading-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
-    }
-
-    .skeleton-card {
-      height: 320px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(90deg, #161926 25%, #222638 50%, #161926 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    @media (max-width: 1024px) {
-      .home-main-layout { grid-template-columns: 1fr; }
-      .hero-section { grid-template-columns: 1fr; }
-      .hero-visual { display: none; }
-    }
-  `]
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    AvatarFrameComponent,
+    VocabSearchModalComponent,
+    GrammarSearchModalComponent,
+    GrammarCardModalComponent
+  ],
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
-  private comicApi = inject(ComicApiService);
+export class HomeComponent implements OnInit, OnDestroy {
+  // English Learning & Gamification Ecosystem Home Component
+  private authService = inject(AuthService);
+  private userState = inject(UserStateService);
+  private cardApi = inject(CardApiService);
+  private grammarApi = inject(GrammarApiService);
+  private readerApi = inject(ReaderApiService);
   private userStatsApi = inject(UserStatsApiService);
+  private comicApi = inject(ComicApiService);
+  private pronunciation = inject(PronunciationService);
+  private router = inject(Router);
+  readonly ecosystem = inject(EcosystemService);
 
-  hotComics: Comic[] = [];
-  recentComics: Comic[] = [];
-  topUsers: LeaderboardEntry[] = [];
-  genres = ComicGenres;
+  // User state
+  currentUser = signal<CurrentUser | null>(null);
+  userStats = signal<UserStats | null>(null);
 
-  loadingHot = true;
-  loadingRecent = true;
+  // Vocab stats
+  dueCardsCount = signal<number>(0);
+  totalCardsCount = signal<number>(0);
+
+  // Comics
+  hotComics = signal<Comic[]>([]);
+  loadingComics = signal<boolean>(true);
+
+  // Tests & Grammar
+  toeicTests = signal<TestSummary[]>([]);
+  featuredGrammar = signal<GrammarPoint[]>([]);
+  topUsers = signal<LeaderboardEntry[]>([]);
+
+  // Loading states
+  loadingTests = signal<boolean>(true);
+  loadingGrammar = signal<boolean>(true);
+
+  // Audio playing indicator
+  isPlayingSample = signal<boolean>(false);
+
+  // Modals state
+  showVocabSearch = signal<boolean>(false);
+  showGrammarSearch = signal<boolean>(false);
+  showGrammarCard = signal<boolean>(false);
+  selectedGrammarPoint = signal<GrammarPoint | null>(null);
+
+  // Curated Daily Word Spotlight
+  readonly dailyWord: SampleVocab = {
+    word: 'adventure',
+    ipa: '/ədˈven.tʃər/',
+    pos: 'noun',
+    meaning: 'Cuộc phiêu lưu, trải nghiệm kỳ thú đầy thử thách',
+    collocation: 'embark on an exciting adventure',
+    example: 'Reading comics in English is a fantastic adventure that enriches your daily vocabulary.'
+  };
+
+  // High-quality fallback comics if API returns empty
+  readonly fallbackComics: Comic[] = [
+    {
+      id: 'comic-1',
+      title: 'One Piece: Romance Dawn',
+      imageUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&q=80',
+      views: 184500,
+      totalChapters: 1080,
+      genres: ['Adventure', 'Action', 'Shounen'],
+      rating: 4.9,
+      englishLevel: 'B1 - Intermediate',
+      isPremium: false,
+    },
+    {
+      id: 'comic-2',
+      title: 'Attack on Titan (Shingeki no Kyojin)',
+      imageUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=500&q=80',
+      views: 142000,
+      totalChapters: 139,
+      genres: ['Dark Fantasy', 'Mystery'],
+      rating: 4.8,
+      englishLevel: 'B2 - Upper Intermediate',
+      isPremium: true,
+    },
+    {
+      id: 'comic-3',
+      title: 'Solo Leveling: Shadow Monarch',
+      imageUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500&q=80',
+      views: 220000,
+      totalChapters: 179,
+      genres: ['Fantasy', 'Action', 'Isekai'],
+      rating: 5.0,
+      englishLevel: 'B1 - Intermediate',
+      isPremium: true,
+    },
+    {
+      id: 'comic-4',
+      title: 'Jujutsu Kaisen: Cursed Clash',
+      imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&q=80',
+      views: 115000,
+      totalChapters: 250,
+      genres: ['Supernatural', 'Action'],
+      rating: 4.7,
+      englishLevel: 'B1 - Intermediate',
+      isPremium: false,
+    },
+  ];
+
+  // Curated Featured Gacha Characters
+  readonly featuredGachaCharacters: FeaturedGachaCharacter[] = [
+    {
+      name: 'Monkey D. Luffy',
+      title: 'Gear 5 Nika God',
+      anime: 'One Piece',
+      rarity: 'SSR',
+      stars: 5,
+      combatPower: '9,850',
+      badgeClass: 'badge-ssr',
+      frameId: 'frame_mythic',
+      avatarUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=200&q=80'
+    },
+    {
+      name: 'Gojo Satoru',
+      title: 'Vô Hạn Chú Thuật Sư',
+      anime: 'Jujutsu Kaisen',
+      rarity: 'SSR',
+      stars: 5,
+      combatPower: '9,999',
+      badgeClass: 'badge-ssr',
+      frameId: 'frame_dragon',
+      avatarUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=200&q=80'
+    },
+    {
+      name: 'Roronoa Zoro',
+      title: 'Kiếm Hào Asura',
+      anime: 'One Piece',
+      rarity: 'SR',
+      stars: 4,
+      combatPower: '8,200',
+      badgeClass: 'badge-sr',
+      frameId: 'frame_gold',
+      avatarUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200&q=80'
+    }
+  ];
+
+  private subs = new Subscription();
 
   ngOnInit(): void {
+    this.subs.add(
+      this.authService.currentUser$.subscribe((user) => {
+        this.currentUser.set(user);
+        if (user) {
+          this.loadUserVocabStats();
+        }
+      })
+    );
+
+    this.subs.add(
+      this.userState.userStats$.subscribe((stats) => {
+        this.userStats.set(stats);
+      })
+    );
+
     this.loadHotComics();
-    this.loadRecentComics();
-    this.loadTopUsers();
+    this.loadToeicTests();
+    this.loadFeaturedGrammar();
+    this.loadTopLearners();
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   loadHotComics(): void {
+    this.loadingComics.set(true);
     this.comicApi.getComics({ page: 0, size: 4, sort: 'views' }).subscribe({
       next: (res) => {
-        this.hotComics = res.content || [];
-        this.loadingHot = false;
+        const list = res.content || [];
+        if (list.length > 0) {
+          this.hotComics.set(list.slice(0, 4));
+        } else {
+          this.hotComics.set(this.fallbackComics);
+        }
+        this.loadingComics.set(false);
       },
       error: () => {
-        this.loadingHot = false;
-      },
+        this.hotComics.set(this.fallbackComics);
+        this.loadingComics.set(false);
+      }
     });
   }
 
-  loadRecentComics(): void {
-    this.comicApi.getComics({ page: 0, size: 8 }).subscribe({
+  loadUserVocabStats(): void {
+    this.cardApi.getDashboard({ size: 1 }).subscribe({
       next: (res) => {
-        this.recentComics = res.content || [];
-        this.loadingRecent = false;
+        this.dueCardsCount.set(res.dueToday || 0);
+        this.totalCardsCount.set(res.totalCards || 0);
       },
-      error: () => {
-        this.loadingRecent = false;
-      },
+      error: () => {}
     });
   }
 
-  loadTopUsers(): void {
+  loadToeicTests(): void {
+    this.loadingTests.set(true);
+    this.readerApi.getTests(0, 4).subscribe({
+      next: (res) => {
+        this.toeicTests.set(res.content || []);
+        this.loadingTests.set(false);
+      },
+      error: () => {
+        this.toeicTests.set([]);
+        this.loadingTests.set(false);
+      }
+    });
+  }
+
+  loadFeaturedGrammar(): void {
+    this.loadingGrammar.set(true);
+    this.grammarApi.getGrammarPoints().subscribe({
+      next: (points) => {
+        this.featuredGrammar.set((points || []).slice(0, 3));
+        this.loadingGrammar.set(false);
+      },
+      error: () => {
+        this.featuredGrammar.set([]);
+        this.loadingGrammar.set(false);
+      }
+    });
+  }
+
+  loadTopLearners(): void {
     this.userStatsApi.getLeaderboard({ page: 0, size: 5 }).subscribe({
       next: (res) => {
-        this.topUsers = Array.isArray(res)
+        const list = Array.isArray(res)
           ? res
           : Array.isArray((res as { content?: LeaderboardEntry[] } | null)?.content)
             ? ((res as { content?: LeaderboardEntry[] }).content ?? [])
             : [];
+        this.topUsers.set(list);
       },
-      error: () => {},
+      error: () => {
+        this.topUsers.set([]);
+      }
     });
   }
 
-  onHeroImgError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=80';
+  playDailyWord(): void {
+    this.isPlayingSample.set(true);
+    this.pronunciation.speak(this.dailyWord.word, 'us');
+    setTimeout(() => {
+      this.isPlayingSample.set(false);
+    }, 1200);
+  }
+
+  openVocabModal(): void {
+    this.showVocabSearch.set(true);
+  }
+
+  closeVocabModal(): void {
+    this.showVocabSearch.set(false);
+  }
+
+  openGrammarModal(): void {
+    this.showGrammarSearch.set(true);
+  }
+
+  closeGrammarModal(): void {
+    this.showGrammarSearch.set(false);
+  }
+
+  onGrammarSelected(point: GrammarPoint): void {
+    this.selectedGrammarPoint.set(point);
+    this.showGrammarCard.set(true);
+  }
+
+  closeGrammarCardModal(): void {
+    this.showGrammarCard.set(false);
+    this.selectedGrammarPoint.set(null);
   }
 
   onAvatarError(event: Event, name: string): void {
     const img = event.target as HTMLImageElement;
-    img.src = `https://ui-avatars.com/api/?name=${name || 'User'}&background=6366f1&color=fff`;
+    img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=6366f1&color=fff`;
+  }
+
+  onComicImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80';
+  }
+
+  getFrameForUser(u: LeaderboardEntry, index: number): string {
+    return (u as unknown as Record<string, unknown>)['equippedAvatarFrame'] as string || (index === 0 ? 'frame_mythic' : index === 1 ? 'frame_dragon' : 'frame_gold');
+  }
+
+  getTitleForUser(u: LeaderboardEntry): string | null {
+    return ((u as unknown as Record<string, unknown>)['equippedTitle'] as string) || (u.rank?.name ?? null);
   }
 }

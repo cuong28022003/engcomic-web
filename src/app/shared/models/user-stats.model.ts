@@ -40,4 +40,6 @@ export interface LeaderboardEntry {
   xp: number;
   rank?: Rank;
   position?: number;
+  equippedTitle?: string;
+  equippedAvatarFrame?: string;
 }

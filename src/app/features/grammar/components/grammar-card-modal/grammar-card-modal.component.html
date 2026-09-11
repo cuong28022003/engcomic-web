@@ -348,12 +348,7 @@
                 </div>
                 <div class="typical-words-cloud">
                   @for (word of typicalWordsList(); track word) {
-                    <div class="typical-word-chip" (click)="playAudio(word, $event)" title="Bấm để nghe phát âm (US)">
-                      <span class="word-text">{{ word }}</span>
-                      <button type="button" class="btn-audio-mini" (click)="playAudio(word, $event)">
-                        <i class="fa-solid fa-volume-high"></i>
-                      </button>
-                    </div>
+                    <app-word-mini-chip [word]="word" />
                   }
                 </div>
               </div>

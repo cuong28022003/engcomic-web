@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ModalComponent } from '@shared/components/modal/modal.component';
 import { VocabCardComponent } from '@shared/components/vocab-card/vocab-card.component';
+import { WordMiniChipComponent } from '@shared/components/word-mini-chip/word-mini-chip.component';
 import { PronunciationService } from '@core/services/pronunciation.service';
 import { Card } from '@models/index';
 import {
@@ -12,12 +13,11 @@ import {
   GrammarExample,
   GrammarComparison
 } from '../../models/grammar.model';
-import { findMatchingUsageWords } from '../../config/usage-categories.config';
 
 @Component({
   selector: 'app-grammar-card-modal',
   standalone: true,
-  imports: [CommonModule, ModalComponent, VocabCardComponent],
+  imports: [CommonModule, ModalComponent, VocabCardComponent, WordMiniChipComponent],
   templateUrl: './grammar-card-modal.component.html',
   styleUrls: ['./grammar-card-modal.component.scss']
 })
@@ -109,21 +109,21 @@ export class GrammarCardModalComponent {
 
     const wordsSet = new Set<string>();
 
-    // 1. Explicit typical words
+    // 1. Explicit typical words (nhập tay trong DB — nguồn chính xác nhất)
     if (p.typicalWords && p.typicalWords.length > 0) {
       p.typicalWords.forEach(w => {
         if (w && w.trim()) wordsSet.add(w.trim());
       });
     }
 
-    // 2. Signal words from point
+    // 2. Signal words từ điểm ngữ pháp (legacy field)
     if (p.signalWords && p.signalWords.length > 0) {
       p.signalWords.forEach(w => {
         if (w && w.trim()) wordsSet.add(w.trim());
       });
     }
 
-    // 3. Signal words from multi usages
+    // 3. Signal words từ từng cách dùng (usages[].signalWords)
     if (p.usages && p.usages.length > 0) {
       p.usages.forEach(u => {
         if (u.signalWords && u.signalWords.length > 0) {
@@ -134,11 +134,8 @@ export class GrammarCardModalComponent {
       });
     }
 
-    // 4. Inferred matching common words from USAGE_CATEGORY_GROUPS
-    const matchedConfigWords = findMatchingUsageWords(p);
-    matchedConfigWords.forEach(w => {
-      if (w && w.trim()) wordsSet.add(w.trim());
-    });
+    // NOTE: Không dùng USAGE_CATEGORY_GROUPS inference vì quá noisy —
+    // khi group match thì toàn bộ sub-categories bị kéo vào, gây ra nhiều từ không liên quan.
 
     return Array.from(wordsSet);
   });
@@ -163,24 +160,27 @@ export class GrammarCardModalComponent {
       const cardWord = (c.word || '').trim().toLowerCase();
       if (!cardWord) return false;
 
-      // ── TIÊU CHÍ 1: KHỚP TỪ / CỤM TỪ CHÍNH XÁC (EXACT OR WORD-BOUNDARY MATCH) ──
-      // Khớp chính xác với một trong các từ tiêu biểu (loại trừ hoàn toàn substring sai như "in" trong "information")
-      const isExactWordMatch = typicalWords.some(w => {
-        if (cardWord === w) return true;
-        // Nếu w là cụm nhiều từ (VD: "look forward to", "used to", "responsible for")
-        if (w.includes(' ') && cardWord === w) return true;
-        // Kiểm tra khớp từ nguyên vẹn với ranh giới từ độc lập (\b)
-        if (w.length >= 3 && cardWord.includes(' ')) {
-          const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-          return regex.test(cardWord);
-        }
-        return false;
-      });
-      if (isExactWordMatch) return true;
+      // ── TIÊU CHÍ 1: KHỚP TỪ / CỤM TỪ CHÍNH XÁC ──
+      // card.word phải khớp chính xác với một trong các từ trong typicalWordsList.
+      // Nếu card.word là cụm (có dấu cách), dùng \b để tránh khớp sai substring.
+      if (typicalWords.length > 0) {
+        const isExactWordMatch = typicalWords.some(w => {
+          // Khớp chính xác toàn bộ từ
+          if (cardWord === w) return true;
+          // card.word là cụm từ dài hơn → kiểm tra w có xuất hiện nguyên vẹn không
+          if (w.length >= 3 && cardWord.includes(' ')) {
+            const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+            return regex.test(cardWord);
+          }
+          return false;
+        });
+        if (isExactWordMatch) return true;
+      }
 
-      // ── TIÊU CHÍ 2: KHỚP QUA NHÃN NGỮ PHÁP (GRAMMAR FUNCTION TAGS) ──
-      // Thẻ từ vựng trong kho được gắn nhãn chức năng ngữ pháp đặc thù (VD: "grammar:prepositions", "grammar:gerunds_infinitives")
+      // ── TIÊU CHÍ 2: KHỚP QUA NHÃN NGỮ PHÁP (GRAMMAR TAG) ──
+      // Thẻ phải được gắn tag tường minh dạng "grammar:<categoryKey>"
+      // để đảm bảo chỉ những thẻ được đánh dấu đúng category mới lọt qua.
       if (c.tags && c.tags.length > 0) {
         const hasMatchingGrammarTag = c.tags.some(tag => {
           const t = tag.toLowerCase().trim();
@@ -197,23 +197,8 @@ export class GrammarCardModalComponent {
         if (hasMatchingGrammarTag) return true;
       }
 
-      // ── TIÊU CHÍ 3: KHỚP QUA CẤU TRÚC CÁCH DÙNG (USAGE STRUCTURE MATCH) ──
-      // Thẻ từ có ghi rõ công thức ngữ pháp đặc thù trong usage (VD: "responsible for + V-ing/N", "enjoy + V-ing")
-      if (c.usages && c.usages.length > 0 && typicalWords.length > 0) {
-        const hasGrammarStructureMatch = c.usages.some(u => {
-          const struct = (u.structure || '').toLowerCase();
-          const note = (u.note || '').toLowerCase();
-          if (!struct && !note) return false;
-
-          return typicalWords.some(w => {
-            if (w.length <= 1) return false;
-            const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-            return regex.test(struct) || regex.test(note);
-          });
-        });
-        if (hasGrammarStructureMatch) return true;
-      }
+      // NOTE: Không dùng tiêu chí tìm từ trong usage.structure vì từ ngắn như
+      // "for", "in", "to" xuất hiện trong hầu hết mọi cấu trúc → false positive hàng loạt.
 
       return false;
     });

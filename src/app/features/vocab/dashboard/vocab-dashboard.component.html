@@ -7,6 +7,9 @@
     icon="fa-solid fa-book-open-reader"
     theme="vocab"
   >
+    <button type="button" class="btn-secondary" (click)="openSearchModal()">
+      <i class="fa-solid fa-magnifying-glass"></i> Tra Nhanh (Ctrl+K)
+    </button>
     <button class="btn-primary" (click)="openVocabModal()">
       <i class="fa-solid fa-plus"></i> Thêm / Nạp Từ Vựng
     </button>
@@ -397,5 +400,13 @@
       }
     </div>
   </app-modal>
+
+  <!-- Quick Vocab Search Modal -->
+  @if (showSearchModal()) {
+    <app-vocab-search-modal
+      [isOpen]="showSearchModal()"
+      (close)="closeSearchModal()"
+    ></app-vocab-search-modal>
+  }
 
 </div>

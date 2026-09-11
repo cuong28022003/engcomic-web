@@ -19,6 +19,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'comics',
+    redirectTo: ROUTE.SEARCH,
+    pathMatch: 'full',
+  },
+  {
+    path: 'comics/:comicId',
+    redirectTo: ROUTE.SEARCH,
+  },
+  {
     path: ROUTE.LEADERBOARD,
     data: { route: ROUTE.LEADERBOARD, title: 'Bảng Xếp Hạng' },
     loadComponent: () =>

@@ -9,11 +9,13 @@ import { UserStatsApiService } from '@core/services/user-stats-api.service';
 import { TranslationService, LanguageCode } from '@core/services/translation.service';
 import { TranslatePipe } from '@shared/pipes/translate.pipe';
 import { CurrentUser, UserStats } from '@models/index';
+import { EcosystemService } from '@core/services/ecosystem.service';
 import { ComicGenres } from '../../constants/genres';
 import { StreakModalComponent } from '../streak-modal/streak-modal.component';
 import { GrammarSearchModalComponent } from '../../../features/grammar/components/grammar-search-modal/grammar-search-modal.component';
 import { GrammarCardModalComponent } from '../../../features/grammar/components/grammar-card-modal/grammar-card-modal.component';
 import { GrammarPoint } from '../../../features/grammar/models/grammar.model';
+import { VocabSearchModalComponent } from '../vocab-search-modal/vocab-search-modal.component';
 
 import { AvatarFrameComponent } from '../avatar-frame/avatar-frame.component';
 
@@ -28,7 +30,8 @@ import { AvatarFrameComponent } from '../avatar-frame/avatar-frame.component';
     AvatarFrameComponent,
     StreakModalComponent,
     GrammarSearchModalComponent,
-    GrammarCardModalComponent
+    GrammarCardModalComponent,
+    VocabSearchModalComponent
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
@@ -39,6 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private userStatsApi = inject(UserStatsApiService);
   private router = inject(Router);
   readonly i18n = inject(TranslationService);
+  readonly ecosystem = inject(EcosystemService);
 
   currentUser: CurrentUser | null = null;
   userStats: UserStats | null = null;
@@ -50,6 +54,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Streak Modal State
   readonly showStreakModal = signal<boolean>(false);
 
+  // Vocab Modal
+  readonly showVocabSearchModal = signal<boolean>(false);
+
   // Grammar Modals
   readonly showGrammarSearchModal = signal<boolean>(false);
   readonly showGrammarCardModal = signal<boolean>(false);
@@ -57,11 +64,27 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
+    // Ctrl+K or Cmd+K to quickly open Vocab Search
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'k' || event.key === 'K')) {
+      event.preventDefault();
+      this.showVocabSearchModal.set(!this.showVocabSearchModal());
+      return;
+    }
+
     // Ctrl+G or Cmd+G to quickly open Grammar Search
     if ((event.ctrlKey || event.metaKey) && (event.key === 'g' || event.key === 'G')) {
       event.preventDefault();
       this.showGrammarSearchModal.set(!this.showGrammarSearchModal());
+      return;
     }
+  }
+
+  openVocabSearch(): void {
+    this.showVocabSearchModal.set(true);
+  }
+
+  closeVocabSearch(): void {
+    this.showVocabSearchModal.set(false);
   }
 
   openGrammarSearch(): void {

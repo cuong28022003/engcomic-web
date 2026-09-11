@@ -34,3 +34,5 @@ export * from './ai-import-workspace/ai-import-workspace.component';
 export * from './avatar-frame/avatar-frame.component';
 export * from './streak-modal/streak-modal.component';
 export * from './filter-select/filter-select.component';
+export * from './word-mini-chip/word-mini-chip.component';
+export * from './vocab-search-modal/vocab-search-modal.component';

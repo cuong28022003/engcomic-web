@@ -23,6 +23,7 @@ import { DataFilterBarComponent } from '@shared/components/data-filter-bar/data-
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { ModalComponent } from '@shared/components/modal/modal.component';
 import { FilterSelectComponent } from '@shared/components/filter-select/filter-select.component';
+import { VocabSearchModalComponent } from '@shared/components/vocab-search-modal/vocab-search-modal.component';
 
 export interface VocabTopicCategory {
   categoryName: string;
@@ -91,6 +92,7 @@ export const PART_OF_SPEECH_OPTIONS = POS_DASHBOARD_FILTER_OPTIONS;
     PageHeaderComponent,
     ModalComponent,
     FilterSelectComponent,
+    VocabSearchModalComponent
   ],
   templateUrl: './vocab-dashboard.component.html',
   styleUrls: ['./vocab-dashboard.component.scss'],
@@ -105,6 +107,8 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   public pendingCountService = inject(PendingCountService);
   private pronunciationService = inject(PronunciationService);
   private confirmDialog = inject(ConfirmDialogService);
+
+  readonly showSearchModal = signal<boolean>(false);
 
   readonly posOptions = PART_OF_SPEECH_OPTIONS;
   readonly presetTopicCategories = PRESET_VOCAB_TOPICS;
@@ -594,6 +598,14 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
 
   onExerciseImportSuccess(): void {
     this.loadDashboard(this.currentPage());
+  }
+
+  openSearchModal(): void {
+    this.showSearchModal.set(true);
+  }
+
+  closeSearchModal(): void {
+    this.showSearchModal.set(false);
   }
 
   // ─── Navigation & Card Actions ────────────────────────────────

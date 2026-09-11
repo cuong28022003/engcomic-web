@@ -1,0 +1,49 @@
+<div
+  class="word-mini-chip"
+  [class.chip-collected]="isPending"
+  [title]="isPending ? word() + ' — đã có trong Word Collector' : word()"
+>
+  <!-- Text từ (chỉ hiện nếu có word) -->
+  @if (word()) {
+    <span class="chip-word" (click)="playAudio($event)">{{ word() }}</span>
+  }
+
+  <!-- Badge loại từ (chỉ hiện nếu có pos VÀ posLabel có giá trị) -->
+  @if (pos() && posLabel) {
+    <span class="chip-pos" [ngClass]="posClass">{{ posLabel }}</span>
+  }
+
+  <!-- Nút loa (chỉ hiện nếu showAudio = true VÀ có word) -->
+  @if (showAudio() && word()) {
+    <button
+      type="button"
+      class="chip-btn btn-audio"
+      (click)="playAudio($event)"
+      title="Nghe phát âm (US)"
+      [attr.aria-label]="'Phát âm ' + word()"
+    >
+      <i class="fa-solid fa-volume-high"></i>
+    </button>
+  }
+
+  <!-- Nút + collector (chỉ hiện nếu showCollect = true VÀ có word) -->
+  @if (showCollect() && word()) {
+    <button
+      type="button"
+      class="chip-btn btn-collect"
+      [class.collected]="isPending"
+      [disabled]="isPending || isAdding()"
+      (click)="addToCollector($event)"
+      [title]="isPending ? 'Đã có trong Word Collector' : 'Thêm vào Word Collector'"
+      [attr.aria-label]="isPending ? 'Đã thêm ' + word() : 'Thêm ' + word() + ' vào Word Collector'"
+    >
+      @if (isAdding()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      } @else if (isPending) {
+        <i class="fa-solid fa-check"></i>
+      } @else {
+        <i class="fa-solid fa-plus"></i>
+      }
+    </button>
+  }
+</div>

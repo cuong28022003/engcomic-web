@@ -1,0 +1,180 @@
+<app-modal
+  [isOpen]="isOpen()"
+  title="Tra Cứu Nhanh Từ Vựng (Vocab Vault)"
+  size="lg"
+  (closed)="onClose()"
+>
+  <div class="vocab-search-modal-container" (keydown)="onKeyDown($event)">
+    <!-- Search Bar -->
+    <div class="search-bar-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        #searchInput
+        type="text"
+        class="search-input"
+        placeholder="Gõ từ tiếng Anh, nghĩa tiếng Việt, phiên âm (ví dụ: 'schedule', 'hợp đồng', 'accommodate')..."
+        [ngModel]="query()"
+        (ngModelChange)="onQueryChange($event)"
+      />
+      @if (query()) {
+        <button type="button" class="clear-btn" (click)="onQueryChange('')" title="Xóa từ khóa">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Quick Hints -->
+    <div class="quick-hints-row">
+      <span class="hint-label">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Gợi ý:
+      </span>
+      <div class="hints-list">
+        @for (hint of quickHints; track hint.label) {
+          <button
+            type="button"
+            class="hint-chip"
+            (click)="applyHint(hint)"
+          >
+            {{ hint.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Status Filters Bar -->
+    <div class="status-filters-row">
+      <span class="filter-label">Trạng thái:</span>
+      <div class="status-tabs">
+        @for (opt of statusOptions; track opt.key) {
+          <button
+            type="button"
+            class="status-tab-btn"
+            [class.active]="activeStatus() === opt.key"
+            (click)="setStatus(opt.key)"
+          >
+            <i [class]="opt.icon" [style.color]="activeStatus() === opt.key ? '#fff' : opt.color"></i>
+            <span>{{ opt.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Results Area -->
+    <div class="results-container" #resultsList>
+      @if (loading()) {
+        <app-loading message="Đang tra cứu từ vựng trong kho Vocab Vault..."></app-loading>
+      } @else if (results().length === 0) {
+        <app-empty-state
+          icon="fa-solid fa-spell-check"
+          title="Không tìm thấy từ vựng phù hợp"
+          message="Hãy thử tìm bằng từ tiếng Anh khác, nghĩa tiếng Việt, hoặc kiểm tra lại bộ lọc trạng thái."
+        ></app-empty-state>
+      } @else {
+        <div class="cards-list">
+          @for (card of results(); track card.id; let i = $index) {
+            <div
+              class="card-result-item"
+              [class.highlighted]="selectedIndex() === i"
+              (click)="onSelect(card)"
+              (mouseenter)="selectedIndex.set(i)"
+            >
+              <!-- Left Col: Word, IPA, POS, Audio -->
+              <div class="col-word">
+                <div class="word-head">
+                  <span class="word-text">{{ card.word }}</span>
+                  <button
+                    type="button"
+                    class="audio-speaker-btn"
+                    [class.playing]="playingWord() === card.word"
+                    (click)="playAudio($event, card.word)"
+                    title="Nghe phát âm chuẩn US"
+                  >
+                    <i class="fa-solid" [class.fa-volume-high]="playingWord() !== card.word" [class.fa-spinner]="playingWord() === card.word" [class.fa-spin]="playingWord() === card.word"></i>
+                  </button>
+                </div>
+
+                <div class="word-meta">
+                  @if (card.ipa) {
+                    <span class="ipa-text">{{ card.ipa }}</span>
+                  }
+                  @if (card.partOfSpeech) {
+                    @if (getPosBadge(card.partOfSpeech); as posCfg) {
+                      <span class="pos-badge" [ngClass]="posCfg.cssClass" [title]="posCfg.english">
+                        {{ posCfg.shortCode || posCfg.vietnamese }}
+                      </span>
+                    } @else {
+                      <span class="pos-badge pos-default">{{ card.partOfSpeech }}</span>
+                    }
+                  }
+                </div>
+              </div>
+
+              <!-- Middle Col: Meaning & Definitions -->
+              <div class="col-meaning">
+                <div class="meaning-vi">{{ card.meaning }}</div>
+
+                @if (card.definitionEn) {
+                  <div class="def-en">{{ card.definitionEn }}</div>
+                }
+
+                <!-- Relations or Usages snippet preview -->
+                @if (card.relations && card.relations.length > 0) {
+                  <div class="relations-preview">
+                    <span class="rel-label">Liên quan:</span>
+                    @for (rel of card.relations.slice(0, 3); track rel.text) {
+                      <span class="rel-tag">{{ rel.text }}</span>
+                    }
+                    @if (card.relations.length > 3) {
+                      <span class="rel-more">+{{ card.relations.length - 3 }}</span>
+                    }
+                  </div>
+                } @else if (card.example) {
+                  <div class="example-preview">
+                    <i class="fa-solid fa-quote-left"></i>
+                    <span>{{ card.example }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Right Col: Topic, Status & Action -->
+              <div class="col-status-action">
+                <div class="badges-group">
+                  @if (card.topic) {
+                    <span class="topic-tag" [title]="'Chủ đề: ' + card.topic">
+                      <i class="fa-solid fa-tag"></i> {{ card.topic }}
+                    </span>
+                  }
+
+                  @if (getStatusBadgeInfo(card.status); as st) {
+                    <span class="card-status-pill" [ngClass]="st.css">
+                      <i [class]="st.icon"></i> {{ st.label }}
+                    </span>
+                  }
+                </div>
+
+                <div class="action-arrow">
+                  <span class="view-detail-hint">Chi tiết</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Footer Help Shortcuts Bar -->
+    <div class="modal-footer-shortcuts">
+      <div class="shortcuts-guide">
+        <span class="key-guide"><kbd>↑</kbd> <kbd>↓</kbd> Duyệt từ</span>
+        <span class="key-guide"><kbd>Enter</kbd> Xem chi tiết</span>
+        <span class="key-guide"><kbd>Esc</kbd> Đóng</span>
+      </div>
+      <div class="results-count">
+        @if (!loading() && results().length > 0) {
+          <span>Hiển thị {{ results().length }} từ vựng</span>
+        }
+      </div>
+    </div>
+  </div>
+</app-modal>

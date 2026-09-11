@@ -392,42 +392,22 @@
             <div class="relations-grid">
               @for (rel of familyRelations; track getRelationWord(rel)) {
                 <div class="relation-item-card">
-                  <div class="rel-word-wrap">
-                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
-                    @if (rel.pos) {
-                      <span class="rel-pos-tag">{{ getPosLabel(rel.pos) }}</span>
-                    }
-                  </div>
-
-                  <div class="rel-action-wrap">
-                    @if (rel.relatedCardId) {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-learned"
-                        (click)="navigateToRelated(rel.relatedCardId)"
-                        title="Đã có trong kho thẻ — Nhấn để mở"
-                      >
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Đã học</span>
-                      </button>
-                    } @else if (isWordInCollector(rel)) {
-                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
-                        <i class="fa-solid fa-inbox"></i>
-                        <span>Trong Collector</span>
-                      </span>
-                    } @else {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-add"
-                        [disabled]="addingPending().has(getRelationWord(rel))"
-                        (click)="addToPending(rel)"
-                        title="Thêm vào Word Collector để nạp từ"
-                      >
-                        <i class="fa-solid fa-plus"></i>
-                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
-                      </button>
-                    }
-                  </div>
+                  <app-word-mini-chip
+                    [word]="getRelationWord(rel)"
+                    [pos]="rel.pos"
+                    [showCollect]="!rel.relatedCardId"
+                  />
+                  @if (rel.relatedCardId) {
+                    <button
+                      type="button"
+                      class="btn-rel-state btn-learned"
+                      (click)="navigateToRelated(rel.relatedCardId)"
+                      title="Đã có trong kho thẻ — Nhấn để mở"
+                    >
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span>Đã học</span>
+                    </button>
+                  }
                 </div>
               }
 
@@ -445,39 +425,22 @@
             <div class="relations-grid">
               @for (rel of collocationRelations; track getRelationWord(rel)) {
                 <div class="relation-item-card">
-                  <div class="rel-word-wrap">
-                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
-                  </div>
-
-                  <div class="rel-action-wrap">
-                    @if (rel.relatedCardId) {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-learned"
-                        (click)="navigateToRelated(rel.relatedCardId)"
-                        title="Đã có trong kho thẻ — Nhấn để mở"
-                      >
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Đã học</span>
-                      </button>
-                    } @else if (isWordInCollector(rel)) {
-                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
-                        <i class="fa-solid fa-inbox"></i>
-                        <span>Trong Collector</span>
-                      </span>
-                    } @else {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-add"
-                        [disabled]="addingPending().has(getRelationWord(rel))"
-                        (click)="addToPending(rel)"
-                        title="Thêm vào Word Collector để nạp từ"
-                      >
-                        <i class="fa-solid fa-plus"></i>
-                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
-                      </button>
-                    }
-                  </div>
+                  <app-word-mini-chip
+                    [word]="getRelationWord(rel)"
+                    [pos]="rel.pos"
+                    [showCollect]="!rel.relatedCardId"
+                  />
+                  @if (rel.relatedCardId) {
+                    <button
+                      type="button"
+                      class="btn-rel-state btn-learned"
+                      (click)="navigateToRelated(rel.relatedCardId)"
+                      title="Đã có trong kho thẻ — Nhấn để mở"
+                    >
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span>Đã học</span>
+                    </button>
+                  }
                 </div>
               }
 
@@ -495,39 +458,22 @@
             <div class="relations-grid">
               @for (rel of synonymRelations; track getRelationWord(rel)) {
                 <div class="relation-item-card">
-                  <div class="rel-word-wrap">
-                    <span class="rel-word">{{ getRelationWord(rel) }}</span>
-                  </div>
-
-                  <div class="rel-action-wrap">
-                    @if (rel.relatedCardId) {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-learned"
-                        (click)="navigateToRelated(rel.relatedCardId)"
-                        title="Đã có trong kho thẻ — Nhấn để mở"
-                      >
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Đã học</span>
-                      </button>
-                    } @else if (isWordInCollector(rel)) {
-                      <span class="btn-rel-state btn-in-collector" title="Đã có trong Word Collector">
-                        <i class="fa-solid fa-inbox"></i>
-                        <span>Trong Collector</span>
-                      </span>
-                    } @else {
-                      <button
-                        type="button"
-                        class="btn-rel-state btn-add"
-                        [disabled]="addingPending().has(getRelationWord(rel))"
-                        (click)="addToPending(rel)"
-                        title="Thêm vào Word Collector để nạp từ"
-                      >
-                        <i class="fa-solid fa-plus"></i>
-                        <span>{{ addingPending().has(getRelationWord(rel)) ? 'Đang thêm...' : 'Nạp từ' }}</span>
-                      </button>
-                    }
-                  </div>
+                  <app-word-mini-chip
+                    [word]="getRelationWord(rel)"
+                    [pos]="rel.pos"
+                    [showCollect]="!rel.relatedCardId"
+                  />
+                  @if (rel.relatedCardId) {
+                    <button
+                      type="button"
+                      class="btn-rel-state btn-learned"
+                      (click)="navigateToRelated(rel.relatedCardId)"
+                      title="Đã có trong kho thẻ — Nhấn để mở"
+                    >
+                      <i class="fa-solid fa-circle-check"></i>
+                      <span>Đã học</span>
+                    </button>
+                  }
                 </div>
               }
 

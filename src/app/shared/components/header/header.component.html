@@ -25,10 +25,23 @@
       <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">
         <i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng
       </a>
+
     </nav>
 
     <!-- User Actions / Profile & Language Switcher -->
     <div class="user-section">
+      <!-- Quick Vocab Search Trigger -->
+      <button
+        type="button"
+        class="nav-quick-search-btn"
+        (click)="openVocabSearch()"
+        title="Tra cứu nhanh từ vựng (Ctrl+K)"
+      >
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span class="search-label">Tìm từ...</span>
+        <kbd class="shortcut-badge">Ctrl K</kbd>
+      </button>
+
       <!-- Language Switcher Dropdown -->
       <div class="lang-dropdown-wrapper">
         <button class="lang-btn" (click)="toggleLangMenu()" [title]="'Chuyển đổi ngôn ngữ'">
@@ -114,6 +127,16 @@
               <a [routerLink]="['/user', currentUser.userId, 'change-password']" (click)="closeProfileMenu()" class="menu-item">
                 <i class="fa-solid fa-key"></i> Đổi mật khẩu
               </a>
+              <hr class="menu-divider" />
+              <a [href]="ecosystem.comicsUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
+                <i class="fa-solid fa-book-open"></i> Đọc truyện tranh (React)
+              </a>
+              <a [href]="ecosystem.gachaUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
+                <i class="fa-solid fa-gem"></i> Quay Gacha nhân vật
+              </a>
+              <a [href]="ecosystem.fightingGameUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
+                <i class="fa-solid fa-gamepad"></i> Đấu trường Fighting Game
+              </a>
               @if (isAdmin) {
                 <hr class="menu-divider" />
                 <a routerLink="/admin" (click)="closeProfileMenu()" class="menu-item admin-item">
@@ -170,6 +193,14 @@
     [stats]="userStats"
     (close)="closeStreakModal()"
   ></app-streak-modal>
+}
+
+<!-- Global Quick Vocab Search Modal (Accessible via Ctrl+K from anywhere) -->
+@if (showVocabSearchModal()) {
+  <app-vocab-search-modal
+    [isOpen]="showVocabSearchModal()"
+    (close)="closeVocabSearch()"
+  ></app-vocab-search-modal>
 }
 
 <!-- Global Quick Grammar Search Modal (Accessible via Ctrl+G from anywhere) -->

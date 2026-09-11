@@ -1,0 +1,132 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// WordMiniChipComponent Styles
+// Layout: [word-text] [pos-badge?] [🔊] [+]
+// ─────────────────────────────────────────────────────────────────────────────
+
+:host {
+  display: inline-flex;
+}
+
+.word-mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.32rem 0.5rem 0.32rem 0.8rem;
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  user-select: none;
+
+  // ── từ chính ───────────────────────────────────────────────────────────────
+  .chip-word {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    line-height: 1;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: #7dd3fc;
+    }
+  }
+
+  // ── badge loại từ ──────────────────────────────────────────────────────────
+  .chip-pos {
+    font-size: 0.64rem;
+    font-weight: 700;
+    padding: 0.06rem 0.32rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+
+    // Màu theo loại từ (dùng cùng convention với getPosCssClass)
+    &.pos-noun     { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.25); }
+    &.pos-verb     { background: rgba(249, 115, 22, 0.12); color: #fb923c; border-color: rgba(249, 115, 22, 0.25); }
+    &.pos-adj      { background: rgba(168, 85, 247, 0.12); color: #c084fc; border-color: rgba(168, 85, 247, 0.25); }
+    &.pos-adv      { background: rgba(234, 179, 8, 0.12);  color: #facc15; border-color: rgba(234, 179, 8, 0.25); }
+    &.pos-prep     { background: rgba(20, 184, 166, 0.12); color: #2dd4bf; border-color: rgba(20, 184, 166, 0.25); }
+    &.pos-conj     { background: rgba(99, 102, 241, 0.12); color: #818cf8; border-color: rgba(99, 102, 241, 0.25); }
+    &.pos-phrase   { background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.25); }
+  }
+
+  // ── các nút nhỏ (loa + collector) ─────────────────────────────────────────
+  .chip-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    font-size: 0.68rem;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+    padding: 0;
+    line-height: 1;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.7;
+    }
+
+    // Nút loa
+    &.btn-audio {
+      color: #38bdf8;
+
+      &:hover {
+        background: rgba(56, 189, 248, 0.15);
+        border-color: rgba(56, 189, 248, 0.4);
+        transform: scale(1.15);
+        color: #7dd3fc;
+      }
+    }
+
+    // Nút + collector
+    &.btn-collect {
+      color: #94a3b8;
+
+      &:hover:not(.collected):not(:disabled) {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #4ade80;
+        transform: scale(1.15);
+      }
+
+      &.collected {
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: #4ade80;
+        cursor: default;
+      }
+    }
+  }
+
+  // ── trạng thái chip đã được collect ───────────────────────────────────────
+  &.chip-collected {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.06);
+
+    .chip-word {
+      color: #86efac;
+    }
+  }
+
+  // ── hover toàn chip ────────────────────────────────────────────────────────
+  &:not(.chip-collected):hover {
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(56, 189, 248, 0.07);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  }
+}
