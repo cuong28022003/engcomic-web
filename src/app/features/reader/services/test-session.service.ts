@@ -20,7 +20,11 @@ export class TestSessionService {
   async startNewAttempt(testId: string, config: TimeTargetConfig): Promise<ToeicAttempt> {
     const payload = {
       timeMode: config.mode,
-      selectedParts: config.selectedParts || [5, 6, 7],
+      selectedParts: config.selectedParts || (config.section === 'listening' ? [1, 2, 3, 4] : [5, 6, 7]),
+      part1TargetSeconds: (config.part1_minutes || 5) * 60,
+      part2TargetSeconds: (config.part2_minutes || 8) * 60,
+      part3TargetSeconds: (config.part3_minutes || 16) * 60,
+      part4TargetSeconds: (config.part4_minutes || 16) * 60,
       part5TargetSeconds: (config.part5_minutes || 20) * 60,
       part6TargetSeconds: (config.part6_minutes || 10) * 60,
       part7TargetSeconds: (config.part7_minutes || 45) * 60
@@ -87,6 +91,10 @@ export class TestSessionService {
 
     const payload: SaveProgressPayload = {
       totalElapsedSeconds: this.timerService.totalElapsed(),
+      part1ElapsedSeconds: this.timerService.getPartElapsed(1),
+      part2ElapsedSeconds: this.timerService.getPartElapsed(2),
+      part3ElapsedSeconds: this.timerService.getPartElapsed(3),
+      part4ElapsedSeconds: this.timerService.getPartElapsed(4),
       part5ElapsedSeconds: this.timerService.getPartElapsed(5),
       part6ElapsedSeconds: this.timerService.getPartElapsed(6),
       part7ElapsedSeconds: this.timerService.getPartElapsed(7),
@@ -111,6 +119,10 @@ export class TestSessionService {
 
     const payload: SaveProgressPayload = {
       totalElapsedSeconds: this.timerService.totalElapsed(),
+      part1ElapsedSeconds: this.timerService.getPartElapsed(1),
+      part2ElapsedSeconds: this.timerService.getPartElapsed(2),
+      part3ElapsedSeconds: this.timerService.getPartElapsed(3),
+      part4ElapsedSeconds: this.timerService.getPartElapsed(4),
       part5ElapsedSeconds: this.timerService.getPartElapsed(5),
       part6ElapsedSeconds: this.timerService.getPartElapsed(6),
       part7ElapsedSeconds: this.timerService.getPartElapsed(7),

@@ -3,7 +3,7 @@
     <div class="step-icon">📄</div>
     <div>
       <h2 class="step-title">Bước 1: Thông tin đề thi & Tệp PDF</h2>
-      <p class="step-desc">Nhập tên bài thi và tải lên tệp đề thi PDF để hiển thị trong giao diện làm bài.</p>
+      <p class="step-desc">Nhập tên bài thi, chọn phần thi (Nghe/Đọc) và tải lên tệp đề thi PDF.</p>
     </div>
   </div>
 
@@ -12,38 +12,64 @@
     <input 
       type="text" 
       class="form-input" 
-      placeholder="Ví dụ: ETS TOEIC 2024 Test 5 - Reading" 
+      placeholder="Ví dụ: ETS TOEIC 2024 Test 5 - Listening" 
       [(ngModel)]="testName"
     />
   </div>
 
   <div class="form-group">
+    <label class="form-label">Phần thi</label>
+    <div class="section-selector">
+      <label class="section-card" [class.active]="selectedSection() === 'reading'" (click)="selectSection('reading')">
+        <input type="radio" name="section" [checked]="selectedSection() === 'reading'" (change)="selectSection('reading')" />
+        <div class="section-info">
+          <span class="section-icon">📖</span>
+          <div>
+            <div class="section-name">TOEIC Reading</div>
+            <div class="section-desc">Part 5 - 7 (100 câu, câu 101 - 200)</div>
+          </div>
+        </div>
+      </label>
+      <label class="section-card" [class.active]="selectedSection() === 'listening'" (click)="selectSection('listening')">
+        <input type="radio" name="section" [checked]="selectedSection() === 'listening'" (change)="selectSection('listening')" />
+        <div class="section-info">
+          <span class="section-icon">🎧</span>
+          <div>
+            <div class="section-name">TOEIC Listening</div>
+            <div class="section-desc">Part 1 - 4 (100 câu, câu 1 - 100, kèm audio)</div>
+          </div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-group">
     <label class="form-label">Tệp đề thi (PDF)</label>
     
-    <div 
-      *ngIf="!selectedFile" 
-      class="dropzone" 
-      [class.drag-active]="isDragging"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-      (drop)="onDrop($event)"
-      (click)="fileInput.click()"
-    >
-      <input #fileInput type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)" style="display: none;" />
-      <div class="drop-icon">☁️</div>
-      <div class="drop-text">Kéo thả tệp PDF vào đây hoặc <span class="browse-link">chọn từ máy</span></div>
-      <div class="drop-hint">Hỗ trợ định dạng PDF tối đa 50MB</div>
-    </div>
-
-    <!-- File preview when selected -->
-    <div *ngIf="selectedFile" class="file-preview-card">
-      <div class="file-icon">📑</div>
-      <div class="file-info">
-        <div class="file-name">{{ selectedFile.name }}</div>
-        <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • Sẵn sàng tải lên</div>
+    @if (!selectedFile) {
+      <div 
+        class="dropzone" 
+        [class.drag-active]="isDragging"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()"
+      >
+        <input #fileInput type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)" style="display: none;" />
+        <div class="drop-icon">☁️</div>
+        <div class="drop-text">Kéo thả tệp PDF vào đây hoặc <span class="browse-link">chọn từ máy</span></div>
+        <div class="drop-hint">Hỗ trợ định dạng PDF tối đa 50MB</div>
       </div>
-      <button type="button" class="btn-remove" (click)="removeFile()" title="Đổi file khác">✕</button>
-    </div>
+    } @else {
+      <div class="file-preview-card">
+        <div class="file-icon">📑</div>
+        <div class="file-info">
+          <div class="file-name">{{ selectedFile.name }}</div>
+          <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • Sẵn sàng tải lên</div>
+        </div>
+        <button type="button" class="btn-remove" (click)="removeFile()" title="Đổi file khác">✕</button>
+      </div>
+    }
   </div>
 
   <div class="divider-text">hoặc</div>
@@ -60,9 +86,43 @@
     <span class="input-hint">Có thể dán trực tiếp link file PDF trên Google Drive / Cloudinary</span>
   </div>
 
-  <div *ngIf="errorMessage" class="error-banner">
-    ⚠️ {{ errorMessage }}
-  </div>
+  @if (selectedSection() === 'listening') {
+    <div class="form-group">
+      <label class="form-label">Tệp audio bài Nghe (bắt buộc với Listening)</label>
+
+      @if (!audioFile) {
+        <div 
+          class="dropzone audio-zone" 
+          [class.drag-active]="isAudioDragging"
+          (dragover)="onAudioDragOver($event)"
+          (dragleave)="onAudioDragLeave($event)"
+          (drop)="onAudioDrop($event)"
+          (click)="audioInput.click()"
+        >
+          <input #audioInput type="file" accept=".mp3,.m4a,.wav,.aac,.ogg,audio/*" (change)="onAudioFileSelected($event)" style="display: none;" />
+          <div class="drop-icon">🎧</div>
+          <div class="drop-text">Kéo thả tệp audio vào đây hoặc <span class="browse-link">chọn từ máy</span></div>
+          <div class="drop-hint">Hỗ trợ MP3 / M4A / WAV tối đa 200MB</div>
+        </div>
+      } @else {
+        <div class="file-preview-card">
+          <div class="file-icon">🎵</div>
+          <div class="file-info">
+            <div class="file-name">{{ audioFile.name }}</div>
+            <div class="file-meta">{{ formatFileSize(audioFile.size) }} • Audio đề Nghe</div>
+          </div>
+          <button type="button" class="btn-remove" (click)="removeAudioFile()" title="Đổi file khác">✕</button>
+        </div>
+      }
+      <span class="input-hint">Chọn file âm thanh của đề Listening (MP3/M4A/WAV) để nghe lại trong lúc làm bài và xem lại.</span>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="error-banner">
+      ⚠️ {{ errorMessage }}
+    </div>
+  }
 
   <div class="step-actions">
     <div></div>

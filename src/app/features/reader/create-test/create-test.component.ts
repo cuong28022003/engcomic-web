@@ -5,7 +5,7 @@ import { PdfUploadStepComponent } from './pdf-upload-step/pdf-upload-step.compon
 import { AiParsePromptStepComponent } from './ai-parse-prompt-step/ai-parse-prompt-step.component';
 import { AnswerKeyImportStepComponent } from './answer-key-import-step/answer-key-import-step.component';
 import { ReaderApiService } from '../services/reader-api.service';
-import { CreateTestPayload } from '../models';
+import { CreateTestPayload, ToeicSection } from '../models';
 import { ToastService } from '@core/services/toast.service';
 
 import { BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
@@ -39,15 +39,19 @@ export class CreateTestComponent {
   testName = '';
   pdfFile: File | null = null;
   pdfUrl = '';
-  questions: Array<{ number: number; part: number; correctAnswer: string }> = [];
+  section: ToeicSection = 'reading';
+  audioFile: File | null = null;
+  questions: Array<{ number: number; part: number; correctAnswer: string; audioStartMs?: number; transcript?: string }> = [];
 
   submitting = false;
   errorMessage = '';
 
-  onStep1Completed(data: { testName: string; pdfFile: File | null; pdfUrl: string }) {
+  onStep1Completed(data: { testName: string; pdfFile: File | null; pdfUrl: string; section: ToeicSection; audioFile: File | null }) {
     this.testName = data.testName;
     this.pdfFile = data.pdfFile;
     this.pdfUrl = data.pdfUrl;
+    this.section = data.section;
+    this.audioFile = data.audioFile;
     this.currentStep = 2;
   }
 
@@ -63,21 +67,24 @@ export class CreateTestComponent {
     this.currentStep = 2;
   }
 
-  onSubmitTest(data: { questions: Array<{ number: number; part: number; correctAnswer: string }> }) {
+  onSubmitTest(data: { questions: Array<{ number: number; part: number; correctAnswer: string; audioStartMs?: number; transcript?: string }> }) {
     this.questions = data.questions;
     this.submitting = true;
     this.errorMessage = '';
 
     const payload: CreateTestPayload = {
       testName: this.testName,
+      section: this.section,
       pdfUrl: this.pdfUrl || undefined,
       questions: this.questions
     };
 
-    this.readerApi.createTestMultipart(payload, this.pdfFile || undefined).subscribe({
+    this.readerApi.createTestMultipart(payload, this.pdfFile || undefined, this.audioFile || undefined).subscribe({
       next: () => {
         this.submitting = false;
-        this.toast.success('Đã tạo đề thi thành công!');
+        this.toast.success(this.section === 'listening' && this.audioFile
+          ? 'Đã tạo đề Listening thành công!'
+          : 'Đã tạo đề thi thành công!');
         // Return to TOEIC tests list dashboard
         this.router.navigate(['/reader']);
       },

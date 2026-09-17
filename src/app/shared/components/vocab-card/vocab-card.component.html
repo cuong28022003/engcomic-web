@@ -70,6 +70,11 @@
           >
             <i class="fa-solid fa-layer-group"></i> {{ deckName() || 'Bộ thẻ' }}
           </span>
+          @if (deckNames().length > 1) {
+            <span class="badge badge-deck-multi" title="Ngoài ra còn thuộc {{ deckNames().length - 1 }} bộ thẻ khác">
+              <i class="fa-solid fa-plus"></i>{{ deckNames().length - 1 }}
+            </span>
+          }
         } @else if (card().topic) {
           <span
             class="badge badge-genre clickable-topic-badge"
@@ -140,6 +145,11 @@
         >
           <i class="fa-solid fa-layer-group"></i> {{ deckName() || 'Bộ thẻ' }}
         </span>
+        @if (deckNames().length > 1) {
+          <span class="badge badge-deck-multi" title="Ngoài ra còn thuộc {{ deckNames().length - 1 }} bộ thẻ khác">
+            <i class="fa-solid fa-plus"></i>{{ deckNames().length - 1 }}
+          </span>
+        }
       }
 
       <span class="status-badge" [class]="getStatusClass(card().status)">

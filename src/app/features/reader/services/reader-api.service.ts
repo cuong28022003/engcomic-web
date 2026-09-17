@@ -40,13 +40,18 @@ export class ReaderApiService extends ApiBaseService {
     return this.post<TestSummary>(this.TEST_BASE, payload);
   }
 
-  createTestMultipart(payload: CreateTestPayload, pdfFile?: File): Observable<TestSummary> {
-    if (!pdfFile) {
+  createTestMultipart(payload: CreateTestPayload, pdfFile?: File, audioFile?: File): Observable<TestSummary> {
+    if (!pdfFile && !audioFile) {
       return this.createTestJson(payload);
     }
     const formData = new FormData();
     formData.append('requestData', JSON.stringify(payload));
-    formData.append('pdfFile', pdfFile);
+    if (pdfFile) {
+      formData.append('pdfFile', pdfFile);
+    }
+    if (audioFile) {
+      formData.append('audioFile', audioFile);
+    }
     return this.postForm<TestSummary>(this.TEST_BASE, formData);
   }
 
@@ -54,13 +59,18 @@ export class ReaderApiService extends ApiBaseService {
     return this.put<TestSummary>(`${this.TEST_BASE}/${testId}`, payload);
   }
 
-  updateTestMultipart(testId: string, payload: Partial<CreateTestPayload>, pdfFile?: File): Observable<TestSummary> {
-    if (!pdfFile) {
+  updateTestMultipart(testId: string, payload: Partial<CreateTestPayload>, pdfFile?: File, audioFile?: File): Observable<TestSummary> {
+    if (!pdfFile && !audioFile) {
       return this.updateTestJson(testId, payload);
     }
     const formData = new FormData();
     formData.append('requestData', JSON.stringify(payload));
-    formData.append('pdfFile', pdfFile);
+    if (pdfFile) {
+      formData.append('pdfFile', pdfFile);
+    }
+    if (audioFile) {
+      formData.append('audioFile', audioFile);
+    }
     return this.putForm<TestSummary>(`${this.TEST_BASE}/${testId}`, formData);
   }
 
@@ -72,7 +82,7 @@ export class ReaderApiService extends ApiBaseService {
     return this.post<SubmitSessionResponse>(`${this.TEST_BASE}/${testId}/submit`, payload);
   }
 
-  startAttempt(testId: string, payload?: { timeMode?: string; selectedParts?: number[]; part5TargetSeconds?: number; part6TargetSeconds?: number; part7TargetSeconds?: number }): Observable<import('../models').ToeicAttempt> {
+  startAttempt(testId: string, payload?: { timeMode?: string; selectedParts?: number[]; part1TargetSeconds?: number; part2TargetSeconds?: number; part3TargetSeconds?: number; part4TargetSeconds?: number; part5TargetSeconds?: number; part6TargetSeconds?: number; part7TargetSeconds?: number }): Observable<import('../models').ToeicAttempt> {
     return this.post<import('../models').ToeicAttempt>(`${this.TEST_BASE}/${testId}/attempts`, payload || {});
   }
 

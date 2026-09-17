@@ -4,130 +4,161 @@
     <h1 class="result-title">{{ result?.testName || 'Kết quả bài thi TOEIC' }}</h1>
   </div>
 
-  <div *ngIf="!result" class="no-result-card">
-    <p>Chưa có dữ liệu kết quả vừa nộp.</p>
-    <a routerLink="/reader" class="btn-primary">Quay lại danh sách đề thi</a>
-  </div>
-
-  <div *ngIf="result" class="result-content">
-    <!-- Top Stats 3 Cards -->
-    <div class="stats-row">
-      <div class="stat-box primary">
-        <div class="stat-icon">🎯</div>
-        <div class="stat-val">{{ result.rawScore }} / {{ result.totalQuestions }}</div>
-        <div class="stat-lbl">Số câu đúng</div>
-      </div>
-      <div class="stat-box success">
-        <div class="stat-icon">📊</div>
-        <div class="stat-val">{{ result.accuracyPercentage }}%</div>
-        <div class="stat-lbl">Tỷ lệ chính xác</div>
-      </div>
-      <div class="stat-box info">
-        <div class="stat-icon">⏱</div>
-        <div class="stat-val">{{ formatDuration(result.duration) }}</div>
-        <div class="stat-lbl">Thời gian làm bài</div>
-      </div>
+  @if (!result) {
+    <div class="no-result-card">
+      <p>Chưa có dữ liệu kết quả vừa nộp.</p>
+      <a routerLink="/reader" class="btn-primary">Quay lại danh sách đề thi</a>
     </div>
+  }
 
-    <!-- Part Breakdown Table with Timing -->
-    <div class="card-section">
-      <h2 class="section-title">📊 Thống kê & Phân bổ thời gian theo Part</h2>
-      <div class="part-grid">
-        <div *ngFor="let p of result.partBreakdown" class="part-card">
-          <div class="part-card-top">
-            <div class="part-num">Part {{ p.part }}</div>
-            <div class="part-score">{{ p.correctCount }}/{{ p.totalCount }} câu</div>
+  @if (result) {
+    <div class="result-content">
+      <!-- Top Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-box primary">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-val">{{ result.rawScore }} / {{ result.totalQuestions }}</div>
+          <div class="stat-lbl">Số câu đúng</div>
+        </div>
+        @if (result.scaledScore !== undefined && result.scaledScore !== null) {
+          <div class="stat-box scaled">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-val">{{ result.scaledScore }}/990</div>
+            <div class="stat-lbl">Điểm quy đổi (Scaled Score)</div>
           </div>
-          
-          <div class="part-bar">
-            <div class="part-bar-fill" [style.width.%]="p.accuracyPercentage"></div>
-          </div>
-          <div class="part-pct-row">
-            <span>Độ chính xác:</span>
-            <strong>{{ p.accuracyPercentage }}%</strong>
-          </div>
+        }
+        <div class="stat-box success">
+          <div class="stat-icon">📊</div>
+          <div class="stat-val">{{ result.accuracyPercentage }}%</div>
+          <div class="stat-lbl">Tỷ lệ chính xác</div>
+        </div>
+        <div class="stat-box info">
+          <div class="stat-icon">⏱</div>
+          <div class="stat-val">{{ formatDuration(result.duration) }}</div>
+          <div class="stat-lbl">Thời gian làm bài</div>
+        </div>
+      </div>
 
-          <div *ngIf="p.elapsedSeconds" class="part-timing-stats">
-            <div class="timing-item">
-              <span class="t-lbl">Thời gian dùng:</span>
-              <span class="t-val">{{ formatMinutes(p.elapsedSeconds) }}</span>
+      <!-- Part Breakdown Table with Timing -->
+      <div class="card-section">
+        <h2 class="section-title">📊 Thống kê & Phân bổ thời gian theo Part</h2>
+        <div class="part-grid">
+          @for (p of result.partBreakdown; track p.part) {
+            <div class="part-card">
+              <div class="part-card-top">
+                <div class="part-num">Part {{ p.part }}</div>
+                <div class="part-score">{{ p.correctCount }}/{{ p.totalCount }} câu</div>
+              </div>
+
+              <div class="part-bar">
+                <div class="part-bar-fill" [style.width.%]="p.accuracyPercentage"></div>
+              </div>
+              <div class="part-pct-row">
+                <span>Độ chính xác:</span>
+                <strong>{{ p.accuracyPercentage }}%</strong>
+              </div>
+
+              @if (p.elapsedSeconds) {
+                <div class="part-timing-stats">
+                  <div class="timing-item">
+                    <span class="t-lbl">Thời gian dùng:</span>
+                    <span class="t-val">{{ formatMinutes(p.elapsedSeconds) }}</span>
+                  </div>
+                  @if (p.targetSeconds) {
+                    <div class="timing-item">
+                      <span class="t-lbl">Mục tiêu:</span>
+                      <span class="t-val">{{ formatMinutes(p.targetSeconds) }}</span>
+                    </div>
+                  }
+                  @if (p.avgSecondsPerQuestion) {
+                    <div class="timing-item">
+                      <span class="t-lbl">Tốc độ TB:</span>
+                      <span class="t-val highlight">{{ p.avgSecondsPerQuestion }}s / câu</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
-            <div *ngIf="p.targetSeconds" class="timing-item">
-              <span class="t-lbl">Mục tiêu:</span>
-              <span class="t-val">{{ formatMinutes(p.targetSeconds) }}</span>
-            </div>
-            <div *ngIf="p.avgSecondsPerQuestion" class="timing-item">
-              <span class="t-lbl">Tốc độ TB:</span>
-              <span class="t-val highlight">{{ p.avgSecondsPerQuestion }}s / câu</span>
-            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Mistakes List Section -->
+      <div class="card-section">
+        <div class="mistakes-header">
+          <div>
+            <h2 class="section-title">Danh sách câu sai ({{ wrongQuestions.length }} câu)</h2>
+            <p class="section-desc">Bạn có thể bấm <strong>Xem lại bài thi</strong> để nhận giải thích chi tiết từ AI và lưu từ vựng trọng tâm.</p>
           </div>
+          @if (result.attemptId) {
+            <a [routerLink]="['/reader', testId, 'attempts', result.attemptId, 'review']" class="btn-goto-queue">
+              🤖 Xem Lời Giải AI →
+            </a>
+          }
+        </div>
+
+        @if (wrongQuestions.length === 0) {
+          <div class="perfect-banner">
+            🎉 Xuất sắc! Bạn đã trả lời đúng 100% tất cả các câu hỏi!
+          </div>
+        }
+
+        @if (wrongQuestions.length > 0) {
+          <div class="wrong-list">
+            @for (w of wrongQuestions; track w.questionNumber) {
+              <div class="wrong-card">
+                <div class="wrong-left">
+                  <span class="w-num">Câu {{ w.questionNumber }}</span>
+                  <span class="w-part">Part {{ w.part }}</span>
+                </div>
+                <div class="wrong-mid">
+                  <div class="choice-tag wrong">
+                    Bạn chọn: <strong>{{ w.userAnswer || 'Bỏ qua' }}</strong>
+                  </div>
+                  <div class="choice-tag correct">
+                    Đáp án đúng: <strong>{{ w.correctAnswer }}</strong>
+                  </div>
+                </div>
+                <div class="wrong-timing-col">
+                  <span class="w-time" [class.slow]="isSlowQuestion(w)">
+                    ⏱ {{ w.timeSpentSeconds || 0 }}s
+                  </span>
+                  @if (isSlowQuestion(w)) {
+                    <span class="slow-badge" title="Câu này bạn tốn nhiều thời gian hơn bình thường">
+                      ⚠️ Quá lâu
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Primary & Secondary Actions Hierarchy -->
+      <div class="result-actions-container">
+        @if (result.attemptId) {
+          <div class="primary-action-wrap">
+            <a [routerLink]="['/reader', testId, 'attempts', result.attemptId, 'review']" class="btn-review-special">
+              <i class="fas fa-microscope"></i> 📝 Xem lại bài thi & Lời giải AI ➔
+            </a>
+          </div>
+        }
+
+        <div class="secondary-actions-grid">
+          <button type="button" class="btn-action-pill" (click)="openHistory()">
+            <i class="fas fa-history"></i> 📊 Lịch sử làm bài
+          </button>
+          <a [routerLink]="['/reader', testId]" class="btn-action-pill outline">
+            <i class="fas fa-redo"></i> ▶ Làm lại đề này
+          </a>
+          <a routerLink="/reader" class="btn-action-pill primary">
+            <i class="fas fa-th-list"></i> 🏠 Danh sách đề thi
+          </a>
         </div>
       </div>
     </div>
-
-    <!-- Mistakes List Section -->
-    <div class="card-section">
-      <div class="mistakes-header">
-        <div>
-          <h2 class="section-title">Danh sách câu sai ({{ wrongQuestions.length }} câu)</h2>
-          <p class="section-desc">Bạn có thể bấm <strong>Xem lại bài thi</strong> để nhận giải thích chi tiết từ AI và lưu từ vựng trọng tâm.</p>
-        </div>
-        <a *ngIf="result.attemptId" [routerLink]="['/reader', testId, 'attempts', result.attemptId, 'review']" class="btn-goto-queue">
-          🤖 Xem Lời Giải AI →
-        </a>
-      </div>
-
-      <div *ngIf="wrongQuestions.length === 0" class="perfect-banner">
-        🎉 Xuất sắc! Bạn đã trả lời đúng 100% tất cả các câu hỏi!
-      </div>
-
-      <div *ngIf="wrongQuestions.length > 0" class="wrong-list">
-        <div *ngFor="let w of wrongQuestions" class="wrong-card">
-          <div class="wrong-left">
-            <span class="w-num">Câu {{ w.questionNumber }}</span>
-            <span class="w-part">Part {{ w.part }}</span>
-          </div>
-          <div class="wrong-mid">
-            <div class="choice-tag wrong">
-              Bạn chọn: <strong>{{ w.userAnswer || 'Bỏ qua' }}</strong>
-            </div>
-            <div class="choice-tag correct">
-              Đáp án đúng: <strong>{{ w.correctAnswer }}</strong>
-            </div>
-          </div>
-          <div class="wrong-timing-col">
-            <span class="w-time" [class.slow]="isSlowQuestion(w)">
-              ⏱ {{ w.timeSpentSeconds || 0 }}s
-            </span>
-            <span *ngIf="isSlowQuestion(w)" class="slow-badge" title="Câu này bạn tốn nhiều thời gian hơn bình thường">
-              ⚠️ Quá lâu
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Primary & Secondary Actions Hierarchy -->
-    <div class="result-actions-container">
-      <div *ngIf="result.attemptId" class="primary-action-wrap">
-        <a [routerLink]="['/reader', testId, 'attempts', result.attemptId, 'review']" class="btn-review-special">
-          <i class="fas fa-microscope"></i> 📝 Xem lại bài thi & Lời giải AI ➔
-        </a>
-      </div>
-
-      <div class="secondary-actions-grid">
-        <button type="button" class="btn-action-pill" (click)="openHistory()">
-          <i class="fas fa-history"></i> 📊 Lịch sử làm bài
-        </button>
-        <a [routerLink]="['/reader', testId]" class="btn-action-pill outline">
-          <i class="fas fa-redo"></i> ▶ Làm lại đề này
-        </a>
-        <a routerLink="/reader" class="btn-action-pill primary">
-          <i class="fas fa-th-list"></i> 🏠 Danh sách đề thi
-        </a>
-      </div>
-    </div>
-  </div>
+  }
 
   <!-- Attempt History Modal -->
   @if (showHistoryModal()) {

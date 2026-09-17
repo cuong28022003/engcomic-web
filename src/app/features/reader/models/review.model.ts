@@ -3,6 +3,8 @@ export type ErrorType = 'vocab' | 'grammar' | 'inference' | 'detail_missed' | 't
 export interface KeyVocabItem {
   word: string;
   meaningVi: string;
+  example?: string;
+  contextNote?: string;
 }
 
 export interface ToeicReviewItem {
@@ -16,6 +18,7 @@ export interface ToeicReviewItem {
   relatedGrammarTopic?: string;
   passageExcerpt?: string;
   questionText?: string;
+  transcript?: string;
   options?: Record<string, string>;
   explanation: string;
   tip?: string;
@@ -32,9 +35,10 @@ export interface ImportReviewItemsPayload {
     related_grammar_topic?: string;
     passage_excerpt?: string;
     question_text?: string;
+    transcript?: string;
     options?: Record<string, string>;
     explanation: string;
     tip?: string;
-    key_vocab?: Array<{ word: string; meaning_vi: string }>;
+    key_vocab?: Array<{ word: string; meaning_vi: string; example?: string; context_note?: string }>;
   }>;
 }

@@ -55,6 +55,7 @@
   @if (test() && showConfigModal()) {
     <app-pre-test-config-modal
       [isOpen]="showConfigModal()"
+      [section]="test()?.section || 'reading'"
       (startTest)="onStartTest($event)"
       (cancel)="onCancelConfig()"
     ></app-pre-test-config-modal>
@@ -134,7 +135,19 @@
             [isSubmitted]="isSubmitted()"
             [gradedResults]="gradedResults()"
             (submitAnswers)="onSubmitAnswers($event)"
-          ></app-answer-sheet>
+            (questionFocused)="onAnswerSheetFocus($event)"
+          >
+            @if (isListening()) {
+              <div audioBar>
+                <app-listening-audio-bar
+                  [audioUrl]="resolvedAudioUrl()"
+                  [questions]="t.questions"
+                  [currentQuestionNumber]="currentListeningQuestion()"
+                  (activeQuestionChanged)="onAudioActiveQuestion($event)"
+                ></app-listening-audio-bar>
+              </div>
+            }
+          </app-answer-sheet>
         </section>
       </main>
     }

@@ -27,6 +27,7 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   @Input() gradedResults: GradedQuestion[] = [];
 
   @Output() submitAnswers = new EventEmitter<SubmitSessionPayload>();
+  @Output() questionFocused = new EventEmitter<number>();
 
   // Map from questionNumber to { answer, flagged }
   userAnswersMap = new Map<number, { answer?: string; flagged?: boolean }>();
@@ -36,7 +37,7 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   private timerInterval?: any;
 
   // Filter
-  filterTab: 'all' | 'unanswered' | 'flagged' | 'p5' | 'p6' | 'p7' = 'all';
+  filterTab: 'all' | 'unanswered' | 'flagged' | number = 'all';
 
   ngOnInit() {
     if (!this.isSubmitted) {
@@ -130,7 +131,8 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
   }
 
   onAnswerSelected(questionNumber: number, answer: string) {
-    this.timerService.onQuestionFocus(questionNumber);
+    this.timerService.onAnswerCommitted(questionNumber);
+    this.questionFocused.emit(questionNumber);
     const qObj = this.questions.find(q => q.number === questionNumber);
     const part = qObj ? qObj.part : 5;
     const existing = this.userAnswersMap.get(questionNumber) || {};
@@ -179,14 +181,16 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
     return count;
   }
 
+  get availableParts(): number[] {
+    return [...new Set(this.questions.map(q => q.part))].sort((a, b) => a - b);
+  }
+
   get filteredQuestions(): Array<{ number: number; part: number }> {
     return this.questions.filter(q => {
       const state = this.userAnswersMap.get(q.number);
       if (this.filterTab === 'unanswered') return !state?.answer;
       if (this.filterTab === 'flagged') return !!state?.flagged;
-      if (this.filterTab === 'p5') return q.part === 5;
-      if (this.filterTab === 'p6') return q.part === 6;
-      if (this.filterTab === 'p7') return q.part === 7;
+      if (typeof this.filterTab === 'number') return q.part === this.filterTab;
       return true;
     });
   }
@@ -197,10 +201,17 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
 
   scrollToQuestion(qNum: number) {
     this.timerService.onQuestionFocus(qNum);
+    this.questionFocused.emit(qNum);
     const el = document.getElementById(`q-${qNum}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  }
+
+  /** Part 2 Listening chỉ có 3 đáp án A/B/C; các Part khác 4 đáp án. */
+  getOptionCount(questionNumber: number): number {
+    const qObj = this.questions.find(q => q.number === questionNumber);
+    return qObj?.part === 2 ? 3 : 4;
   }
 
   onSubmitClick() {
@@ -246,9 +257,17 @@ export class AnswerSheetComponent implements OnInit, OnDestroy {
       duration: this.timerService.totalElapsed(),
       timeMode: this.timerService.config()?.mode,
       selectedParts: this.timerService.config()?.selectedParts,
+      part1TargetSeconds: this.timerService.getPartTarget(1),
+      part2TargetSeconds: this.timerService.getPartTarget(2),
+      part3TargetSeconds: this.timerService.getPartTarget(3),
+      part4TargetSeconds: this.timerService.getPartTarget(4),
       part5TargetSeconds: this.timerService.getPartTarget(5),
       part6TargetSeconds: this.timerService.getPartTarget(6),
       part7TargetSeconds: this.timerService.getPartTarget(7),
+      part1ElapsedSeconds: this.timerService.getPartElapsed(1),
+      part2ElapsedSeconds: this.timerService.getPartElapsed(2),
+      part3ElapsedSeconds: this.timerService.getPartElapsed(3),
+      part4ElapsedSeconds: this.timerService.getPartElapsed(4),
       part5ElapsedSeconds: this.timerService.getPartElapsed(5),
       part6ElapsedSeconds: this.timerService.getPartElapsed(6),
       part7ElapsedSeconds: this.timerService.getPartElapsed(7),

@@ -208,13 +208,74 @@
                 </span>
               </div>
 
-              @if (currentAnswer()?.timeSpentSeconds; as timeSpent) {
-                <div class="choice-box time-box">
-                  <span class="box-lbl">Thời gian làm:</span>
-                  <span class="box-val time">{{ timeSpent }}s</span>
-                </div>
-              }
+              <div class="choice-box time-box">
+                <span class="box-lbl">Thời gian làm:</span>
+                <span class="box-val time">{{ (currentAnswer()?.timeSpentSeconds) || 0 }}s</span>
+              </div>
             </div>
+
+            <!-- Listening Replay + Transcript (Part 1-4) -->
+            @if ((audioUrl() || currentTranscript()) && currentQuestionDetail()) {
+              <audio
+                #audioEl
+                [src]="audioUrl()"
+                preload="metadata"
+                (loadedmetadata)="onAudioReady(audioEl)"
+                class="visually-hidden-audio"
+              ></audio>
+
+              <div class="listen-replay-card">
+                @if (audioUrl()) {
+                  <div class="replay-row">
+                    <button type="button" class="btn-replay-audio" (click)="playCurrentQuestionAudio()" title="Nghe lại đoạn audio của câu này">
+                      <i class="fa-solid fa-headphones"></i> Nghe lại audio
+                    </button>
+                    @if (currentAudioStartMs() != null) {
+                      <span class="audio-pos-hint">
+                        Bắt đầu tại {{ (currentAudioStartMs()! / 1000).toFixed(1) }}s
+                      </span>
+                    }
+                  </div>
+                }
+                @if (currentTranscript()) {
+                  <div class="transcript-panel" [class.dialogue]="currentQuestionPart() === 3 || currentQuestionPart() === 4">
+                    <div class="transcript-heading">
+                      <i class="fa-solid fa-closed-captioning"></i> Transcript
+                      @if (currentQuestionPart() != null) {
+                        <span class="transcript-part-badge">Part {{ currentQuestionPart() }}</span>
+                      }
+                    </div>
+                    @if (currentQuestionPart() === 3 || currentQuestionPart() === 4) {
+                      @if (currentTranscriptLines(); as lines) {
+                        @if (currentTranscriptHasSpeaker()) {
+                          <div class="transcript-dialogue">
+                            @for (line of lines; track $index) {
+                              <div class="tr-line" [class.tr-plain]="line.speaker == null">
+                                @if (line.speaker) {
+                                  <span class="tr-speaker-tag">{{ line.speaker }}</span>
+                                }
+                                <span class="tr-text">{{ line.text }}</span>
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          <p class="transcript-text">{{ currentTranscript() }}</p>
+                        }
+                      }
+                      <p class="transcript-group-hint">
+                        <i class="fa-solid fa-circle-info"></i> Transcript chung cho cả đoạn {{ currentQuestionPart() === 3 ? 'hội thoại' : 'bài nói' }} của nhóm câu này.
+                      </p>
+                    } @else {
+                      <p class="transcript-text">{{ currentTranscript() }}</p>
+                    }
+                  </div>
+                } @else {
+                  <div class="transcript-missing-note">
+                    <i class="fa-solid fa-circle-info"></i> Chưa có transcript cho câu này — bấm "Nghe lại audio", hoặc thêm transcript tại trang chủ (Chỉnh sửa đề → tab Transcript), hoặc khi import phân tích AI hãy đính kèm PDF transcript để kéo trường "transcript".
+                  </div>
+                }
+              </div>
+            }
 
             <!-- Subtype tag if available -->
             @if (selectedReviewItem()?.errorSubtype; as subtype) {
@@ -262,6 +323,12 @@
                           <div class="vocab-text">
                             <span class="v-word">{{ v.word }}</span>
                             <span class="v-meaning">{{ v.meaningVi }}</span>
+                            @if (v.example) {
+                              <span class="v-example"><i class="fas fa-quote-left"></i> {{ v.example }}</span>
+                            }
+                            @if (v.contextNote) {
+                              <span class="v-context-note"><i class="fas fa-exclamation-triangle"></i> Bẫy: {{ v.contextNote }}</span>
+                            }
                           </div>
                           <button 
                             type="button" 
@@ -306,6 +373,7 @@
       [isOpen]="showImportModal()"
       [testName]="test()?.testName || ''"
       [filterLabel]="currentFilterLabel()"
+      [section]="test()?.section || ''"
       [questionsToReview]="questionsNeedingReview()"
       [isSubmitting]="isImportingReviews()"
       (importData)="handleImportReviews($event)"

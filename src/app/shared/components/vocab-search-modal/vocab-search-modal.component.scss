@@ -193,6 +193,163 @@
   gap: 9px;
 }
 
+// ── Word chưa có trong Vault → card tra cứu nhanh (giống app-word-lookup-popup) ──
+.word-missing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: rgba(18, 20, 29, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  .wm-header {
+    .wm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.14);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+
+      i {
+        font-size: 0.72rem;
+      }
+    }
+  }
+
+  .wm-word-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .wm-word {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+
+    .wm-ipa {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #a5b4fc;
+    }
+
+    .audio-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #e4e4e7;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      i {
+        color: #818cf8;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba(99, 102, 241, 0.18);
+        border-color: rgba(99, 102, 241, 0.5);
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      &.playing {
+        background: rgba(99, 102, 241, 0.35);
+        border-color: #818cf8;
+        color: #a5b4fc;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .wm-meaning-box {
+    min-height: 42px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border-left: 3px solid #818cf8;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: #e4e4e7;
+
+    .wm-loading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+
+      i {
+        color: #818cf8;
+        font-size: 1rem;
+      }
+    }
+
+    .wm-no-meaning {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #64748b;
+    }
+  }
+
+  .wm-actions {
+    display: flex;
+
+    .btn-add-collector {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--primary-gradient, linear-gradient(135deg, #6366f1 0%, #818cf8 100%));
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+
+      &.added {
+        background: rgba(16, 185, 129, 0.18);
+        border: 1px solid rgba(16, 185, 129, 0.5);
+        color: #10b981;
+        box-shadow: none;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
 // ── Card Result Item ──
 .card-result-item {
   display: grid;

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { Subscription, Subject, forkJoin } from 'rxjs';
+import { Subscription, Subject, forkJoin, Observable } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { CardApiService } from '@services/card-api.service';
 import { DeckApiService } from '@services/deck-api.service';
@@ -146,12 +146,13 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   selectedCardIds = signal<Set<string>>(new Set());
 
   // Bulk Assign Deck State
-  targetDeckIdForBulk = '';
+  selectedDeckIdsForBulk = signal<string[]>([]);
+  isBulkDeckPanelOpen = signal<boolean>(false);
   isAssigningBulk = signal<boolean>(false);
 
   // Single Assign Deck Modal State
   cardToAssignDeck = signal<Card | null>(null);
-  singleTargetDeckId = '';
+  singleSelectedDeckIds = signal<string[]>([]);
   isAssigningSingle = signal<boolean>(false);
 
   // Filters & View Mode
@@ -504,30 +505,81 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
 
   // ─── Bulk Assign Deck ─────────────────────────────────────────
 
-  executeBulkAssignDeck(): void {
+  toggleBulkDeckPanel(): void {
+    if (this.selectedCardIds().size === 0) return;
+    if (this.isBulkDeckPanelOpen()) {
+      this.closeBulkDeckPanel();
+      return;
+    }
+
+    // Pre-tick các bộ thẻ mà các card đang chọn đã thuộc
+    const ids = this.selectedCardIds();
+    const deckSet = new Set<string>();
+    for (const c of this.cards()) {
+      if (!ids.has(c.id)) continue;
+      const list = c.deckIds?.length ? c.deckIds : (c.deckId ? [c.deckId] : []);
+      list.forEach(d => deckSet.add(d));
+    }
+    this.selectedDeckIdsForBulk.set([...deckSet]);
+    this.isBulkDeckPanelOpen.set(true);
+  }
+
+  closeBulkDeckPanel(): void {
+    this.isBulkDeckPanelOpen.set(false);
+  }
+
+  isDeckSelectedForBulk(deckId: string): boolean {
+    return this.selectedDeckIdsForBulk().includes(deckId);
+  }
+
+  onBulkDeckChange(deckId: string, event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.toggleDeckForBulk(deckId, input?.checked === true);
+  }
+
+  toggleDeckForBulk(deckId: string, checked: boolean): void {
     const cardIds = Array.from(this.selectedCardIds());
     if (cardIds.length === 0 || this.isAssigningBulk()) return;
 
-    this.isAssigningBulk.set(true);
-    const targetDeckId = (this.targetDeckIdForBulk === 'unassigned' || !this.targetDeckIdForBulk)
-      ? undefined
-      : this.targetDeckIdForBulk;
+    // Cập nhật tick ngay (optimistic), rollback nếu API lỗi
+    this.selectedDeckIdsForBulk.update(list =>
+      checked ? (list.includes(deckId) ? list : [...list, deckId]) : list.filter(id => id !== deckId)
+    );
 
-    this.cardApi.batchAssignDeck(cardIds, targetDeckId).subscribe({
-      next: (res: { totalAssigned: number; message: string }) => {
+    this.isAssigningBulk.set(true);
+    const op$: Observable<{ message: string }> = checked
+      ? this.cardApi.batchAssignDeck(cardIds, [deckId])
+      : this.cardApi.batchRemoveDeck(cardIds, deckId);
+
+    op$.subscribe({
+      next: (res: { message: string }) => {
         this.isAssigningBulk.set(false);
-        const deckName = this.deckNameMap().get(targetDeckId || '') || 'Chưa phân loại';
-        this.toast.success(`Đã chuyển ${res.totalAssigned || cardIds.length} thẻ từ vào [${deckName}]`);
-        this.clearSelection();
-        this.targetDeckIdForBulk = '';
-        this.loadDashboard(this.currentPage());
+        this.updateLocalCardDecks(cardIds, deckId, checked);
+        const deckName = this.deckNameMap().get(deckId) || 'Bộ thẻ';
+        this.toast.success(checked
+          ? `Đã thêm ${cardIds.length} thẻ từ vào [${deckName}]`
+          : `Đã gỡ ${cardIds.length} thẻ từ khỏi [${deckName}]`);
         this.fetchUserDecks();
       },
       error: () => {
         this.isAssigningBulk.set(false);
-        this.toast.error('Lỗi khi chuyển bộ thẻ hàng loạt');
+        this.selectedDeckIdsForBulk.update(list =>
+          checked ? list.filter(id => id !== deckId) : (list.includes(deckId) ? [...list, deckId] : list)
+        );
+        this.toast.error(checked ? 'Lỗi khi gán bộ thẻ' : 'Lỗi khi gỡ bộ thẻ');
       }
     });
+  }
+
+  private updateLocalCardDecks(cardIds: string[], deckId: string, added: boolean): void {
+    this.cards.update(list => list.map(c => {
+      if (!cardIds.includes(c.id)) return c;
+      const cur = c.deckIds?.length ? [...c.deckIds] : (c.deckId ? [c.deckId] : []);
+      const next = added
+        ? (cur.includes(deckId) ? cur : [...cur, deckId])
+        : cur.filter(d => d !== deckId);
+      return { ...c, deckIds: next, deckId: next.length ? next[0] : undefined };
+    }));
   }
 
   // ─── Single Card Assign Deck Modal ────────────────────────────
@@ -535,12 +587,23 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   openAssignDeckModal(card: Card, event: Event): void {
     event.stopPropagation();
     this.cardToAssignDeck.set(card);
-    this.singleTargetDeckId = card.deckId || '';
+    const ids = card.deckIds?.length ? card.deckIds : (card.deckId ? [card.deckId] : []);
+    this.singleSelectedDeckIds.set([...ids]);
   }
 
   closeAssignDeckModal(): void {
     this.cardToAssignDeck.set(null);
-    this.singleTargetDeckId = '';
+    this.singleSelectedDeckIds.set([]);
+  }
+
+  isSingleDeckSelected(deckId: string): boolean {
+    return this.singleSelectedDeckIds().includes(deckId);
+  }
+
+  toggleSingleDeck(deckId: string): void {
+    this.singleSelectedDeckIds.update(list =>
+      list.includes(deckId) ? list.filter(id => id !== deckId) : [...list, deckId]
+    );
   }
 
   executeSingleAssignDeck(): void {
@@ -548,19 +611,17 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
     if (!card || this.isAssigningSingle()) return;
 
     this.isAssigningSingle.set(true);
-    const targetDeckId = (this.singleTargetDeckId === 'unassigned' || !this.singleTargetDeckId)
-      ? undefined
-      : this.singleTargetDeckId;
-
-    this.cardApi.updateCard(card.id, {
-      deckId: targetDeckId,
-    }).subscribe({
+    const deckIds = this.singleSelectedDeckIds();
+    this.cardApi.setCardDecks(card.id, deckIds).subscribe({
       next: (updated: Card) => {
         this.isAssigningSingle.set(false);
-        this.cards.update(list => list.map(c => c.id === updated.id ? { ...c, deckId: updated.deckId } : c));
+        this.cardToAssignDeck.set(updated);
+        this.cards.update(list => list.map(c => c.id === updated.id ? updated : c));
         this.closeAssignDeckModal();
-        const deckName = this.deckNameMap().get(updated.deckId || '') || 'Chưa phân loại';
-        this.toast.success(`Đã chuyển thẻ "${card.word}" vào [${deckName}]`);
+        const deckName = deckIds.length
+          ? deckIds.map(id => this.deckNameMap().get(id) || 'Bộ thẻ').join(', ')
+          : 'Chưa phân loại';
+        this.toast.success(`Đã cập nhật bộ thẻ cho "${card.word}": [${deckName}]`);
         this.fetchUserDecks();
       },
       error: () => {
@@ -671,6 +732,11 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   getDeckName(deckId?: string): string | null {
     if (!deckId) return null;
     return this.deckNameMap().get(deckId) || 'Bộ thẻ';
+  }
+
+  getCardDecksNames(card: Card): string[] {
+    const ids = card.deckIds?.length ? card.deckIds : (card.deckId ? [card.deckId] : []);
+    return ids.map(id => this.deckNameMap().get(id) || 'Bộ thẻ');
   }
 
   getStatusClass(status?: string): string {

@@ -1,6 +1,6 @@
 <app-modal
   [isOpen]="isOpen()"
-  [title]="'⚙️ Thiết Lập Mục Tiêu Trước Khi Làm Bài'"
+  [title]="isListening() ? '⚙️ Thiết Lập Mục Tiêu Trước Khi Làm Bài (Listening)' : '⚙️ Thiết Lập Mục Tiêu Trước Khi Làm Bài (Reading)'"
   [size]="'md'"
   [closeOnBackdrop]="false"
   (closed)="onCancel()"
@@ -21,59 +21,31 @@
           [class.active]="isAllPartsSelected()"
           (click)="selectAllParts()"
         >
-          Toàn bộ đề (100 câu)
+          Toàn bộ đề ({{ totalSelectedQuestions() }} câu)
         </button>
-        <button 
-          type="button" 
-          class="preset-btn" 
-          [class.active]="includePart5() && !includePart6() && !includePart7()"
-          (click)="selectSinglePart(5)"
-        >
-          Chỉ Part 5 (30 câu)
-        </button>
-        <button 
-          type="button" 
-          class="preset-btn" 
-          [class.active]="includePart6() && !includePart5() && !includePart7()"
-          (click)="selectSinglePart(6)"
-        >
-          Chỉ Part 6 (16 câu)
-        </button>
-        <button 
-          type="button" 
-          class="preset-btn" 
-          [class.active]="includePart7() && !includePart5() && !includePart6()"
-          (click)="selectSinglePart(7)"
-        >
-          Chỉ Part 7 (54 câu)
-        </button>
+        @for (p of isListening() ? listeningParts() : readingParts(); track p.part) {
+          <button 
+            type="button" 
+            class="preset-btn" 
+            [class.active]="isIncluded(p.part) && toggledParts().length === 1"
+            (click)="selectSinglePart(p.part)"
+          >
+            Chỉ {{ p.title }} ({{ partQuestionCount(p.part) }} câu)
+          </button>
+        }
       </div>
 
       <!-- Checkbox Group -->
       <div class="parts-checkbox-grid">
-        <label class="part-checkbox-card" [class.checked]="includePart5()" (click)="togglePart(5)">
-          <input type="checkbox" [checked]="includePart5()" (change)="$event.stopPropagation(); togglePart(5)" />
-          <div class="card-info">
-            <span class="c-title">Part 5</span>
-            <span class="c-desc">30 câu (101 - 130)</span>
-          </div>
-        </label>
-
-        <label class="part-checkbox-card" [class.checked]="includePart6()" (click)="togglePart(6)">
-          <input type="checkbox" [checked]="includePart6()" (change)="$event.stopPropagation(); togglePart(6)" />
-          <div class="card-info">
-            <span class="c-title">Part 6</span>
-            <span class="c-desc">16 câu (131 - 146)</span>
-          </div>
-        </label>
-
-        <label class="part-checkbox-card" [class.checked]="includePart7()" (click)="togglePart(7)">
-          <input type="checkbox" [checked]="includePart7()" (change)="$event.stopPropagation(); togglePart(7)" />
-          <div class="card-info">
-            <span class="c-title">Part 7</span>
-            <span class="c-desc">54 câu (147 - 200)</span>
-          </div>
-        </label>
+        @for (p of isListening() ? listeningParts() : readingParts(); track p.part) {
+          <label class="part-checkbox-card" [class.checked]="isIncluded(p.part)" (click)="togglePart(p.part)">
+            <input type="checkbox" [checked]="isIncluded(p.part)" (change)="$event.stopPropagation(); togglePart(p.part)" />
+            <div class="card-info">
+              <span class="c-title">{{ p.title }}</span>
+              <span class="c-desc">{{ p.range }}</span>
+            </div>
+          </label>
+        }
       </div>
 
       <div class="scope-summary">
@@ -100,7 +72,7 @@
               <span>⏱️ Chuẩn TOEIC theo phần đã chọn</span>
               <span class="mode-badge">{{ totalCalculatedMinutes() }} phút</span>
             </div>
-            <span class="mode-hint">Tự động tính: Part 5 (20p) / Part 6 (10p) / Part 7 (45p)</span>
+            <span class="mode-hint">Tự động tính theo chuẩn TOEIC cho các Part đã chọn</span>
           </div>
         </label>
 
@@ -139,64 +111,26 @@
         <div class="per-part-config-box glass-panel">
           <h4 class="box-title">Tùy chỉnh số phút cho các Part đã chọn:</h4>
 
-          @if (includePart5()) {
-            <div class="part-row">
-              <div class="part-label">
-                <span class="part-name">Part 5</span>
-                <span class="part-count">(30 câu)</span>
+          @for (p of isListening() ? listeningParts() : readingParts(); track p.part) {
+            @if (isIncluded(p.part)) {
+              <div class="part-row">
+                <div class="part-label">
+                  <span class="part-name">{{ p.title }}</span>
+                  <span class="part-count">({{ p.range }})</span>
+                </div>
+                <div class="part-input-wrapper">
+                  <input 
+                    type="number" 
+                    class="part-input" 
+                    min="1" 
+                    max="60" 
+                    [value]="getPartMinutesSignal(p.part)()"
+                    (input)="onPartChange(p.part, $event)"
+                  />
+                  <span class="unit">phút</span>
+                </div>
               </div>
-              <div class="part-input-wrapper">
-                <input 
-                  type="number" 
-                  class="part-input" 
-                  min="1" 
-                  max="60" 
-                  [value]="part5Minutes()"
-                  (input)="onPartChange(5, $event)"
-                />
-                <span class="unit">phút</span>
-              </div>
-            </div>
-          }
-
-          @if (includePart6()) {
-            <div class="part-row">
-              <div class="part-label">
-                <span class="part-name">Part 6</span>
-                <span class="part-count">(16 câu)</span>
-              </div>
-              <div class="part-input-wrapper">
-                <input 
-                  type="number" 
-                  class="part-input" 
-                  min="1" 
-                  max="40" 
-                  [value]="part6Minutes()"
-                  (input)="onPartChange(6, $event)"
-                />
-                <span class="unit">phút</span>
-              </div>
-            </div>
-          }
-
-          @if (includePart7()) {
-            <div class="part-row">
-              <div class="part-label">
-                <span class="part-name">Part 7</span>
-                <span class="part-count">(54 câu)</span>
-              </div>
-              <div class="part-input-wrapper">
-                <input 
-                  type="number" 
-                  class="part-input" 
-                  min="1" 
-                  max="90" 
-                  [value]="part7Minutes()"
-                  (input)="onPartChange(7, $event)"
-                />
-                <span class="unit">phút</span>
-              </div>
-            </div>
+            }
           }
 
           <div class="total-calc-row">

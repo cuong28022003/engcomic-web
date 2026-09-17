@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 export class QuestionRowComponent {
   @Input() questionNumber = 101;
   @Input() part = 5;
+  @Input() optionCount = 4;
   @Input() selectedAnswer?: string;
   @Input() flagged = false;
   @Input() isSubmitted = false;
@@ -20,7 +21,12 @@ export class QuestionRowComponent {
   @Output() answerSelected = new EventEmitter<string>();
   @Output() flagToggled = new EventEmitter<void>();
 
-  readonly options = ['A', 'B', 'C', 'D'];
+  readonly letters = ['A', 'B', 'C', 'D'];
+
+  get options(): string[] {
+    const count = Math.max(1, Math.min(4, this.optionCount || 4));
+    return this.letters.slice(0, count);
+  }
 
   selectOption(opt: string) {
     if (this.isSubmitted) return;

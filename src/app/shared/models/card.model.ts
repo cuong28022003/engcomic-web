@@ -47,6 +47,7 @@ export interface WordUsage {
 export interface Card {
   id: string;
   deckId?: string;
+  deckIds?: string[];
   userId?: string;
   // Nội dung từ vựng chính
   word: string;             // từ / cụm từ tiếng Anh

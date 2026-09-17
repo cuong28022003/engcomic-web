@@ -9,6 +9,17 @@
         @if (timerService.config()?.mode !== 'untimed' && timerService.totalRemaining() <= 300) {
           <span class="danger-badge"><i class="fa-solid fa-fire"></i> Sắp hết giờ</span>
         }
+        @if (timerService.config()) {
+          <button
+            type="button"
+            class="timer-reset-btn"
+            (click)="resetMainTimer()"
+            title="Đặt lại thời gian làm bài về 0 và đếm lại từ đầu"
+            aria-label="Đặt lại đồng hồ bài thi"
+          >
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        }
       </div>
       <div class="timer-value" [class.danger]="timerService.config()?.mode !== 'untimed' && timerService.totalRemaining() <= 300">
         {{ timerService.config()?.mode === 'untimed' ? timerService.formatSeconds(timerService.totalElapsed()) : timerService.formatSeconds(timerService.totalRemaining()) }}

@@ -24,36 +24,47 @@
     </div>
   </div>
 
-  <div *ngIf="errorMessage" class="error-toast">
-    ❌ {{ errorMessage }}
-  </div>
+  @if (errorMessage) {
+    <div class="error-toast">
+      ❌ {{ errorMessage }}
+    </div>
+  }
 
-  <div *ngIf="submitting" class="loading-overlay">
-    <div class="spinner"></div>
-    <div class="loading-text">Đang tải lên PDF và tạo đề thi... Vui lòng đợi trong giây lát.</div>
-  </div>
+  @if (submitting) {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Đang tải lên PDF và tạo đề thi... Vui lòng đợi trong giây lát.</div>
+    </div>
+  }
 
   <!-- Step 1 -->
-  <app-pdf-upload-step
-    *ngIf="currentStep === 1"
-    [testName]="testName"
-    [pdfUrl]="pdfUrl"
-    [selectedFile]="pdfFile"
-    (stepCompleted)="onStep1Completed($event)"
-  ></app-pdf-upload-step>
+  @if (currentStep === 1) {
+    <app-pdf-upload-step
+      [testName]="testName"
+      [pdfUrl]="pdfUrl"
+      [selectedFile]="pdfFile"
+      [section]="section"
+      [audioFile]="audioFile"
+      (stepCompleted)="onStep1Completed($event)"
+    ></app-pdf-upload-step>
+  }
 
   <!-- Step 2 -->
-  <app-ai-parse-prompt-step
-    *ngIf="currentStep === 2"
-    [testName]="testName"
-    (prevStep)="onStep2Back()"
-    (nextStep)="onStep2Next()"
-  ></app-ai-parse-prompt-step>
+  @if (currentStep === 2) {
+    <app-ai-parse-prompt-step
+      [testName]="testName"
+      [section]="section"
+      (prevStep)="onStep2Back()"
+      (nextStep)="onStep2Next()"
+    ></app-ai-parse-prompt-step>
+  }
 
   <!-- Step 3 -->
-  <app-answer-key-import-step
-    *ngIf="currentStep === 3"
-    (prevStep)="onStep3Back()"
-    (submitTest)="onSubmitTest($event)"
-  ></app-answer-key-import-step>
+  @if (currentStep === 3) {
+    <app-answer-key-import-step
+      [section]="section"
+      (prevStep)="onStep3Back()"
+      (submitTest)="onSubmitTest($event)"
+    ></app-answer-key-import-step>
+  }
 </div>

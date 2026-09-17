@@ -2,6 +2,7 @@ import { Component, input, output, signal, inject, OnInit, OnDestroy, effect, El
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { ModalComponent } from '@shared/components/modal/modal.component';
@@ -9,6 +10,9 @@ import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { CardApiService } from '@core/services/card-api.service';
 import { PronunciationService } from '@core/services/pronunciation.service';
+import { TranslatorApiService, TranslateResponse } from '@core/services/translator-api.service';
+import { PendingItemApiService } from '@core/services/pending-item-api.service';
+import { ToastService } from '@core/services/toast.service';
 import { Card } from '@models/index';
 import { getPosConfig, PartOfSpeechConfig } from '@shared/constants/part-of-speech.constant';
 
@@ -17,6 +21,10 @@ export interface StatusFilterOption {
   label: string;
   icon: string;
   color: string;
+}
+
+interface MyMemoryTranslateResponse {
+  responseData?: { translatedText?: string };
 }
 
 @Component({
@@ -30,6 +38,10 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
   private cardApi = inject(CardApiService);
   private router = inject(Router);
   private pronunciation = inject(PronunciationService);
+  private http = inject(HttpClient);
+  private translatorApi = inject(TranslatorApiService);
+  private pendingItemApi = inject(PendingItemApiService);
+  private toast = inject(ToastService);
 
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('resultsList') resultsListRef?: ElementRef<HTMLDivElement>;
@@ -46,6 +58,14 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
   readonly loading = signal<boolean>(false);
   readonly selectedIndex = signal<number>(-1);
   readonly playingWord = signal<string | null>(null);
+
+  // Word không có trong Vault → hiển thị tra cứu nhanh (giống app-word-lookup-popup)
+  readonly searchWordInfo = signal<TranslateResponse | null>(null);
+  readonly wordInfoLoading = signal<boolean>(false);
+  readonly isAdded = signal<boolean>(false);
+  readonly isSaving = signal<boolean>(false);
+  readonly isSpeaking = signal<'us' | 'uk' | null>(null);
+  readonly suggestedWord = signal<string>('');
 
   readonly statusOptions: StatusFilterOption[] = [
     { key: 'all', label: 'Tất cả', icon: 'fa-solid fa-list-check', color: '#94a3b8' },
@@ -95,6 +115,9 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
   onQueryChange(val: string): void {
     this.query.set(val);
     this.selectedIndex.set(-1);
+    this.isAdded.set(false);
+    this.searchWordInfo.set(null);
+    this.wordInfoLoading.set(false);
     this.searchSubject.next(val);
   }
 
@@ -111,6 +134,9 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
     } else {
       this.query.set(hint.tag);
       this.selectedIndex.set(-1);
+      this.isAdded.set(false);
+      this.searchWordInfo.set(null);
+      this.wordInfoLoading.set(false);
       this.fetchCards();
     }
   }
@@ -137,10 +163,103 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
         const cards = res?.cards?.content || [];
         this.results.set(cards);
         this.loading.set(false);
+        this.checkMissingWordLookup();
       },
       error: () => {
         this.results.set([]);
         this.loading.set(false);
+        this.checkMissingWordLookup();
+      }
+    });
+  }
+
+  private checkMissingWordLookup(): void {
+    const clean = this.query().trim();
+    if (!this.loading() && clean && this.results().length === 0) {
+      this.lookupMissingWord(clean);
+    } else {
+      this.searchWordInfo.set(null);
+      this.wordInfoLoading.set(false);
+    }
+  }
+
+  private lookupMissingWord(clean: string): void {
+    this.suggestedWord.set(clean);
+    this.searchWordInfo.set(null);
+    this.wordInfoLoading.set(true);
+    this.isAdded.set(false);
+
+    this.translatorApi.translateText({ text: clean }).subscribe({
+      next: (data) => {
+        if (this.suggestedWord() !== clean) return;
+        if (
+          data &&
+          data.meaning &&
+          data.meaning.trim() &&
+          data.meaning.trim().toLowerCase() !== clean.toLowerCase() &&
+          !data.meaning.startsWith('Không thể gọi API Python')
+        ) {
+          this.searchWordInfo.set(data);
+        } else {
+          this.fallbackClientTranslation(clean);
+        }
+        this.wordInfoLoading.set(false);
+      },
+      error: () => {
+        if (this.suggestedWord() !== clean) return;
+        this.fallbackClientTranslation(clean);
+      }
+    });
+  }
+
+  private fallbackClientTranslation(clean: string): void {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|vi`;
+    this.http.get<MyMemoryTranslateResponse>(url).subscribe({
+      next: (res) => {
+        if (this.suggestedWord() !== clean) return;
+        const text = res?.responseData?.translatedText;
+        this.searchWordInfo.set({
+          word: clean,
+          meaning: text && text.trim() ? text.trim() : clean
+        });
+        this.wordInfoLoading.set(false);
+      },
+      error: () => {
+        if (this.suggestedWord() !== clean) return;
+        this.searchWordInfo.set({ word: clean, meaning: clean });
+        this.wordInfoLoading.set(false);
+      }
+    });
+  }
+
+  async speakForMissingWord(accent: 'us' | 'uk'): Promise<void> {
+    const clean = this.query().trim();
+    if (!clean || this.isSpeaking()) return;
+
+    this.isSpeaking.set(accent);
+    try {
+      await this.pronunciation.speak(clean, accent);
+    } finally {
+      if (this.isSpeaking() === accent) {
+        this.isSpeaking.set(null);
+      }
+    }
+  }
+
+  addToWordCollector(): void {
+    const clean = this.query().trim();
+    if (!clean || this.isSaving() || this.isAdded()) return;
+
+    this.isSaving.set(true);
+    this.pendingItemApi.addManual(clean).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.isAdded.set(true);
+        this.toast.success(`Đã thêm "${clean}" vào Sổ từ vựng (Word Collector)!`);
+      },
+      error: () => {
+        this.isSaving.set(false);
+        this.toast.error('Không thể thêm từ. Vui lòng thử lại!');
       }
     });
   }

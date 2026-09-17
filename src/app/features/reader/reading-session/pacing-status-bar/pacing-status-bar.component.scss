@@ -48,6 +48,34 @@
         color: #f87171;
         animation: pulseDanger 1s infinite alternate;
       }
+
+      .timer-reset-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin-left: 2px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+        font-size: 0.62rem;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.25);
+          border-color: rgba(239, 68, 68, 0.6);
+          color: #f87171;
+          transform: rotate(-180deg);
+        }
+
+        &:active {
+          transform: rotate(-180deg) scale(0.9);
+        }
+      }
     }
 
     .timer-value {

@@ -22,25 +22,30 @@
   </div>
 
   <div class="q-options">
-    <button 
-      *ngFor="let opt of options"
-      type="button"
-      class="opt-btn"
-      [class.selected]="selectedAnswer === opt"
-      [class.opt-correct]="isSubmitted && correctAnswer === opt"
-      [class.opt-wrong]="isSubmitted && selectedAnswer === opt && !isCorrect"
-      [disabled]="isSubmitted"
-      (click)="selectOption(opt)"
-    >
-      <span class="opt-letter">{{ opt }}</span>
-    </button>
+    @for (opt of options; track opt) {
+      <button 
+        type="button"
+        class="opt-btn"
+        [class.selected]="selectedAnswer === opt"
+        [class.opt-correct]="isSubmitted && correctAnswer === opt"
+        [class.opt-wrong]="isSubmitted && selectedAnswer === opt && !isCorrect"
+        [disabled]="isSubmitted"
+        (click)="selectOption(opt)"
+      >
+        <span class="opt-letter">{{ opt }}</span>
+      </button>
+    }
   </div>
 
-  <!-- After submit feedback -->
-  <div *ngIf="isSubmitted" class="q-result-badge">
-    <span *ngIf="isCorrect" class="badge-correct">✓ Đúng</span>
-    <span *ngIf="!isCorrect" class="badge-wrong">
-      ✗ Sai (Đ/A: <strong>{{ correctAnswer }}</strong>)
-    </span>
-  </div>
+  @if (isSubmitted) {
+    <div class="q-result-badge">
+      @if (isCorrect) {
+        <span class="badge-correct">✓ Đúng</span>
+      } @else {
+        <span class="badge-wrong">
+          ✗ Sai (Đ/A: <strong>{{ correctAnswer }}</strong>)
+        </span>
+      }
+    </div>
+  }
 </div>

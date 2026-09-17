@@ -1,12 +1,21 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { PacingStatus, PartTiming, TimeTargetConfig } from '../models';
 
+const READING_PARTS = [5, 6, 7];
+const LISTENING_PARTS = [1, 2, 3, 4];
+
+const READING_RANGES: Record<number, [number, number]> = { 5: [101, 130], 6: [131, 146], 7: [147, 200] };
+const LISTENING_RANGES: Record<number, [number, number]> = { 1: [1, 6], 2: [7, 31], 3: [32, 70], 4: [71, 100] };
+
+const READING_DEFAULT_MINUTES: Record<number, number> = { 5: 20, 6: 10, 7: 45 };
+const LISTENING_DEFAULT_MINUTES: Record<number, number> = { 1: 5, 2: 8, 3: 16, 4: 16 };
+
 @Injectable({
   providedIn: 'root'
 })
 export class TestTimerService {
   readonly totalElapsed = signal<number>(0);
-  readonly currentPart = signal<5 | 6 | 7>(5);
+  readonly currentPart = signal<number>(5);
   readonly partTimings = signal<Record<number, PartTiming>>({});
   readonly isRunning = signal<boolean>(false);
   readonly isExpired = signal<boolean>(false);
@@ -23,44 +32,46 @@ export class TestTimerService {
     this.config.set(config);
     this.totalElapsed.set(0);
 
-    const selected = (config.selectedParts && config.selectedParts.length > 0) ? config.selectedParts : [5, 6, 7];
-    const firstPart = (selected[0] as 5 | 6 | 7) || 5;
+    const isListening = config.section === 'listening';
+    const defaultParts = isListening ? LISTENING_PARTS : READING_PARTS;
+    const selected = (config.selectedParts && config.selectedParts.length > 0) ? config.selectedParts : defaultParts;
+    const firstPart = selected[0] ?? (isListening ? 1 : 5);
     this.currentPart.set(firstPart);
-    this.currentTrackedQuestion = firstPart === 5 ? 101 : (firstPart === 6 ? 131 : 147);
+    this.currentTrackedQuestion = this.getPartRange(firstPart).start;
 
     this.questionStartTime = null;
     this.questionTimings = {};
     this.isExpired.set(false);
     this.onExpireCallback = onExpire;
 
-    let p5Sec = (config.part5_minutes ?? 20) * 60;
-    let p6Sec = (config.part6_minutes ?? 10) * 60;
-    let p7Sec = (config.part7_minutes ?? 45) * 60;
+    const parts: PartTiming[] = defaultParts
+      .filter(p => selected.includes(p))
+      .map(p => {
+        let target = 0;
+        const defaultMin = isListening ? LISTENING_DEFAULT_MINUTES[p] : READING_DEFAULT_MINUTES[p];
+        if (config.mode === 'full_test') {
+          target = defaultMin * 60;
+        } else if (config.mode === 'per_part') {
+          target = (config[`part${p}_minutes` as 'part1_minutes'] || defaultMin) * 60;
+        }
+        const range = this.getPartRange(p);
+        return {
+          part: p as PartTiming['part'],
+          target_seconds: target,
+          elapsed_seconds: 0,
+          start_question: range.start,
+          end_question: range.end
+        };
+      });
 
-    if (config.mode === 'full_test') {
-      p5Sec = 20 * 60;
-      p6Sec = 10 * 60;
-      p7Sec = 45 * 60;
-    } else if (config.mode === 'untimed') {
-      p5Sec = 0;
-      p6Sec = 0;
-      p7Sec = 0;
-    }
-
-    const parts: PartTiming[] = [
-      { part: 5, target_seconds: p5Sec, elapsed_seconds: 0, start_question: 101, end_question: 130 },
-      { part: 6, target_seconds: p6Sec, elapsed_seconds: 0, start_question: 131, end_question: 146 },
-      { part: 7, target_seconds: p7Sec, elapsed_seconds: 0, start_question: 147, end_question: 200 }
-    ];
-
-    this.partTimings.set(Object.fromEntries(parts.map(p => [p.part, p])));
+    this.partTimings.set(Object.fromEntries(parts.map(pt => [pt.part, pt])));
   }
 
   start(): void {
     if (this.isRunning()) return;
 
     this.isRunning.set(true);
-    this.questionStartTime = Date.now();
+    this.questionStartTime = this.questionStartTime ?? Date.now();
 
     this.intervalId = setInterval(() => {
       this.totalElapsed.update(v => v + 1);
@@ -93,12 +104,7 @@ export class TestTimerService {
     clearInterval(this.intervalId);
     this.intervalId = null;
     this.isRunning.set(false);
-
-    if (this.questionStartTime !== null) {
-      const spent = Math.round((Date.now() - this.questionStartTime) / 1000);
-      this.questionTimings[this.currentTrackedQuestion] = (this.questionTimings[this.currentTrackedQuestion] || 0) + spent;
-      this.questionStartTime = null;
-    }
+    this.commitCurrent();
   }
 
   resume(): void {
@@ -112,7 +118,20 @@ export class TestTimerService {
       this.intervalId = null;
     }
     this.isRunning.set(false);
+    this.commitCurrent();
+  }
 
+  /** Cộng thời gian từ checkpoint hiện tại vào `questionNum` rồi ghi checkpoint mới. */
+  private checkpointOn(questionNum: number): void {
+    if (this.questionStartTime !== null) {
+      const spent = Math.round((Date.now() - this.questionStartTime) / 1000);
+      this.questionTimings[questionNum] = (this.questionTimings[questionNum] || 0) + spent;
+    }
+    this.questionStartTime = Date.now();
+  }
+
+  /** Cộng thời gian từ checkpoint hiện tại vào câu đang theo dõi rồi dừng theo dõi. */
+  private commitCurrent(): void {
     if (this.questionStartTime !== null) {
       const spent = Math.round((Date.now() - this.questionStartTime) / 1000);
       this.questionTimings[this.currentTrackedQuestion] = (this.questionTimings[this.currentTrackedQuestion] || 0) + spent;
@@ -120,18 +139,24 @@ export class TestTimerService {
     }
   }
 
-  /**
-   * Gọi khi người dùng click/focus vào câu hỏi (chọn đáp án hoặc click bảng đáp án)
-   */
   onQuestionFocus(questionNum: number): void {
-    const now = Date.now();
-    if (this.questionStartTime !== null) {
-      const prevQuestion = this.currentTrackedQuestion;
-      const spent = Math.round((now - this.questionStartTime) / 1000);
-      this.questionTimings[prevQuestion] = (this.questionTimings[prevQuestion] || 0) + spent;
+    if (questionNum === this.currentTrackedQuestion) return;
+
+    this.commitCurrent();
+    this.currentTrackedQuestion = questionNum;
+    if (this.isRunning()) {
+      this.questionStartTime = Date.now();
     }
 
-    this.questionStartTime = now;
+    // Tự động chuyển currentPart nếu câu này thuộc Part khác
+    const newPart = this.getPartByQuestion(questionNum);
+    if (newPart !== this.currentPart()) {
+      this.currentPart.set(newPart);
+    }
+  }
+
+  onAnswerCommitted(questionNum: number): void {
+    this.checkpointOn(questionNum);
     this.currentTrackedQuestion = questionNum;
 
     // Tự động chuyển currentPart nếu câu này thuộc Part khác
@@ -141,7 +166,31 @@ export class TestTimerService {
     }
   }
 
-  private getPartByQuestion(num: number): 5 | 6 | 7 {
+  /** Khôi phục thời gian từng câu đã lưu khi tiếp tục (resume) lượt làm bài dang dở. */
+  restoreQuestionTimings(timings: Record<number, number>): void {
+    this.questionTimings = { ...timings };
+  }
+
+  resetElapsed(): void {
+    const cfg = this.config();
+    if (cfg) {
+      this.init(cfg, this.onExpireCallback);
+    }
+    this.start();
+  }
+
+  private getPartRange(num: number): { start: number; end: number } {
+    const range = num <= 4 ? LISTENING_RANGES[num] : READING_RANGES[num];
+    return { start: range[0], end: range[1] };
+  }
+
+  private getPartByQuestion(num: number): number {
+    if (num <= 100) {
+      if (num <= 6) return 1;
+      if (num <= 31) return 2;
+      if (num <= 70) return 3;
+      return 4;
+    }
     if (num <= 130) return 5;
     if (num <= 146) return 6;
     return 7;
@@ -164,11 +213,11 @@ export class TestTimerService {
     return result;
   }
 
-  getPartElapsed(part: 5 | 6 | 7): number {
+  getPartElapsed(part: number): number {
     return this.partTimings()[part]?.elapsed_seconds || 0;
   }
 
-  getPartTarget(part: 5 | 6 | 7): number {
+  getPartTarget(part: number): number {
     return this.partTimings()[part]?.target_seconds || 0;
   }
 
@@ -182,7 +231,7 @@ export class TestTimerService {
 
   readonly totalTargetSeconds = computed<number>(() => {
     const cfg = this.config();
-    const selected = cfg?.selectedParts || [5, 6, 7];
+    const selected = cfg?.selectedParts || LISTENING_PARTS.concat(READING_PARTS);
     const timings = Object.values(this.partTimings()).filter(t => selected.includes(t.part));
     return timings.reduce((sum, t) => sum + t.target_seconds, 0);
   });

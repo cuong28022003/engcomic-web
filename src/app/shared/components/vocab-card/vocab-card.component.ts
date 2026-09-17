@@ -20,6 +20,7 @@ export class VocabCardComponent {
   readonly showCheckbox = input<boolean>(true);
   readonly showDeckBadge = input<boolean>(true);
   readonly deckName = input<string | null>(null);
+  readonly deckNames = input<string[]>([]);
 
   // Outputs
   readonly selectChange = output<boolean>();

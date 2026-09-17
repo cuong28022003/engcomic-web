@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TestTimerService } from '../../services/test-timer.service';
+import { ConfirmDialogService } from '@shared/components/confirm-dialog/confirm-dialog.service';
 
 @Component({
   selector: 'app-pacing-status-bar',
@@ -11,6 +12,7 @@ import { TestTimerService } from '../../services/test-timer.service';
 })
 export class PacingStatusBarComponent {
   readonly timerService = inject(TestTimerService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   /** Mảng số câu đã chọn đáp án để tính % tiến độ Part */
   readonly answeredQuestions = input<Record<number, string>>({});
@@ -20,17 +22,17 @@ export class PacingStatusBarComponent {
   });
 
   readonly partStartQuestion = computed<number>(() => {
-    const part = this.timerService.currentPart();
-    if (part === 5) return 101;
-    if (part === 6) return 131;
-    return 147;
+    const timing = this.partTiming();
+    return timing?.start_question ?? 1;
   });
 
   readonly partEndQuestion = computed<number>(() => {
-    const part = this.timerService.currentPart();
-    if (part === 5) return 130;
-    if (part === 6) return 146;
-    return 200;
+    const timing = this.partTiming();
+    return timing?.end_question ?? 200;
+  });
+
+  private readonly partTiming = computed(() => {
+    return this.timerService.partTimings()[this.timerService.currentPart()];
   });
 
   readonly partTotalQuestions = computed<number>(() => {
@@ -78,4 +80,18 @@ export class PacingStatusBarComponent {
     if (total === 0) return 0;
     return Math.min(100, Math.round((this.totalQuestionsDone() / total) * 100));
   });
+
+  resetMainTimer(): void {
+    this.confirmDialog.confirm({
+      title: 'Đặt lại đồng hồ bài thi',
+      message: 'Bạn có chắc muốn đặt lại thời gian làm bài về 0? Đồng hồ sẽ đếm lại từ đầu toàn bộ Parts.',
+      confirmText: 'Đặt lại & đếm lại',
+      cancelText: 'Hủy bỏ',
+      type: 'warning'
+    }).subscribe((confirmed) => {
+        if (confirmed) {
+          this.timerService.resetElapsed();
+        }
+      });
+  }
 }

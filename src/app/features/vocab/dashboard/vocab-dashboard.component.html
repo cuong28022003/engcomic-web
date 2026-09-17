@@ -161,6 +161,7 @@
           [showCheckbox]="true"
           [showDeckBadge]="true"
           [deckName]="getDeckName(card.deckId)"
+          [deckNames]="getCardDecksNames(card)"
           (selectChange)="toggleSelectCard(card.id)"
           (cardClick)="goToDetail($event)"
           (favoriteClick)="toggleFavorite($event.card, $event.event)"
@@ -199,28 +200,52 @@
   >
     <!-- Custom Bulk Deck Assignment Inside Bulk Bar -->
     <div class="bulk-deck-assign-group" (click)="$event.stopPropagation()">
-      <select class="bulk-deck-select-styled" [(ngModel)]="targetDeckIdForBulk" [disabled]="isAssigningBulk()">
-        <option value="">-- Chuyển bộ thẻ --</option>
-        <option value="unassigned">📂 Hủy gán (Không thuộc Deck)</option>
-        @for (d of decks(); track d.id) {
-          <option [value]="d.id">🗂️ {{ d.name }}</option>
-        }
-      </select>
-
       <button
         type="button"
-        class="btn-bulk-assign-deck"
-        (click)="executeBulkAssignDeck()"
-        [disabled]="!targetDeckIdForBulk || isAssigningBulk()"
-        title="Gán tất cả từ đã chọn vào bộ thẻ này"
+        class="btn-bulk-deck-toggle"
+        [class.active]="isBulkDeckPanelOpen()"
+        [disabled]="isAssigningBulk()"
+        (click)="toggleBulkDeckPanel()"
+        title="Gán các thẻ đã chọn vào nhiều bộ thẻ"
       >
-        @if (isAssigningBulk()) {
-          <i class="fa-solid fa-circle-notch fa-spin"></i>
-        } @else {
-          <i class="fa-solid fa-arrow-right-to-bracket"></i>
-        }
+        <i class="fa-solid fa-layer-group"></i>
         <span>Gán Deck</span>
+        @if (selectedDeckIdsForBulk().length > 0) {
+          <span class="deck-tick-count">{{ selectedDeckIdsForBulk().length }}</span>
+        }
       </button>
+
+      @if (isBulkDeckPanelOpen() && decks().length > 0) {
+        <div class="bulk-deck-popover glass-panel" (click)="$event.stopPropagation()">
+          <div class="popover-header">
+            <span>Tick bộ thẻ cần gán — bỏ tick để gỡ (1 thẻ thuộc được nhiều deck)</span>
+            <button type="button" class="popover-close" (click)="closeBulkDeckPanel()" title="Đóng">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div class="deck-checklist">
+            @for (d of decks(); track d.id) {
+              <label class="deck-check-item">
+                <input
+                  type="checkbox"
+                  [checked]="isDeckSelectedForBulk(d.id)"
+                  (change)="onBulkDeckChange(d.id, $event)"
+                  [disabled]="isAssigningBulk()"
+                />
+                <span class="deck-check-icon">🗂️</span>
+                <span class="deck-check-name">{{ d.name }}</span>
+              </label>
+            }
+          </div>
+
+          @if (isAssigningBulk()) {
+            <p class="popover-hint"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang cập nhật...</p>
+          } @else {
+            <p class="popover-hint">Tick tức thì thêm các thẻ đã chọn vào deck; bỏ tick sẽ gỡ chúng khỏi deck đó.</p>
+          }
+        </div>
+      }
     </div>
   </app-bulk-actions-bar>
 
@@ -242,13 +267,30 @@
           </p>
 
           <div class="form-group">
-            <label>Chọn bộ thẻ mục tiêu:</label>
-            <select class="form-control" [(ngModel)]="singleTargetDeckId" [disabled]="isAssigningSingle()">
-              <option value="">📂 Chưa phân bộ thẻ (Không thuộc Deck nào)</option>
+            <label>Tick các bộ thẻ mà từ này thuộc về (có thể thuộc nhiều deck):</label>
+            <div class="single-deck-checklist">
               @for (d of decks(); track d.id) {
-                <option [value]="d.id">🗂️ {{ d.name }}</option>
+                <label class="deck-check-item">
+                  <input
+                    type="checkbox"
+                    [checked]="isSingleDeckSelected(d.id)"
+                    (change)="toggleSingleDeck(d.id)"
+                    [disabled]="isAssigningSingle()"
+                  />
+                  <span class="deck-check-icon">🗂️</span>
+                  <span class="deck-check-name">{{ d.name }}</span>
+                </label>
+              } @empty {
+                <p class="help-text">Chưa có bộ thẻ nào — tick vào ô trống để đặt từ này ở "Chưa phân loại".</p>
               }
-            </select>
+            </div>
+            <p class="help-text">
+              @if (singleSelectedDeckIds().length === 0) {
+                Không tick gì = từ này không thuộc bộ thẻ nào.
+              } @else {
+                Từ này sẽ thuộc {{ singleSelectedDeckIds().length }} bộ thẻ.
+              }
+            </p>
           </div>
         </div>
 

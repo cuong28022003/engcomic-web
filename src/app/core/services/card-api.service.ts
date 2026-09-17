@@ -52,11 +52,24 @@ export class CardApiService extends ApiBaseService {
     return this.post<BatchImportResult>(`${this.BASE}/batch-import`, req);
   }
 
-  /** POST /api/card/batch-assign-deck — gán hàng loạt cards vào deck */
-  batchAssignDeck(cardIds: string[], deckId?: string): Observable<{ totalAssigned: number; message: string }> {
+  /** POST /api/card/batch-assign-deck — gán hàng loạt cards vào các deck (deckIds != null => add/clear membership) */
+  batchAssignDeck(cardIds: string[], deckIds?: string[]): Observable<{ totalAssigned: number; message: string }> {
     return this.post<{ totalAssigned: number; message: string }>(`${this.BASE}/batch-assign-deck`, {
       cardIds,
-      deckId: deckId || null,
+      deckIds: deckIds || null,
+    });
+  }
+
+  /** PUT /api/card/:id/decks — thay thế toàn bộ membership (nhiều deck) của 1 card */
+  setCardDecks(id: string, deckIds: string[]): Observable<Card> {
+    return this.put<Card>(`${this.BASE}/${id}/decks`, { deckIds });
+  }
+
+  /** POST /api/card/batch-remove-deck — gỡ hàng loạt cards khỏi 1 deck */
+  batchRemoveDeck(cardIds: string[], deckId: string): Observable<{ totalRemoved: number; message: string }> {
+    return this.post<{ totalRemoved: number; message: string }>(`${this.BASE}/batch-remove-deck`, {
+      cardIds,
+      deckId,
     });
   }
 

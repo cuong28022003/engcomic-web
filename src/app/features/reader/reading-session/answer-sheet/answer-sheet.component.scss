@@ -9,6 +9,11 @@
   backdrop-filter: blur(12px);
 }
 
+.audio-bar-slot {
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .sheet-header {
   padding: 16px 20px;
   background: rgba(15, 23, 42, 0.7);

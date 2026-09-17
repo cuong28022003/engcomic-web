@@ -1,0 +1,80 @@
+<audio
+  #audio
+  [src]="audioUrl()"
+  preload="metadata"
+  (loadstart)="onElementReady(audio)"
+  (loadedmetadata)="onElementReady(audio)"
+  (error)="onLoadError()"
+  class="visually-hidden"
+></audio>
+
+<div class="audio-bar glass-panel">
+  <div class="audio-main">
+    <button
+      type="button"
+      class="media-btn"
+      [class.disabled]="!hasAudio()"
+      (click)="togglePlay()"
+      [attr.aria-label]="isPlaying() ? 'Tạm dừng' : 'Phát audio'"
+      title="Phát / Tạm dừng audio"
+    >
+      <i class="fa-solid" [ngClass]="isPlaying() ? 'fa-pause' : 'fa-play'"></i>
+    </button>
+
+    <span class="time-display">{{ formatTime(currentTime()) }}</span>
+
+    <input
+      type="range"
+      class="seek-slider"
+      [min]="0"
+      [max]="duration() || 0"
+      [value]="currentTime()"
+      [step]="0.05"
+      [disabled]="!hasAudio()"
+      (input)="onSliderChange($event)"
+    />
+
+    <span class="time-display">{{ formatTime(duration()) }}</span>
+
+    <label class="rate-label">
+      <span class="rate-title">Tốc độ</span>
+      <select class="rate-select" [disabled]="!hasAudio()" (change)="changeRate($event)">
+        <option [value]="0.5" [selected]="playbackRate() === 0.5">0.5x</option>
+        <option [value]="0.75" [selected]="playbackRate() === 0.75">0.75x</option>
+        <option [value]="1" [selected]="playbackRate() === 1">1x</option>
+        <option [value]="1.25" [selected]="playbackRate() === 1.25">1.25x</option>
+        <option [value]="1.5" [selected]="playbackRate() === 1.5">1.5x</option>
+      </select>
+    </label>
+  </div>
+
+  @if (activeSet(); as set) {
+    <div class="active-track">
+      <span class="track-pill"><i class="fa-solid fa-ear-listen"></i> Đang phát: {{ set.label }}</span>
+    </div>
+  } @else if (hasLoadError()) {
+    <div class="active-track">
+      <span class="track-pill error"><i class="fa-solid fa-circle-exclamation"></i> Không tải được audio — kiểm tra backend &amp; đường dẫn file</span>
+    </div>
+  } @else if (!hasAudio()) {
+    <div class="active-track">
+      <span class="track-pill warn">Bài thi chưa có audio để phát lại</span>
+    </div>
+  }
+
+  @if (segments().length > 0) {
+    <div class="segment-scrub">
+      @for (set of segments(); track set.startQ) {
+        <button
+          type="button"
+          class="seg-chip"
+          [class.active]="activeSegmentIndex() === $index"
+          (click)="seekToSet(set)"
+          title="{{ set.label }} ({{ formatTime(set.startMs / 1000) }})"
+        >
+          {{ set.label }}
+        </button>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,140 @@
+.audio-bar {
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-card, #1b2130);
+}
+
+.audio-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.media-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  background: var(--primary-gradient, linear-gradient(135deg, #6c5ce7, #a29bfe));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+
+  &:hover:not(.disabled) {
+    transform: scale(1.06);
+    opacity: 0.92;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.time-display {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary, #9aa3b2);
+  min-width: 40px;
+  text-align: center;
+}
+
+.seek-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rate-label {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rate-title {
+  font-size: 11px;
+  color: var(--text-secondary, #9aa3b2);
+}
+
+.rate-select {
+  background: var(--bg-elevated, #232b3b);
+  color: var(--text-primary, #e8ecf4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.active-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.track-pill {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(108, 92, 231, 0.18);
+  color: var(--primary, #a29bfe);
+
+  &.warn {
+    background: rgba(255, 159, 67, 0.15);
+    color: #ffb74d;
+  }
+
+  &.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+  }
+}
+
+.segment-scrub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 64px;
+  overflow-y: auto;
+}
+
+.seg-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-secondary, #9aa3b2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary, #a29bfe);
+    color: var(--text-primary, #e8ecf4);
+  }
+
+  &.active {
+    background: var(--primary-gradient, linear-gradient(135deg, #6c5ce7, #a29bfe));
+    border-color: transparent;
+    color: #fff;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

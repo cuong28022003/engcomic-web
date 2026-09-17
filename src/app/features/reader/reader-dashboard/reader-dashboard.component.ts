@@ -49,13 +49,16 @@ export class ReaderDashboardComponent implements OnInit {
   // Comprehensive Edit Test State
   isEditModalOpen = signal<boolean>(false);
   editingTest = signal<TestSummary | null>(null);
-  editActiveTab = signal<'info' | 'answers' | 'json'>('info');
+  editActiveTab = signal<'info' | 'answers' | 'json' | 'transcript'>('info');
   editTestName = signal<string>('');
   editPdfUrl = signal<string>('');
   editNewPdfFile = signal<File | null>(null);
-  editQuestions = signal<Array<{ number: number; part: number; correctAnswer: string }>>([]);
+  editNewAudioFile = signal<File | null>(null);
+  editSelectedTranscriptNum = signal<number | null>(null);
+  editQuestions = signal<Array<{ number: number; part: number; correctAnswer: string; audioStartMs?: number; transcript?: string }>>([]);
+  transcriptCount = computed(() => this.editQuestions().filter(q => q.transcript && q.transcript.trim().length > 0).length);
   editJsonInput = signal<string>('');
-  isLoadingDetail = signal<boolean>(false);
+  transcriptJsonInput = signal<string>('');  isLoadingDetail = signal<boolean>(false);
   isSaving = signal<boolean>(false);
 
   // Delete Test State
@@ -65,12 +68,17 @@ export class ReaderDashboardComponent implements OnInit {
 
   searchQuery = signal<string>('');
   filterStatus = signal<'all' | 'not_started' | 'in_progress' | 'completed'>('all');
+  sectionFilter = signal<'all' | 'reading' | 'listening'>('all');
 
   filteredTests = computed(() => {
     let list = this.tests();
     const query = this.searchQuery().trim().toLowerCase();
     if (query) {
       list = list.filter(t => t.testName?.toLowerCase().includes(query));
+    }
+    const section = this.sectionFilter();
+    if (section !== 'all') {
+      list = list.filter(t => (t.section || 'reading') === section);
     }
     const filter = this.filterStatus();
     if (filter === 'all') return list;
@@ -124,6 +132,16 @@ export class ReaderDashboardComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  setSectionFilter(section: 'all' | 'reading' | 'listening') {
+    this.sectionFilter.set(section);
+    this.cdr.markForCheck();
+  }
+
+  getSectionLabel(section?: 'reading' | 'listening'): string {
+    if (section === 'listening') return 'Listening';
+    return 'Reading';
+  }
+
   openTestHistory(test: TestSummary) {
     this.selectedTestTitle.set(test.testName);
     this.readerApi.getAttemptsForTest(test.id).subscribe({
@@ -151,6 +169,8 @@ export class ReaderDashboardComponent implements OnInit {
     this.editTestName.set(test.testName);
     this.editPdfUrl.set(test.pdfUrl || '');
     this.editNewPdfFile.set(null);
+    this.editNewAudioFile.set(null);
+    this.editSelectedTranscriptNum.set(null);
     this.editActiveTab.set('info');
     this.editJsonInput.set('');
     this.isEditModalOpen.set(true);
@@ -163,7 +183,9 @@ export class ReaderDashboardComponent implements OnInit {
         const mapped = (detail.questions || []).map(q => ({
           number: q.number,
           part: q.part,
-          correctAnswer: q.correctAnswer || ''
+          correctAnswer: q.correctAnswer || '',
+          audioStartMs: q.audioStartMs,
+          transcript: q.transcript || undefined
         }));
         this.editQuestions.set(mapped);
         this.cdr.markForCheck();
@@ -179,12 +201,15 @@ export class ReaderDashboardComponent implements OnInit {
     this.isEditModalOpen.set(false);
     this.editingTest.set(null);
     this.editNewPdfFile.set(null);
+    this.editNewAudioFile.set(null);
+    this.editSelectedTranscriptNum.set(null);
     this.editQuestions.set([]);
     this.editJsonInput.set('');
+    this.transcriptJsonInput.set('');
     this.cdr.markForCheck();
   }
 
-  setEditTab(tab: 'info' | 'answers' | 'json') {
+  setEditTab(tab: 'info' | 'answers' | 'json' | 'transcript') {
     this.editActiveTab.set(tab);
     this.cdr.markForCheck();
   }
@@ -207,6 +232,41 @@ export class ReaderDashboardComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  onEditAudioSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const okExt = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/wav', 'audio/webm'].includes(file.type)
+        || /\.(mp3|m4a|wav|webm|aac|ogg)$/i.test(file.name);
+      if (!okExt) {
+        this.toast.error('Vui lòng chỉ chọn tệp audio (.mp3, .m4a, .wav, .webm)');
+        input.value = '';
+        return;
+      }
+      this.editNewAudioFile.set(file);
+      this.cdr.markForCheck();
+    }
+  }
+
+  removeNewAudioFile() {
+    this.editNewAudioFile.set(null);
+    this.cdr.markForCheck();
+  }
+
+  getTranscriptByNumber(qNum: number): string {
+    return this.editQuestions().find(q => q.number === qNum)?.transcript?.trim() || '';
+  }
+
+  openTranscriptViewer(qNum: number) {
+    this.editSelectedTranscriptNum.set(qNum);
+    this.cdr.markForCheck();
+  }
+
+  closeTranscriptViewer() {
+    this.editSelectedTranscriptNum.set(null);
+    this.cdr.markForCheck();
+  }
+
   getResolvedPdfUrl(url: string | null | undefined): string {
     if (!url) return '';
     const trimmed = url.trim();
@@ -215,6 +275,10 @@ export class ReaderDashboardComponent implements OnInit {
     }
     const base = environment.apiUrl.replace(/\/api\/?$/, '');
     return `${base}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+  }
+
+  getResolvedMediaUrl(url: string | null | undefined): string {
+    return this.getResolvedPdfUrl(url);
   }
 
   updateQuestionAnswer(qNumber: number, ans: string) {
@@ -238,13 +302,57 @@ export class ReaderDashboardComponent implements OnInit {
       this.toast.error(res.errors.join('; '));
       return;
     }
-    this.editQuestions.set(res.questions);
+    const existingMap = new Map(this.editQuestions().map(q => [q.number, q]));
+    const merged = res.questions.map(rq => ({
+      number: rq.number,
+      part: rq.part,
+      correctAnswer: rq.correctAnswer,
+      audioStartMs: rq.audioStartMs,
+      transcript: existingMap.get(rq.number)?.transcript ?? rq.transcript
+    }));
+    this.editQuestions.set(merged);
     if (res.testName && res.testName.trim()) {
       this.editTestName.set(res.testName.trim());
     }
     this.toast.success(`Đã cập nhật ${res.questions.length} câu hỏi từ JSON thành công!`);
     this.editActiveTab.set('answers');
     this.cdr.markForCheck();
+  }
+
+  applyTranscriptJson() {
+    const raw = this.transcriptJsonInput();
+    if (!raw.trim()) {
+      this.toast.error('Vui lòng nhập chuỗi JSON transcript');
+      return;
+    }
+    try {
+      let cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+      const parsed = JSON.parse(cleaned);
+      const items: Array<Record<string, unknown>> = Array.isArray(parsed.questions) ? parsed.questions : (Array.isArray(parsed) ? parsed : []);
+      const transcriptMap = new Map<number, string>();
+      items.forEach(item => {
+        const num = Number(item['number'] ?? item['question_number'] ?? item['num']);
+        const rawTranscript = typeof item['transcript'] === 'string' ? item['transcript'].trim() : '';
+        if (!isNaN(num) && rawTranscript.length > 0) {
+          transcriptMap.set(num, rawTranscript);
+        }
+      });
+      if (transcriptMap.size === 0) {
+        this.toast.error('JSON không chứa nội dung transcript hợp lệ.');
+        return;
+      }
+      const updated = this.editQuestions().map(q => ({
+        ...q,
+        transcript: transcriptMap.get(q.number) ?? q.transcript
+      }));
+      this.editQuestions.set(updated);
+      this.toast.success(`Đã cập nhật transcript cho ${transcriptMap.size} câu hỏi.`);
+      this.editActiveTab.set('answers');
+      this.transcriptJsonInput.set('');
+      this.cdr.markForCheck();
+    } catch {
+      this.toast.error('JSON không hợp lệ. Vui lòng kiểm tra lại cú pháp.');
+    }
   }
 
   saveEditTest() {
@@ -258,15 +366,23 @@ export class ReaderDashboardComponent implements OnInit {
     this.isSaving.set(true);
 
     const questions = this.editQuestions();
-    const payload: { testName: string; pdfUrl?: string; questions?: Array<{ number: number; part: number; correctAnswer: string }> } = {
+    const payload: { testName: string; pdfUrl?: string; questions?: Array<{ number: number; part: number; correctAnswer: string; audioStartMs?: number; transcript?: string }> } = {
       testName: newName,
-      questions: questions.length > 0 ? questions : undefined
+      questions: questions.length > 0 ? questions.map(q => ({
+        number: q.number,
+        part: q.part,
+        correctAnswer: q.correctAnswer,
+        ...(q.audioStartMs !== undefined ? { audioStartMs: q.audioStartMs } : {}),
+        ...(q.transcript ? { transcript: q.transcript } : {})
+      })) : undefined
     };
 
-    const newFile = this.editNewPdfFile();
+    const newPdfFile = this.editNewPdfFile();
+    const newAudioFile = this.editNewAudioFile();
 
-    const request$ = newFile
-      ? this.readerApi.updateTestMultipart(test.id, payload, newFile)
+    const hasFiles = Boolean(newPdfFile || newAudioFile);
+    const request$ = hasFiles
+      ? this.readerApi.updateTestMultipart(test.id, payload, newPdfFile || undefined, newAudioFile || undefined)
       : this.readerApi.updateTestJson(test.id, payload);
 
     request$.subscribe({
@@ -275,6 +391,7 @@ export class ReaderDashboardComponent implements OnInit {
         this.isEditModalOpen.set(false);
         this.editingTest.set(null);
         this.editNewPdfFile.set(null);
+        this.editNewAudioFile.set(null);
         this.toast.success(`Đã cập nhật đề thi "${updated.testName}" thành công!`);
         this.loadData();
       },

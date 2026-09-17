@@ -63,12 +63,77 @@
     <div class="results-container" #resultsList>
       @if (loading()) {
         <app-loading message="Đang tra cứu từ vựng trong kho Vocab Vault..."></app-loading>
-      } @else if (results().length === 0) {
+      } @else if (results().length === 0 && !query().trim()) {
         <app-empty-state
           icon="fa-solid fa-spell-check"
           title="Không tìm thấy từ vựng phù hợp"
           message="Hãy thử tìm bằng từ tiếng Anh khác, nghĩa tiếng Việt, hoặc kiểm tra lại bộ lọc trạng thái."
         ></app-empty-state>
+      } @else if (results().length === 0 && !!query().trim()) {
+        <!-- Word not in Vocab Vault yet → quick lookup card (giống app-word-lookup-popup) -->
+        <div class="word-missing-card">
+          <div class="wm-header">
+            <span class="wm-badge"><i class="fa-solid fa-magnifying-glass"></i> Từ chưa có trong Vocab Vault</span>
+          </div>
+
+          <div class="wm-word-row">
+            <span class="wm-word">{{ query().trim() }}</span>
+            @if (searchWordInfo()?.ipa) {
+              <span class="wm-ipa">/{{ searchWordInfo()!.ipa }}/</span>
+            }
+            <button
+              type="button"
+              class="audio-btn"
+              [class.playing]="isSpeaking() === 'us'"
+              (click)="speakForMissingWord('us')"
+              [disabled]="!!isSpeaking()"
+              title="Phát âm tiếng Anh - Mỹ"
+            >
+              <i class="fa-solid" [class.fa-volume-high]="isSpeaking() !== 'us'" [class.fa-spinner]="isSpeaking() === 'us'" [class.fa-spin]="isSpeaking() === 'us'"></i>
+              US 🇺🇸
+            </button>
+            <button
+              type="button"
+              class="audio-btn"
+              [class.playing]="isSpeaking() === 'uk'"
+              (click)="speakForMissingWord('uk')"
+              [disabled]="!!isSpeaking()"
+              title="Phát âm tiếng Anh - Anh"
+            >
+              <i class="fa-solid" [class.fa-volume-high]="isSpeaking() !== 'uk'" [class.fa-spinner]="isSpeaking() === 'uk'" [class.fa-spin]="isSpeaking() === 'uk'"></i>
+              UK 🇬🇧
+            </button>
+          </div>
+
+          <div class="wm-meaning-box">
+            @if (wordInfoLoading()) {
+              <span class="wm-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tra cứu nghĩa...</span>
+            } @else if (searchWordInfo()?.meaning) {
+              {{ searchWordInfo()!.meaning }}
+            } @else {
+              <span class="wm-no-meaning">Không tra cứu được nghĩa tức thì của từ này.</span>
+            }
+          </div>
+
+          <div class="wm-actions">
+            <button
+              type="button"
+              class="btn-add-collector"
+              [class.added]="isAdded()"
+              [disabled]="isSaving() || isAdded()"
+              (click)="addToWordCollector()"
+              title="Thêm từ này vào Sổ từ vựng (Word Collector) để học sau"
+            >
+              @if (isSaving()) {
+                <i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...
+              } @else if (isAdded()) {
+                <i class="fa-solid fa-check"></i> Đã thêm vào Sổ từ
+              } @else {
+                <i class="fa-solid fa-bookmark"></i> Thêm vào Sổ từ vựng (Word Collector)
+              }
+            </button>
+          </div>
+        </div>
       } @else {
         <div class="cards-list">
           @for (card of results(); track card.id; let i = $index) {

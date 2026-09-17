@@ -84,6 +84,18 @@
           Đã hoàn thành
         </button>
       </div>
+
+      <div class="filter-pills section-pills">
+        <button type="button" class="pill-btn" [class.active]="sectionFilter() === 'all'" (click)="setSectionFilter('all')">
+          Tất cả phần
+        </button>
+        <button type="button" class="pill-btn" [class.active]="sectionFilter() === 'reading'" (click)="setSectionFilter('reading')">
+          📖 Reading
+        </button>
+        <button type="button" class="pill-btn" [class.active]="sectionFilter() === 'listening'" (click)="setSectionFilter('listening')">
+          🎧 Listening
+        </button>
+      </div>
     </div>
 
     <!-- Loading Skeleton / Error -->
@@ -111,6 +123,9 @@
                     @default { Chưa làm }
                   }
                 </span>
+                <div class="test-section-badge" [class.listening]="test.section === 'listening'">
+                  {{ getSectionLabel(test.section) }}
+                </div>
                 <div class="card-top-right">
                   <span class="test-date">{{ test.createdAt | timeAgo }}</span>
                   <div class="card-menu-actions">
@@ -224,6 +239,16 @@
           >
             <i class="fa-solid fa-code"></i> Nhập/Dán JSON Mới
           </button>
+          @if (editingTest()?.section === 'listening') {
+            <button
+              type="button"
+              class="edit-tab-btn"
+              [class.active]="editActiveTab() === 'transcript'"
+              (click)="setEditTab('transcript')"
+            >
+              <i class="fa-solid fa-closed-captioning"></i> Transcript ({{ transcriptCount() }})
+            </button>
+          }
         </div>
 
         @if (isLoadingDetail()) {
@@ -280,6 +305,44 @@
                   <span class="upload-hint">Chỉ chọn nếu bạn muốn thay thế tệp PDF đề thi hiện tại.</span>
                 </div>
               </div>
+
+              @if (editingTest()?.section === 'listening') {
+                <div class="edit-audio-section">
+                  <label class="section-lbl">Tệp Audio (thu âm)</label>
+
+                  @if (editingTest()?.audioUrl && !editNewAudioFile()) {
+                    <div class="current-audio-card">
+                      <div class="audio-icon"><i class="fa-solid fa-file-audio"></i></div>
+                      <div class="audio-info">
+                        <div class="audio-name">Tệp audio hiện tại của đề thi</div>
+                        <audio controls preload="metadata" [src]="getResolvedMediaUrl(editingTest()?.audioUrl)"></audio>
+                      </div>
+                    </div>
+                  }
+
+                  @if (editNewAudioFile(); as newFile) {
+                    <div class="new-audio-selected-card">
+                      <div class="audio-icon success"><i class="fa-solid fa-check-circle"></i></div>
+                      <div class="audio-info">
+                        <div class="audio-name">Tệp audio mới: <strong>{{ newFile.name }}</strong></div>
+                        <div class="audio-size">Dung lượng: {{ (newFile.size / 1024 / 1024).toFixed(2) }} MB</div>
+                      </div>
+                      <button type="button" class="btn-cancel-file" (click)="removeNewAudioFile()" title="Hủy chọn tệp mới">
+                        <i class="fa-solid fa-xmark"></i> Hủy
+                      </button>
+                    </div>
+                  }
+
+                  <div class="upload-new-audio-zone">
+                    <label class="btn-select-audio">
+                      <i class="fa-solid fa-cloud-arrow-up"></i>
+                      <span>{{ editNewAudioFile() ? 'Chọn tệp audio khác' : 'Tải lên tệp audio thay thế' }}</span>
+                      <input type="file" accept="audio/*,.mp3,.m4a,.wav,.webm,.aac,.ogg" (change)="onEditAudioSelected($event)" hidden />
+                    </label>
+                    <span class="upload-hint">Chỉ chọn nếu bạn muốn thay thế tệp audio hiện tại (.mp3, .m4a, .wav).</span>
+                  </div>
+                </div>
+              }
             </div>
           }
 
@@ -317,9 +380,20 @@
                           </button>
                         }
                       </div>
+                      @if (q.transcript?.trim()) {
+                        <button type="button" class="q-script-btn" (click)="openTranscriptViewer(q.number)" title="Xem transcript câu #{{ q.number }}">
+                          <i class="fa-solid fa-closed-captioning"></i> Script
+                        </button>
+                      }
                     </div>
                   }
                 </div>
+
+                @if (transcriptCount() > 0) {
+                  <p class="transcript-viewer-hint">
+                    <i class="fa-solid fa-circle-info"></i> Các câu có nút <strong>Script</strong> đã có transcript — bấm vào nút để xem nội dung ngay trong lúc sửa đáp án.
+                  </p>
+                }
               }
             </div>
           }
@@ -342,10 +416,65 @@
               </div>
             </div>
           }
+
+          <!-- Tab 4: Transcript Import -->
+          @if (editActiveTab() === 'transcript') {
+            <div class="edit-tab-pane">
+              <p class="json-guide">Dán JSON transcript (AI trích xuất khi đính kèm PDF transcript) để gắn transcript vào từng câu hỏi. Transcript sẽ hiển thị khi bạn xem lại bài, không cần nghe lại:</p>
+              <textarea
+                class="edit-json-textarea"
+                rows="10"
+                placeholder='{ "questions": [{ "number": 1, "transcript": "A man is watering the plants in the garden." }, ...] }'
+                [value]="transcriptJsonInput()"
+                (input)="transcriptJsonInput.set($any($event.target).value)"
+              ></textarea>
+              <div class="json-actions">
+                <button type="button" class="btn btn-primary" (click)="applyTranscriptJson()" [disabled]="!transcriptJsonInput().trim()">
+                  <i class="fa-solid fa-circle-plus"></i> Gắn transcript vào bảng câu hỏi
+                </button>
+              </div>
+              @if (transcriptCount() > 0) {
+                <p class="transcript-count-hint">
+                  <i class="fa-solid fa-circle-info"></i> Đã có transcript cho {{ transcriptCount() }} câu. Chuyển sang tab Đáp án để xem (nút Script) hoặc Lưu để áp dụng.
+                </p>
+              }
+              @if (transcriptCount() > 0) {
+                <div class="transcript-summary-list">
+                  @for (q of editQuestions(); track q.number) {
+                    @if (q.transcript?.trim()) {
+                      <button type="button" class="transcript-list-item" (click)="openTranscriptViewer(q.number)">
+                        <span class="tl-num">#{{ q.number }}</span>
+                        <span class="tl-preview">{{ q.transcript }}</span>
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Transcript Viewer (hiển thị ở mọi tab khi bấm nút Script) -->
+          @if (editSelectedTranscriptNum(); as viewNum) {
+            <div class="transcript-viewer">
+              <div class="transcript-viewer-head">
+                <span class="tv-title">
+                  <i class="fa-solid fa-closed-captioning"></i> Transcript câu #{{ viewNum }}
+                </span>
+                <button type="button" class="btn-cancel-file" (click)="closeTranscriptViewer()" title="Đóng xem transcript">
+                  <i class="fa-solid fa-xmark"></i> Đóng
+                </button>
+              </div>
+              @if (getTranscriptByNumber(viewNum); as text) {
+                <p class="transcript-viewer-text">{{ text }}</p>
+              } @else {
+                <p class="transcript-viewer-empty">Câu này chưa có transcript.</p>
+              }
+            </div>
+          }
         }
       </div>
 
-      @if (editActiveTab() !== 'json') {
+      @if (editActiveTab() !== 'json' && editActiveTab() !== 'transcript') {
         <div footer class="modal-footer-actions">
           <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isSaving()">
             Hủy

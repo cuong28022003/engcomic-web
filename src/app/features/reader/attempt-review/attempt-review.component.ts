@@ -9,6 +9,7 @@ import { PendingItemApiService } from '../../../core/services/pending-item-api.s
 import { ImportReviewItemsPayload, TestDetail, ToeicAttempt, ToeicAttemptAnswer, ToeicReviewItem } from '../models';
 import { PartStrategyPopoverComponent } from '../reading-session/part-strategy-popover/part-strategy-popover.component';
 import { ToastService } from '@core/services/toast.service';
+import { resolveBackendPath } from '../utils/backend-url.util';
 
 @Component({
   selector: 'app-attempt-review',
@@ -50,7 +51,7 @@ export class AttemptReviewComponent implements OnInit {
   errorMessage = signal<string>('');
 
   activeMobileTab = signal<'pdf' | 'answers'>('answers');
-  filterMode = signal<'all' | 'wrong' | 'flagged' | 'correct' | 'reviewed'>('wrong');
+  filterMode = signal<'all' | 'wrong' | 'flagged' | 'correct' | 'reviewed'>('all');
   selectedQuestionNumber = signal<number | null>(null);
   addedWords = signal<Set<string>>(new Set());
 
@@ -166,6 +167,67 @@ export class AttemptReviewComponent implements OnInit {
     return this.reviewItemsMap().get(qNum) || null;
   });
 
+  readonly audioUrl = computed<string>(() => resolveBackendPath(this.test()?.audioUrl));
+
+  readonly currentQuestionDetail = computed<{ number: number; part?: number; audioStartMs?: number; transcript?: string } | undefined>(() => {
+    const qNum = this.selectedQuestionNumber();
+    if (qNum === null) return undefined;
+    return this.test()?.questions.find(q => q.number === qNum);
+  });
+
+  readonly currentTranscript = computed<string>(() => {
+    const q = this.currentQuestionDetail();
+    if (q?.transcript?.trim()) return q.transcript.trim();
+    return this.selectedReviewItem()?.transcript?.trim() || '';
+  });
+
+  readonly currentTranscriptHasSpeaker = computed<boolean>(() => {
+    return this.currentTranscriptLines().some(l => l.speaker != null);
+  });
+
+  readonly currentQuestionPart = computed<number | null>(() => {
+    const detail = this.currentQuestionDetail();
+    if (detail?.part != null && detail.part > 0) return detail.part;
+    const answer = this.currentAnswer();
+    return answer?.part ?? null;
+  });
+
+  readonly currentTranscriptLines = computed<Array<{ speaker: string | null; text: string }>>(() => {
+    const raw = this.currentTranscript();
+    if (!raw) return [];
+    const speakerRx = /^\s*(Woman(?:\s+[AB])?|Man(?:\s+[AB])?|Speaker\s*\d*|Male\d*|Female\d*|Interviewer\d*|Host|M|W)\s*[:：]\s*(.*)$/i;
+    return raw
+      .split(/\r?\n/)
+      .map(line => {
+        const m = line.match(speakerRx);
+        if (m && m[1]) {
+          return { speaker: m[1], text: (m[2] || '').trim() };
+        }
+        return { speaker: null, text: line.trim() };
+      })
+      .filter(l => l.speaker || l.text.length > 0);
+  });
+
+  readonly currentAudioStartMs = computed<number | null>(() => {
+    const q = this.currentQuestionDetail();
+    return q && q.audioStartMs != null ? q.audioStartMs : null;
+  });
+
+  private audioEl?: HTMLAudioElement;
+
+  onAudioReady(el: HTMLAudioElement): void {
+    this.audioEl = el;
+  }
+
+  playCurrentQuestionAudio(): void {
+    if (!this.audioEl) return;
+    const ms = this.currentAudioStartMs();
+    if (ms != null) {
+      this.audioEl.currentTime = ms / 1000;
+    }
+    void this.audioEl.play();
+  }
+
   readonly currentFilterLabel = computed<string>(() => {
     switch (this.filterMode()) {
       case 'wrong':
@@ -251,15 +313,6 @@ export class AttemptReviewComponent implements OnInit {
   }
 
   private autoSelectInitialQuestion() {
-    // If wrong questions exist, default to wrong and pick first wrong question
-    if (this.countWrong() > 0) {
-      this.filterMode.set('wrong');
-    } else if (this.countFlagged() > 0) {
-      this.filterMode.set('flagged');
-    } else {
-      this.filterMode.set('all');
-    }
-
     const list = this.filteredQuestions();
     if (list.length > 0) {
       this.selectedQuestionNumber.set(list[0].questionNumber);

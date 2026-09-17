@@ -3,11 +3,16 @@
     <div class="step-icon">🤖</div>
     <div>
       <h2 class="step-title">Bước 2: Hướng dẫn nhờ AI trích xuất Đáp án</h2>
-      <p class="step-desc">Sử dụng ChatGPT hoặc Claude để tự động đọc bảng đáp án từ PDF và tạo chuỗi JSON chuẩn.</p>
+      <p class="step-desc">
+        @if (isListening()) {
+          Sử dụng ChatGPT hoặc Claude để đọc bảng đáp án từ PDF (và file PDF transcript nếu có) để tạo JSON chuẩn cho đề Listening.
+        } @else {
+          Sử dụng ChatGPT hoặc Claude để tự động đọc bảng đáp án từ PDF và tạo chuỗi JSON chuẩn.
+        }
+      </p>
     </div>
   </div>
 
-  <!-- Instruction list -->
   <div class="guide-grid">
     <div class="guide-item">
       <div class="guide-num">1</div>
@@ -15,7 +20,13 @@
     </div>
     <div class="guide-item">
       <div class="guide-num">2</div>
-      <div class="guide-text">Đính kèm tệp <strong>PDF đề thi</strong> vừa chọn vào ô chat.</div>
+      <div class="guide-text">
+        @if (isListening()) {
+          Đính kèm tệp <strong>PDF đề thi</strong> và tệp <strong>PDF transcript</strong> (nếu có) vào ô chat.
+        } @else {
+          Đính kèm tệp <strong>PDF đề thi</strong> vừa chọn vào ô chat.
+        }
+      </div>
     </div>
     <div class="guide-item">
       <div class="guide-num">3</div>
@@ -30,13 +41,13 @@
   <!-- Prompt Box -->
   <div class="prompt-box-container">
     <div class="prompt-box-header">
-      <span class="prompt-badge">AI PARSE PROMPT TEMPLATE</span>
+      <span class="prompt-badge">{{ isListening() ? 'LISTENING PARSE PROMPT TEMPLATE' : 'AI PARSE PROMPT TEMPLATE' }}</span>
       <button type="button" class="btn-copy" [class.copied]="copied" (click)="copyPrompt()">
         <span *ngIf="!copied">📋 Sao chép Prompt</span>
         <span *ngIf="copied">✓ Đã sao chép vào bộ nhớ!</span>
       </button>
     </div>
-    <textarea class="prompt-textarea" readonly [value]="promptText()" rows="12"></textarea>
+    <textarea class="prompt-textarea" readonly [value]="promptText()" rows="16"></textarea>
   </div>
 
   <div class="step-actions">

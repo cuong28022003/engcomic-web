@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LoadingComponent, ErrorStateComponent, ModalComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
 import { PdfViewerComponent } from './pdf-viewer/pdf-viewer.component';
 import { AnswerSheetComponent } from './answer-sheet/answer-sheet.component';
+import { ListeningAudioBarComponent } from './listening-audio-bar/listening-audio-bar.component';
 import { PreTestConfigModalComponent } from './pre-test-config-modal/pre-test-config-modal.component';
 import { ResumeAttemptModalComponent } from './resume-attempt-modal/resume-attempt-modal.component';
 import { AttemptHistoryModalComponent } from './attempt-history-modal/attempt-history-modal.component';
@@ -17,6 +18,7 @@ import { PacingStopwatchComponent } from './pacing-stopwatch/pacing-stopwatch.co
 import { ToastService } from '@core/services/toast.service';
 import { UserStatsApiService } from '@core/services/user-stats-api.service';
 import { UserStateService } from '@core/services/user-state.service';
+import { resolveBackendPath } from '../utils/backend-url.util';
 
 @Component({
   selector: 'app-reading-session',
@@ -26,6 +28,7 @@ import { UserStateService } from '@core/services/user-state.service';
     RouterModule, 
     PdfViewerComponent, 
     AnswerSheetComponent, 
+    ListeningAudioBarComponent, 
     PartStrategyPopoverComponent,
     PacingStopwatchComponent,
     PreTestConfigModalComponent,
@@ -81,8 +84,18 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
     if (parts && parts.length === 1) {
       return parts[0];
     }
-    return 6;
+    return this.isListening() ? 1 : 6;
   });
+
+  readonly isListening = computed<boolean>(() => {
+    return this.test()?.section === 'listening' || !!this.test()?.audioUrl;
+  });
+
+  /** URL tuyệt đối tới file audio backend (đề phòng đường dẫn tương đối /api/...). */
+  readonly resolvedAudioUrl = computed<string>(() => resolveBackendPath(this.test()?.audioUrl));
+
+  /** Câu hỏi đang được lắng nghe/phát trong audio bar (Listening only). */
+  currentListeningQuestion = signal<number | null>(null);
 
   readonly filteredQuestions = computed<Array<{ number: number; part: number }>>(() => {
     const t = this.test();
@@ -93,6 +106,21 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
 
   // Mobile layout tab
   activeMobileTab = signal<'pdf' | 'answers'>('answers');
+
+  /** Audio bar đang phát tới set câu `q` -> cuộn bảng đáp án theo. */
+  onAudioActiveQuestion(q: number | null): void {
+    if (q == null) return;
+    if (this.answerSheet) {
+      this.answerSheet.scrollToQuestion(q);
+    }
+  }
+
+  /** Học viên focus câu trong bảng đáp án -> seek audio về đầu câu đó (Listening). */
+  onAnswerSheetFocus(q: number): void {
+    if (this.isListening()) {
+      this.currentListeningQuestion.set(q);
+    }
+  }
 
   @HostListener('window:beforeunload')
   onBeforeUnload() {
@@ -171,7 +199,12 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
 
     const config: TimeTargetConfig = {
       mode: att.timeMode || 'full_test',
+      section: this.test()?.section,
       selectedParts: att.selectedParts,
+      part1_minutes: (att.part1TargetSeconds || 300) / 60,
+      part2_minutes: (att.part2TargetSeconds || 480) / 60,
+      part3_minutes: (att.part3TargetSeconds || 960) / 60,
+      part4_minutes: (att.part4TargetSeconds || 960) / 60,
       part5_minutes: (att.part5TargetSeconds || 1200) / 60,
       part6_minutes: (att.part6TargetSeconds || 600) / 60,
       part7_minutes: (att.part7TargetSeconds || 2700) / 60
@@ -185,6 +218,14 @@ export class ReadingSessionComponent implements OnInit, OnDestroy {
 
     // Restore timer elapsed
     this.timerService.totalElapsed.set(att.totalElapsedSeconds || 0);
+
+    // Restore per-question timing so submitted times are not reset on resume
+    const savedTimings: Record<number, number> = {};
+    (att.answers || []).forEach(a => {
+      savedTimings[a.questionNumber] = a.timeSpentSeconds || 0;
+    });
+    this.timerService.restoreQuestionTimings(savedTimings);
+
     this.timerService.start();
 
     // Restore answers into answer sheet
