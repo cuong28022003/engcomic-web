@@ -348,7 +348,10 @@
                 </div>
                 <div class="typical-words-cloud">
                   @for (word of typicalWordsList(); track word) {
-                    <app-word-mini-chip [word]="word" />
+                    <app-word-mini-chip
+                      [word]="word"
+                      [inVault]="vaultWordLookup().has(word.trim().toLowerCase())"
+                    />
                   }
                 </div>
               </div>

@@ -8,9 +8,10 @@ import { getPosShortLabel, getPosCssClass } from '@shared/constants/part-of-spee
 /**
  * WordMiniChipComponent — Chip từ vựng mini dùng chung.
  *
- * Hiển thị: [từ] [loại từ?] [🔊] [+]
+ * Hiển thị: [từ] [loại từ?] [🔊] [+/✓]
  * - Bấm text/loa: phát âm US
  * - Bấm +: thêm vào Word Collector (pending items)
+ * - Nút + hiển thị ✓ (và bị vô hiệu) khi từ đã có trong Word Collector hoặc trong kho từ vựng
  * - Trạng thái "đã thêm" phản ánh ngay lập tức qua PendingCountService
  *
  * @example
@@ -41,6 +42,9 @@ export class WordMiniChipComponent {
   /** Có hiển thị nút loa không (mặc định: true) */
   readonly showAudio = input<boolean>(true);
 
+  /** Từ/cụm này đã có trong kho từ vựng cá nhân chưa (mặc định: false) */
+  readonly inVault = input<boolean>(false);
+
   readonly isAdding = signal(false);
 
   get posLabel(): string {
@@ -55,6 +59,29 @@ export class WordMiniChipComponent {
     return this.pendingCount.isWordPending(this.word());
   }
 
+  /** Đã được lưu: tồn tại trong Word Collector HOẶC trong kho từ vựng */
+  get isSaved(): boolean {
+    return this.isPending || this.inVault();
+  }
+
+  get chipTitle(): string {
+    if (this.isPending) return this.word() + ' — đã có trong Word Collector';
+    if (this.inVault()) return this.word() + ' — đã có trong kho từ vựng';
+    return this.word();
+  }
+
+  get collectTooltip(): string {
+    if (this.isPending) return this.word() + ' — đã có trong Word Collector';
+    if (this.inVault()) return this.word() + ' — đã có trong kho từ vựng';
+    return 'Thêm ' + this.word() + ' vào Word Collector';
+  }
+
+  get collectAria(): string {
+    if (this.isPending) return 'Đã thêm ' + this.word();
+    if (this.inVault()) return this.word() + ' đã có trong kho từ vựng';
+    return 'Thêm ' + this.word() + ' vào Word Collector';
+  }
+
   playAudio(event: MouseEvent): void {
     event.stopPropagation();
     const w = this.word()?.trim();
@@ -64,7 +91,7 @@ export class WordMiniChipComponent {
   addToCollector(event: MouseEvent): void {
     event.stopPropagation();
     const clean = this.word()?.trim();
-    if (!clean || this.isPending || this.isAdding()) return;
+    if (!clean || this.isSaved || this.isAdding()) return;
 
     this.isAdding.set(true);
     this.pendingApi.addManual(clean).subscribe({

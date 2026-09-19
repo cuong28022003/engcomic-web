@@ -122,6 +122,12 @@
     }
   }
 
+  // ── trạng thái chip đã được lưu (collector hoặc kho từ vựng) ─────────────
+  &.chip-saved {
+    border-color: rgba(52, 211, 153, 0.35);
+    background: rgba(52, 211, 153, 0.05);
+  }
+
   // ── hover toàn chip ────────────────────────────────────────────────────────
   &:not(.chip-collected):hover {
     border-color: rgba(56, 189, 248, 0.35);

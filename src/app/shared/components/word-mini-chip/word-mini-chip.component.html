@@ -1,7 +1,8 @@
 <div
   class="word-mini-chip"
   [class.chip-collected]="isPending"
-  [title]="isPending ? word() + ' — đã có trong Word Collector' : word()"
+  [class.chip-saved]="isSaved"
+  [title]="chipTitle"
 >
   <!-- Text từ (chỉ hiện nếu có word) -->
   @if (word()) {
@@ -31,15 +32,15 @@
     <button
       type="button"
       class="chip-btn btn-collect"
-      [class.collected]="isPending"
-      [disabled]="isPending || isAdding()"
+      [class.collected]="isSaved"
+      [disabled]="isSaved || isAdding()"
       (click)="addToCollector($event)"
-      [title]="isPending ? 'Đã có trong Word Collector' : 'Thêm vào Word Collector'"
-      [attr.aria-label]="isPending ? 'Đã thêm ' + word() : 'Thêm ' + word() + ' vào Word Collector'"
+      [title]="collectTooltip"
+      [attr.aria-label]="collectAria"
     >
       @if (isAdding()) {
         <i class="fa-solid fa-spinner fa-spin"></i>
-      } @else if (isPending) {
+      } @else if (isSaved) {
         <i class="fa-solid fa-check"></i>
       } @else {
         <i class="fa-solid fa-plus"></i>

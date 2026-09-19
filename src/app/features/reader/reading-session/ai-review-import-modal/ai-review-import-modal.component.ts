@@ -244,7 +244,7 @@ ${questionRows}
       "error_type": "detail_missed",
       "error_subtype": "nghe nhầm chi tiết hành động",
       "passage_excerpt": "trích ngắn transcript của câu này",
-      "transcript": "NGUYÊN VĂN toàn bộ transcript của đoạn audio ứng với câu này (lấy từ file PDF transcript, ghi trong MỘT dòng, mỗi lượt thoại ngăn cách bằng \\n)",
+      "transcript": "NGUYÊN VĂN toàn bộ transcript của đoạn audio ứng với câu này (lấy đúng đoạn theo số câu từ file PDF transcript, ghi trong MỘT dòng, mỗi lượt thoại ngăn cách bằng \\n — để \"\" nếu không tìm thấy đoạn đúng, tuyệt đối không bịa)",
       "question_text": "nội dung câu hỏi",
       "options": {
         "A": "lựa chọn A",
@@ -262,11 +262,20 @@ ${questionRows}
 }
 
 === NGUYÊN TẮC PHÂN TÍCH (LISTENING): ===
-1. "transcript": Trích NGUYÊN VĂN (verbatim) toàn bộ transcript của đoạn audio ứng với câu, lấy từ file PDF transcript đã đính kèm — không tóm tắt, không thêm thắt. Part 1 & 2: câu/xuyên câu xung quanh audio của câu. Part 3 & 4: các câu trong cùng một nhóm thuộc cùng MỘT đoạn hội thoại/bài nói — lặp lại nguyên văn toàn bộ đoạn đó cho từng câu trong nhóm. Ghi trong MỘT dòng, mỗi lượt thoại ngăn cách bằng \n.
-2. "passage_excerpt": Dùng đúng nội dung trong transcript PDF cho câu đó, trích ngắn 1-2 câu tiêu biểu. "question_text" ghi lại câu hỏi đúng như trong đề.
+1. "transcript": Đây là dữ liệu TRA CỨU, không phải câu chữ tự viết. File PDF transcript đính kèm đánh số TỪNG đoạn audio theo khoảng câu hỏi: Part 1 & 2 mỗi câu = 1 đoạn audio RIÊNG; Part 3 & 4 đoạn chung đánh số kiểu "Questions 38-40".
+   - Với mỗi câu đang phân tích, CHỈ lấy đúng đoạn có số chứa số câu đó. KHÔNG lấy đoạn của câu khác dù nội dung nghe có vẻ giống.
+   - Part 3 & 4: các câu trong cùng một nhóm DÙNG CHUNG MỘT đoạn — "transcript" của cả nhóm PHẢI giống hệt nhau (nguyên văn toàn bộ đoạn đó).
+   - COPY NGUYÊN VĂN 100% từ PDF: đúng từng chữ, từng dấu câu, không viết lại, không tóm tắt, không dịch, không tự sửa lỗi đề.
+   - KIỂM TRA KHỚP: đoạn đúng phải chứa manh mối để xác định đáp án đúng của câu đó. Nếu đoạn transcript bạn chọn KHÔNG trả lời được câu hỏi → chắc chắn đã lấy nhầm đoạn, phải tìm lại đoạn đúng.
+   - CHỐNG BỊA: nếu không tìm thấy đoạn transcript ứng với câu (không chắc chắn 100%), KHÔNG được bịa — đặt "transcript" là chuỗi rỗng "" và ghi rõ trong "explanation" là bạn không tìm thấy đoạn tương ứng trong PDF.
+   - Ghi trong MỘT dòng, mỗi lượt thoại ngăn cách bằng \n.
+2. "passage_excerpt": Trích 1-2 câu NẰM TRONG chính đoạn transcript đã gán cho câu ở trên (không lấy câu từ đoạn khác). "question_text" ghi lại câu hỏi đúng như trong đề.
 3. "key_vocab": Quét kỹ transcript + câu hỏi + TẤT CẢ các đáp án A, B, C, D. Trích ra MỌI từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này.
+   SỐ LƯỢNG BẮT BUỘC (đừng tự quyết định nhỏ giọt — cứ khai thác cho ĐỦ ngưỡng):
+   - Câu Part 1 & 2: TỐI THIỂU 5 từ/cụm từ mỗi câu.
+   - Câu Part 3 & 4: TỐI THIỂU 10 từ/cụm từ mỗi câu (đoạn dài hãy khai thác 12-15).
+   - KHÔNG BAO GIỜ dừng lại ở 1-3 từ. Nếu chưa đủ ngưỡng tối thiểu, phải rà lại TỪNG dòng transcript + TỪNG đáp án rồi bổ sung cho đủ.
    Quy tắc lọc:
-   - KHÔNG giới hạn số lượng — nghi ngờ thì cứ thêm vào, thà dư còn hơn thiếu.
    - BỎ QUA các từ cơ bản, quá thông dụng (top ~1000 từ phổ biến nhất, ví dụ: the, meeting, go, work, time...).
    - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến chọn sai đáp án.
    Với mỗi từ/cụm trả về object gồm:
@@ -312,8 +321,12 @@ ${questionRows}
 
 === NGUYÊN TẮC PHÂN TÍCH: ===
 1. "key_vocab": Quét kỹ đoạn trích (passage), câu hỏi và TẤT CẢ các đáp án A, B, C, D. Trích ra MỌI từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này.
+   SỐ LƯỢNG BẮT BUỘC (đừng tự quyết định nhỏ giọt — cứ khai thác cho ĐỦ ngưỡng):
+   - Câu Part 5: TỐI THIỂU 5 từ/cụm từ mỗi câu (kể cả từ vựng trong 4 đáp án).
+   - Câu Part 6: TỐI THIỂU 8 từ/cụm từ mỗi câu.
+   - Câu Part 7: TỐI THIỂU 12 từ/cụm từ mỗi câu (bài dài hãy khai thác 15-20).
+   - KHÔNG BAO GIỜ dừng lại ở 1-3 từ. Nếu chưa đủ ngưỡng tối thiểu, phải rà lại toàn bộ passage + câu hỏi + đáp án rồi bổ sung cho đủ.
    Quy tắc lọc:
-   - KHÔNG giới hạn số lượng — nghi ngờ thì cứ thêm vào, thà dư còn hơn thiếu.
    - BỎ QUA các từ cơ bản, quá thông dụng (top ~1000 từ phổ biến nhất, ví dụ: the, meeting, go, work, time...).
    - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến chọn sai đáp án.
    Với mỗi từ/cụm trả về object gồm:

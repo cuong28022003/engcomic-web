@@ -148,61 +148,41 @@ export class GrammarCardModalComponent {
     const p = this.grammarPoint();
     if (!p) return [];
 
-    const typicalWords = this.typicalWordsList()
-      .map(w => w.toLowerCase().trim())
-      .filter(w => w.length > 0);
+    const typicalSet = this.toTypicalWordSet(this.typicalWordsList());
     const cards = this.userCards();
-    if (cards.length === 0) return [];
+    if (typicalSet.size === 0 || cards.length === 0) return [];
 
-    const pointCategory = (p.category || '').toLowerCase().trim();
-
-    return cards.filter(c => {
-      const cardWord = (c.word || '').trim().toLowerCase();
-      if (!cardWord) return false;
-
-      // ── TIÊU CHÍ 1: KHỚP TỪ / CỤM TỪ CHÍNH XÁC ──
-      // card.word phải khớp chính xác với một trong các từ trong typicalWordsList.
-      // Nếu card.word là cụm (có dấu cách), dùng \b để tránh khớp sai substring.
-      if (typicalWords.length > 0) {
-        const isExactWordMatch = typicalWords.some(w => {
-          // Khớp chính xác toàn bộ từ
-          if (cardWord === w) return true;
-          // card.word là cụm từ dài hơn → kiểm tra w có xuất hiện nguyên vẹn không
-          if (w.length >= 3 && cardWord.includes(' ')) {
-            const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-            return regex.test(cardWord);
-          }
-          return false;
-        });
-        if (isExactWordMatch) return true;
-      }
-
-      // ── TIÊU CHÍ 2: KHỚP QUA NHÃN NGỮ PHÁP (GRAMMAR TAG) ──
-      // Thẻ phải được gắn tag tường minh dạng "grammar:<categoryKey>"
-      // để đảm bảo chỉ những thẻ được đánh dấu đúng category mới lọt qua.
-      if (c.tags && c.tags.length > 0) {
-        const hasMatchingGrammarTag = c.tags.some(tag => {
-          const t = tag.toLowerCase().trim();
-          if (!t.startsWith('grammar:')) return false;
-          const tagKey = t.replace('grammar:', '').trim();
-          return tagKey === pointCategory ||
-            (pointCategory === 'prepositions' && (tagKey.includes('prep') || tagKey.includes('adjective_prep'))) ||
-            (pointCategory === 'conjunctions' && (tagKey.includes('conj') || tagKey.includes('transition'))) ||
-            (pointCategory === 'gerunds_infinitives' && (tagKey.includes('gerund') || tagKey.includes('infinitive'))) ||
-            (pointCategory === 'phrasal_verbs' && (tagKey.includes('phrasal') || tagKey.includes('collocation'))) ||
-            (pointCategory === 'conditionals' && tagKey.includes('condition')) ||
-            (pointCategory === 'subjunctive_wish' && (tagKey.includes('subjunctive') || tagKey.includes('wish')));
-        });
-        if (hasMatchingGrammarTag) return true;
-      }
-
-      // NOTE: Không dùng tiêu chí tìm từ trong usage.structure vì từ ngắn như
-      // "for", "in", "to" xuất hiện trong hầu hết mọi cấu trúc → false positive hàng loạt.
-
-      return false;
-    });
+    // CHỈ hiển thị card mà từ/cụm từ của nó NẰM CHÍNH XÁC trong danh sách
+    // "từ & cụm từ tiêu biểu" — không match tag, không match lỏng theo từ chứa,
+    // tránh hiện những từ vựng không thuộc danh sách tiêu biểu.
+    return cards.filter(c => typicalSet.has((c.word ?? '').trim().toLowerCase()));
   });
+
+  /** Set các từ tiêu biểu (đã lowercase) ĐÃ có trong kho từ vựng — dùng để đánh dấu tích trên chip */
+  readonly vaultWordLookup = computed<Set<string>>(() => {
+    const typicalSet = this.toTypicalWordSet(this.typicalWordsList());
+    const cards = this.userCards();
+    const set = new Set<string>();
+    if (typicalSet.size === 0 || cards.length === 0) return set;
+
+    const vaultWords = cards
+      .map(c => (c.word ?? '').trim().toLowerCase())
+      .filter(w => w.length > 0);
+    for (const w of typicalSet) {
+      if (vaultWords.includes(w)) set.add(w);
+    }
+    return set;
+  });
+
+  /** Chuyển danh sách từ tiêu biểu về Set đã trim + lowercase */
+  private toTypicalWordSet(words: string[]): Set<string> {
+    const set = new Set<string>();
+    for (const w of words) {
+      const clean = (w ?? '').trim().toLowerCase();
+      if (clean) set.add(clean);
+    }
+    return set;
+  }
 
   setActiveTab(tab: 'usages' | 'pitfalls' | 'comparisons' | 'vocabulary'): void {
     this.activeTab.set(tab);
