@@ -270,14 +270,15 @@ ${questionRows}
    - CHỐNG BỊA: nếu không tìm thấy đoạn transcript ứng với câu (không chắc chắn 100%), KHÔNG được bịa — đặt "transcript" là chuỗi rỗng "" và ghi rõ trong "explanation" là bạn không tìm thấy đoạn tương ứng trong PDF.
    - Ghi trong MỘT dòng, mỗi lượt thoại ngăn cách bằng \n.
 2. "passage_excerpt": Trích 1-2 câu NẰM TRONG chính đoạn transcript đã gán cho câu ở trên (không lấy câu từ đoạn khác). "question_text" ghi lại câu hỏi đúng như trong đề.
-3. "key_vocab": Quét kỹ transcript + câu hỏi + TẤT CẢ các đáp án A, B, C, D. Trích ra MỌI từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này.
-   SỐ LƯỢNG BẮT BUỘC (đừng tự quyết định nhỏ giọt — cứ khai thác cho ĐỦ ngưỡng):
-   - Câu Part 1 & 2: TỐI THIỂU 5 từ/cụm từ mỗi câu.
-   - Câu Part 3 & 4: TỐI THIỂU 10 từ/cụm từ mỗi câu (đoạn dài hãy khai thác 12-15).
-   - KHÔNG BAO GIỜ dừng lại ở 1-3 từ. Nếu chưa đủ ngưỡng tối thiểu, phải rà lại TỪNG dòng transcript + TỪNG đáp án rồi bổ sung cho đủ.
-   Quy tắc lọc:
-   - BỎ QUA các từ cơ bản, quá thông dụng (top ~1000 từ phổ biến nhất, ví dụ: the, meeting, go, work, time...).
-   - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến chọn sai đáp án.
+3. "key_vocab": Quét kỹ transcript + câu hỏi + TẤT CẢ các đáp án A, B, C, D. CHỈ liệt kê từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 THẬT SỰ CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này, dẫn tới nghe nhầm hoặc chọn sai đáp án.
+   SỐ LƯỢNG (đủ ngưỡng để review có giá trị, không quá phình):
+   - Câu Part 1 & 2: TỐI THIỂU 3 từ/cụm từ mỗi câu.
+   - Câu Part 3 & 4: TỐI THIỂU 5 từ/cụm từ mỗi câu.
+   Nếu chưa đủ ngưỡng, rà lại transcript + câu hỏi + đáp án để tìm thêm từ/cụm từ ĐÁNG NOTE (đặc biệt từ vựng trong 4 đáp án), tuyệt đối KHÔNG chêm từ cơ bản chỉ để cho đủ số.
+   Quy tắc lọc (QUAN TRỌNG):
+   - BỎ QUA từ ngữ quá đơn giản, người học TOEIC 500-650 chắc chắn đã biết (ví dụ: the, meeting, go, work, time, sorry, thank...). Chỉ giữ lại từ/cụm từ mang giá trị học thuật thật sự.
+   - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến nghe nhầm hoặc chọn sai đáp án (đặc biệt là từ vựng xuất hiện trong 4 đáp án).
+   - KHÔNG vượt quá 6-8 từ mỗi câu dù đoạn bản dài — dừng lại khi không còn từ nào thực sự đáng note.
    Với mỗi từ/cụm trả về object gồm:
    - "term": từ hoặc cụm từ gốc (giữ đúng dạng xuất hiện trong bài).
    - "meaning": nghĩa tiếng Việt ngắn gọn, đúng với NGHĨA ĐANG DÙNG trong bài (không phải liệt kê hết các nghĩa của từ).
@@ -320,15 +321,16 @@ ${questionRows}
 }
 
 === NGUYÊN TẮC PHÂN TÍCH: ===
-1. "key_vocab": Quét kỹ đoạn trích (passage), câu hỏi và TẤT CẢ các đáp án A, B, C, D. Trích ra MỌI từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này.
-   SỐ LƯỢNG BẮT BUỘC (đừng tự quyết định nhỏ giọt — cứ khai thác cho ĐỦ ngưỡng):
-   - Câu Part 5: TỐI THIỂU 5 từ/cụm từ mỗi câu (kể cả từ vựng trong 4 đáp án).
-   - Câu Part 6: TỐI THIỂU 8 từ/cụm từ mỗi câu.
-   - Câu Part 7: TỐI THIỂU 12 từ/cụm từ mỗi câu (bài dài hãy khai thác 15-20).
-   - KHÔNG BAO GIỜ dừng lại ở 1-3 từ. Nếu chưa đủ ngưỡng tối thiểu, phải rà lại toàn bộ passage + câu hỏi + đáp án rồi bổ sung cho đủ.
-   Quy tắc lọc:
-   - BỎ QUA các từ cơ bản, quá thông dụng (top ~1000 từ phổ biến nhất, ví dụ: the, meeting, go, work, time...).
-   - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến chọn sai đáp án.
+1. "key_vocab": Quét kỹ đoạn trích (passage), câu hỏi và TẤT CẢ các đáp án A, B, C, D. CHỈ liệt kê từ/cụm từ (collocations, phrasal verbs, idioms, từ vựng công sở - kinh doanh, từ đa nghĩa dễ gây nhầm) mà một người ở mức TOEIC 500-650 THẬT SỰ CÓ THỂ chưa biết hoặc dễ hiểu sai trong ngữ cảnh này, dẫn tới chọn sai đáp án.
+   SỐ LƯỢNG (đủ ngưỡng để review có giá trị, không quá phình):
+   - Câu Part 5: TỐI THIỂU 3 từ/cụm từ mỗi câu (kể cả từ vựng trong 4 đáp án).
+   - Câu Part 6: TỐI THIỂU 4 từ/cụm từ mỗi câu.
+   - Câu Part 7: TỐI THIỂU 5 từ/cụm từ mỗi câu.
+   Nếu chưa đủ ngưỡng, rà lại passage + câu hỏi + đáp án để tìm thêm từ/cụm từ ĐÁNG NOTE (đặc biệt từ vựng trong 4 đáp án), tuyệt đối KHÔNG chêm từ cơ bản chỉ để cho đủ số.
+   Quy tắc lọc (QUAN TRỌNG):
+   - BỎ QUA từ ngữ quá đơn giản, người học TOEIC 500-650 chắc chắn đã biết (ví dụ: the, meeting, go, work, time, sorry, thank...). Chỉ giữ lại từ/cụm từ mang giá trị học thuật thật sự.
+   - ƯU TIÊN các từ/cụm mà nếu hiểu sai sẽ dẫn đến chọn sai đáp án (đặc biệt là từ vựng xuất hiện trong 4 đáp án).
+   - KHÔNG vượt quá 6-8 từ mỗi câu dù đoạn bản dài — dừng lại khi không còn từ nào thực sự đáng note.
    Với mỗi từ/cụm trả về object gồm:
    - "term": từ hoặc cụm từ gốc (giữ đúng dạng xuất hiện trong bài).
    - "meaning": nghĩa tiếng Việt ngắn gọn, đúng với NGHĨA ĐANG DÙNG trong bài (không phải liệt kê hết các nghĩa của từ).
