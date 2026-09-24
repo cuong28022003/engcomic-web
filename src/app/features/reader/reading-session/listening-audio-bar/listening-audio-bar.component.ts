@@ -147,6 +147,20 @@ export class ListeningAudioBarComponent {
     this.currentTime.set(set.startMs / 1000);
   }
 
+  rewind(seconds = 10): void {
+    if (!this.audioEl) return;
+    this.audioEl.currentTime = Math.max(0, this.audioEl.currentTime - seconds);
+    this.currentTime.set(this.audioEl.currentTime);
+  }
+
+  forward(seconds = 10): void {
+    if (!this.audioEl) return;
+    const dur = this.duration() || 0;
+    const target = this.audioEl.currentTime + seconds;
+    this.audioEl.currentTime = dur > 0 ? Math.min(dur, target) : target;
+    this.currentTime.set(this.audioEl.currentTime);
+  }
+
   onSliderChange(event: Event): void {
     const v = Number((event.target as HTMLInputElement).value);
     if (this.audioEl) {

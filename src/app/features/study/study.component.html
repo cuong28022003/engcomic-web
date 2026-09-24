@@ -1,0 +1,254 @@
+<div class="study-session-page">
+  <!-- Top header with Progress -->
+  <div class="study-topbar glass-panel">
+    <a [routerLink]="deckId ? ['/deck', deckId] : '/deck'" class="btn-icon" title="Thoát phiên học">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div class="progress-wrap">
+      <div class="deck-title-row">
+        <span class="deck-title">{{ deck()?.name || 'Ôn Tập Flashcard' }}</span>
+        @if (levelParam() > 0) {
+          <span class="filter-pill lvl">Level {{ levelParam() }}</span>
+        }
+        @if (posParam() !== 'all') {
+          <span class="filter-pill pos">{{ posParam() }}</span>
+        }
+        @if (starParam()) {
+          <span class="filter-pill star"><i class="fa-solid fa-star"></i> Yêu thích</span>
+        }
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" [style.width.%]="progressPercent()"></div>
+      </div>
+      <span class="progress-text">{{ currentIndex() + 1 }} / {{ cards().length }}</span>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin spinner"></i>
+      <p>Đang chuẩn bị bộ thẻ học...</p>
+    </div>
+  } @else if (cards().length === 0) {
+    <div class="empty-state glass-panel">
+      <i class="fa-solid fa-sparkles empty-icon"></i>
+      <h3>Bộ thẻ này chưa có từ vựng nào!</h3>
+      <p>Hãy đọc truyện tranh và tra từ để thêm từ mới vào bộ thẻ này nhé.</p>
+      <a routerLink="/comics" class="btn-primary">Đọc truyện ngay</a>
+    </div>
+  } @else if (isFinished()) {
+    <!-- Completed Summary View -->
+    <div class="finished-summary glass-panel">
+      <div class="trophy-icon-wrap">
+        <i class="fa-solid fa-medal trophy-icon"></i>
+      </div>
+      <h2>Chúc mừng bạn đã hoàn thành!</h2>
+      <p class="summary-sub">Bạn đã ôn tập xong toàn bộ <strong>{{ cards().length }}</strong> thẻ từ vựng trong phiên này.</p>
+
+      <div class="rewards-row">
+        <div class="reward-box">
+          <i class="fa-solid fa-bolt bolt"></i>
+          <span class="reward-val">+{{ cards().length * 10 }} XP</span>
+          <span class="reward-lbl">Kinh nghiệm học</span>
+        </div>
+        <div class="reward-box">
+          <i class="fa-solid fa-gem gem"></i>
+          <span class="reward-val">+2 Kim cương</span>
+          <span class="reward-lbl">Thưởng hoàn thành</span>
+        </div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="btn-primary" (click)="restartStudy()"><i class="fa-solid fa-rotate-right"></i> Ôn tập lại</button>
+        <a routerLink="/deck" class="btn-secondary">Về danh sách bộ thẻ</a>
+      </div>
+    </div>
+  } @else {
+    <!-- Mode Switch -->
+    <div class="mode-switch-bar glass-panel">
+      <span class="mode-label"><i class="fa-solid fa-sliders"></i> Chế độ học:</span>
+      <div class="mode-segmented">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="!recallMode()"
+          (click)="setRecallMode(false)"
+          title="Mặt trước là từ tiếng Anh, lật để xem nghĩa"
+        >
+          <i class="fa-solid fa-book-open"></i>
+          <span>Bình thường</span>
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="recallMode()"
+          (click)="setRecallMode(true)"
+          title="Mặt trước là nghĩa tiếng Việt — tự nhớ từ tiếng Anh rồi lật kiểm tra"
+        >
+          <i class="fa-solid fa-brain"></i>
+          <span>Recall (đoán trước)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Interactive 3D Flip Flashcard -->
+    <div class="flashcard-container">
+      <div
+        class="flashcard"
+        [class.flipped]="isFlipped()"
+        [class.recall-mode]="recallMode()"
+        (click)="toggleFlip()"
+      >
+        <!-- Front (mặt ban đầu) -->
+        <div class="card-face card-front glass-panel">
+          <span class="face-badge">{{ recallMode() ? 'Nhớ từ tiếng Anh' : 'Tiếng Anh' }}</span>
+
+          @if (!recallMode()) {
+            <h2 class="card-word">{{ currentCard()?.word || currentCard()?.front }}</h2>
+            @if (currentCard()?.ipa) {
+              <p class="card-ipa"><code>{{ currentCard()?.ipa }}</code></p>
+            }
+            @if (posInfo().label) {
+              <span class="pos-chip" [ngClass]="posInfo().css">{{ posInfo().label }}</span>
+            }
+            <button class="btn-icon audio-btn" (click)="speak($event, currentCard()?.word || currentCard()?.front || '')" title="Nghe phát âm">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+          } @else {
+            <h2 class="card-prompt">{{ currentCard()?.meaning || currentCard()?.back }}</h2>
+            @if (posInfo().label) {
+              <span class="pos-chip" [ngClass]="posInfo().css">{{ posInfo().label }}</span>
+            }
+            <span class="recall-hint"><i class="fa-solid fa-lightbulb"></i> Cố gắng nhớ ra từ tiếng Anh trước khi lật thẻ!</span>
+          }
+
+          <span class="flip-hint"><i class="fa-solid fa-hand-pointer"></i> Nhấp thẻ hoặc nhấn Space để xem {{ recallMode() ? 'đáp án' : 'nghĩa' }}</span>
+        </div>
+
+        <!-- Back (mặt đáp án + thông tin liên quan) -->
+        <div class="card-face card-back glass-panel">
+          <span class="face-badge back-badge">Chi Tiết Từ Vựng</span>
+
+          <div class="answer-head">
+            <div class="answer-word-row">
+              @if (recallMode()) {
+                <h2 class="card-word">{{ currentCard()?.word || currentCard()?.front }}</h2>
+                <button class="btn-icon audio-btn small" (click)="speak($event, currentCard()?.word || currentCard()?.front || '')" title="Nghe phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              } @else {
+                <h3 class="card-meaning">{{ currentCard()?.meaning || currentCard()?.back }}</h3>
+              }
+            </div>
+
+            @if (!recallMode() && (currentCard()?.word || currentCard()?.front)) {
+              <div class="answer-word-sub">
+                <span class="answer-word">{{ currentCard()?.word || currentCard()?.front }}</span>
+                @if (currentCard()?.ipa) {
+                  <code class="card-ipa">{{ currentCard()?.ipa }}</code>
+                }
+                <button class="btn-icon audio-btn small" (click)="speak($event, currentCard()?.word || currentCard()?.front || '')" title="Nghe phát âm">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+            }
+            @if (recallMode() && (currentCard()?.ipa || posInfo().label || currentCard()?.meaning)) {
+              <div class="answer-word-sub">
+                @if (posInfo().label) {
+                  <span class="pos-chip" [ngClass]="posInfo().css">{{ posInfo().label }}</span>
+                }
+                @if (currentCard()?.meaning || currentCard()?.back) {
+                  <span class="answer-meaning">{{ currentCard()?.meaning || currentCard()?.back }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          @if (currentCard()?.definitionEn) {
+            <p class="def-en">{{ currentCard()?.definitionEn }}</p>
+          }
+
+          @if (detailExamples().length > 0) {
+            <div class="detail-block">
+              <span class="detail-label"><i class="fa-solid fa-quote-right"></i> Ví dụ</span>
+              @for (ex of detailExamples(); track $index) {
+                <div class="example-box">
+                  <p class="example-text">{{ ex.text }}</p>
+                  @if (ex.translation) {
+                    <p class="example-trans">{{ ex.translation }}</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (collocations().length > 0 || synonyms().length > 0) {
+            <div class="detail-block">
+              @if (collocations().length > 0) {
+                <div class="chip-row">
+                  <span class="chip-group-label colloc"><i class="fa-solid fa-link"></i> Kết hợp</span>
+                  <div class="chip-group">
+                    @for (col of collocations(); track $index) {
+                      <span class="rel-chip colloc-chip">{{ col }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (synonyms().length > 0) {
+                <div class="chip-row">
+                  <span class="chip-group-label syn"><i class="fa-solid fa-equals"></i> Đồng nghĩa</span>
+                  <div class="chip-group">
+                    @for (s of synonyms(); track $index) {
+                      <span class="rel-chip syn-chip">{{ s }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (currentCard()?.memoryTip || currentCard()?.usageNote) {
+            <div class="detail-block tips">
+              @if (currentCard()?.memoryTip) {
+                <p class="tip-line memory"><i class="fa-solid fa-lightbulb"></i> {{ currentCard()?.memoryTip }}</p>
+              }
+              @if (currentCard()?.usageNote) {
+                <p class="tip-line usage"><i class="fa-solid fa-circle-info"></i> {{ currentCard()?.usageNote }}</p>
+              }
+            </div>
+          }
+
+          <span class="flip-hint"><i class="fa-solid fa-hand-pointer"></i> Nhấp để quay lại mặt {{ recallMode() ? 'câu hỏi' : 'trước' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SRS Rating Controls Bar -->
+    <div class="srs-controls-bar">
+      @if (!isFlipped()) {
+        <button class="btn-primary show-ans-btn" (click)="toggleFlip()">
+          <i class="fa-solid fa-eye"></i> Hiện đáp án (Space)
+        </button>
+      } @else {
+        <div class="review-buttons">
+          <button class="srs-btn btn-again" (click)="rateCard(1)" title="Nhấn phím A">
+            <span class="btn-title">Again (A)</span>
+            <span class="interval">1 phút</span>
+          </button>
+          <button class="srs-btn btn-hard" (click)="rateCard(2)" title="Nhấn phím H">
+            <span class="btn-title">Hard (H)</span>
+            <span class="interval">1 ngày</span>
+          </button>
+          <button class="srs-btn btn-good" (click)="rateCard(3)" title="Nhấn phím G">
+            <span class="btn-title">Good (G)</span>
+            <span class="interval">3 ngày</span>
+          </button>
+          <button class="srs-btn btn-easy" (click)="rateCard(4)" title="Nhấn phím E">
+            <span class="btn-title">Easy (E)</span>
+            <span class="interval">7 ngày</span>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

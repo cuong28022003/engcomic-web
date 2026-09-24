@@ -12,6 +12,17 @@
   <div class="audio-main">
     <button
       type="button"
+      class="media-btn secondary"
+      [class.disabled]="!hasAudio()"
+      (click)="rewind()"
+      title="Lùi lại 10 giây"
+      [attr.aria-label]="'Lùi lại 10 giây'"
+    >
+      <i class="fa-solid fa-rotate-left"></i>
+    </button>
+
+    <button
+      type="button"
       class="media-btn"
       [class.disabled]="!hasAudio()"
       (click)="togglePlay()"
@@ -19,6 +30,17 @@
       title="Phát / Tạm dừng audio"
     >
       <i class="fa-solid" [ngClass]="isPlaying() ? 'fa-pause' : 'fa-play'"></i>
+    </button>
+
+    <button
+      type="button"
+      class="media-btn secondary"
+      [class.disabled]="!hasAudio()"
+      (click)="forward()"
+      title="Tiến tới 10 giây"
+      [attr.aria-label]="'Tiến tới 10 giây'"
+    >
+      <i class="fa-solid fa-rotate-right"></i>
     </button>
 
     <span class="time-display">{{ formatTime(currentTime()) }}</span>
