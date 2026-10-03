@@ -109,33 +109,12 @@ export class GrammarCardModalComponent {
 
     const wordsSet = new Set<string>();
 
-    // 1. Explicit typical words (nhập tay trong DB — nguồn chính xác nhất)
+    // Chỉ lọc các typical words (từ vựng tiêu biểu) — không hiển thị signal words ở mục này
     if (p.typicalWords && p.typicalWords.length > 0) {
       p.typicalWords.forEach(w => {
         if (w && w.trim()) wordsSet.add(w.trim());
       });
     }
-
-    // 2. Signal words từ điểm ngữ pháp (legacy field)
-    if (p.signalWords && p.signalWords.length > 0) {
-      p.signalWords.forEach(w => {
-        if (w && w.trim()) wordsSet.add(w.trim());
-      });
-    }
-
-    // 3. Signal words từ từng cách dùng (usages[].signalWords)
-    if (p.usages && p.usages.length > 0) {
-      p.usages.forEach(u => {
-        if (u.signalWords && u.signalWords.length > 0) {
-          u.signalWords.forEach(w => {
-            if (w && w.trim()) wordsSet.add(w.trim());
-          });
-        }
-      });
-    }
-
-    // NOTE: Không dùng USAGE_CATEGORY_GROUPS inference vì quá noisy —
-    // khi group match thì toàn bộ sub-categories bị kéo vào, gây ra nhiều từ không liên quan.
 
     return Array.from(wordsSet);
   });
