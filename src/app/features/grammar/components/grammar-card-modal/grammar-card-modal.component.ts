@@ -176,7 +176,8 @@ export class GrammarCardModalComponent {
 
   onVocabCardClick(card: Card): void {
     if (card.id) {
-      this.router.navigate(['/vocab/word', card.id]);
+      const url = this.router.serializeUrl(this.router.createUrlTree(['/vocab/word', card.id]));
+      window.open(url, '_blank');
     }
   }
 
