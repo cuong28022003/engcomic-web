@@ -69,9 +69,10 @@
           title="Không tìm thấy từ vựng phù hợp"
           message="Hãy thử tìm bằng từ tiếng Anh khác, nghĩa tiếng Việt, hoặc kiểm tra lại bộ lọc trạng thái."
         ></app-empty-state>
-      } @else if (results().length === 0 && !!query().trim()) {
-        <!-- Word not in Vocab Vault yet → quick lookup card (giống app-word-lookup-popup) -->
-        <div class="word-missing-card">
+      } @else {
+        <!-- Tra cứu nhanh: hiện card thêm từ khi từ khóa chưa nằm CHÍNH XÁC trong kho (dù có thể có kết quả liên quan) -->
+        @if (!!query().trim() && !exactWordMatched()) {
+          <div class="word-missing-card">
           <div class="wm-header">
             <span class="wm-badge"><i class="fa-solid fa-magnifying-glass"></i> Từ chưa có trong Vocab Vault</span>
           </div>
@@ -134,8 +135,10 @@
             </button>
           </div>
         </div>
-      } @else {
-        <div class="cards-list">
+        }
+
+        @if (results().length > 0) {
+          <div class="cards-list">
           @for (card of results(); track card.id; let i = $index) {
             <div
               class="card-result-item"
@@ -224,7 +227,8 @@
               </div>
             </div>
           }
-        </div>
+          </div>
+        }
       }
     </div>
 

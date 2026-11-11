@@ -490,7 +490,9 @@ export class DeckDetailComponent implements OnInit {
   }
 
   goToWordDetail(card: Card): void {
-    this.router.navigate(['/vocab/word', card.id]);
+    if (!card?.id) return;
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/vocab/word', card.id]));
+    window.open(url, '_blank');
   }
 
   playAudio(card: Card, event?: Event): void {

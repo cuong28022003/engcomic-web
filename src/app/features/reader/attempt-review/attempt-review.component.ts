@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, computed, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LoadingComponent, ErrorStateComponent, BreadcrumbComponent, BreadcrumbItem } from '@shared/components';
@@ -339,6 +339,26 @@ export class AttemptReviewComponent implements OnInit {
       const nextQ = this.filteredQuestions()[idx + 1];
       this.selectedQuestionNumber.set(nextQ.questionNumber);
       this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+
+    const target = event.target as HTMLElement | null;
+    const isTyping =
+      !!target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable);
+    if (isTyping) return;
+
+    event.preventDefault();
+    if (event.key === 'ArrowLeft') {
+      this.prevQuestion();
+    } else {
+      this.nextQuestion();
     }
   }
 

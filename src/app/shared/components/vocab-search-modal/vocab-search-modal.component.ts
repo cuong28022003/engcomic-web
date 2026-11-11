@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject, OnInit, OnDestroy, effect, ElementRef, ViewChild } from '@angular/core';
+import { Component, input, output, signal, computed, inject, OnInit, OnDestroy, effect, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -58,6 +58,14 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
   readonly loading = signal<boolean>(false);
   readonly selectedIndex = signal<number>(-1);
   readonly playingWord = signal<string | null>(null);
+
+  // Từ khóa không khớp chính xác (word) với bất kỳ kết quả nào trong kho → hiện luôn card tra cứu nhanh,
+  // dù vẫn có các kết quả liên quan (từ gần nghĩa / chứa từ khóa) được hiển thị bên dưới.
+  readonly exactWordMatched = computed<boolean>(() => {
+    const clean = this.query().trim().toLowerCase();
+    if (!clean) return false;
+    return this.results().some(c => (c.word || '').trim().toLowerCase() === clean);
+  });
 
   // Word không có trong Vault → hiển thị tra cứu nhanh (giống app-word-lookup-popup)
   readonly searchWordInfo = signal<TranslateResponse | null>(null);
@@ -175,7 +183,7 @@ export class VocabSearchModalComponent implements OnInit, OnDestroy {
 
   private checkMissingWordLookup(): void {
     const clean = this.query().trim();
-    if (!this.loading() && clean && this.results().length === 0) {
+    if (!this.loading() && clean && !this.exactWordMatched()) {
       this.lookupMissingWord(clean);
     } else {
       this.searchWordInfo.set(null);

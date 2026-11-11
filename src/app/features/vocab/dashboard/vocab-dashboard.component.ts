@@ -681,7 +681,9 @@ export class VocabDashboardComponent implements OnInit, OnDestroy {
   }
 
   goToDetail(card: Card) {
-    this.router.navigate(['/vocab/word', card.id]);
+    if (!card?.id) return;
+    const url = this.router.serializeUrl(this.router.createUrlTree(['/vocab/word', card.id]));
+    window.open(url, '_blank');
   }
 
   startPractice() {

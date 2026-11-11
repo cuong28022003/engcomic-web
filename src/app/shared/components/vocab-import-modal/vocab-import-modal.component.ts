@@ -532,7 +532,14 @@ QUY TẮC QUAN TRỌNG:
       next: (res: BatchImportResult) => {
         this.isImporting.set(false);
         const importedCount = res.imported ? res.imported.length : 0;
-        this.toast.success(`Đã thêm thành công ${importedCount} từ vựng vào kho!`);
+        const skippedCount = res.skipped ? res.skipped.length : 0;
+        if (importedCount > 0) {
+          this.toast.success(`Đã thêm thành công ${importedCount} từ vựng vào kho!${skippedCount > 0 ? ` (bỏ qua ${skippedCount} từ trùng với từ trong kho)` : ''}`);
+        } else if (skippedCount > 0) {
+          this.toast.warning(`Không có từ mới — ${skippedCount} từ đều đã tồn tại trong kho từ vựng, đã bỏ qua.`);
+        } else {
+          this.toast.success('Đã thêm thành công 0 từ vựng vào kho!');
+        }
         this.pendingCountService.refresh();
         this.vocabAdded.emit({ count: importedCount, deckId: dId });
         this.onClose();
