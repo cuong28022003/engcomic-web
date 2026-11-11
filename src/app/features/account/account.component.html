@@ -6,6 +6,7 @@
         [avatarUrl]="currentUser?.avatarUrl || 'assets/image/avt.png'"
         [frameId]="userStats?.equippedAvatarFrame || 'frame_default'"
         size="lg"
+        shape="circle"
         [showGlow]="true"
       ></app-avatar-frame>
 
@@ -33,7 +34,7 @@
         <i class="fa-solid fa-layer-group"></i> Quản lý bộ thẻ SRS
       </a>
       <a [routerLink]="['/user', userId, 'change-password']" routerLinkActive="active" class="side-link">
-        <i class="fa-solid fa-key"></i> Đổi mật khẩu
+        <i class="fa-solid fa-shield-halved"></i> Tài khoản & bảo mật
       </a>
       <a [routerLink]="['/user', userId, 'topup-history']" routerLinkActive="active" class="side-link">
         <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử nạp tiền

@@ -1,7 +1,7 @@
 <header class="navbar-wrapper">
   <div class="navbar-container">
     <!-- Logo -->
-    <a routerLink="/" class="logo-brand">
+    <a routerLink="/" class="logo-brand" [title]="'Về trang chủ'">
       <div class="logo-icon">
         <i class="fa-solid fa-book-open-reader"></i>
       </div>
@@ -25,7 +25,6 @@
       <a routerLink="/leaderboard" routerLinkActive="active" class="nav-item">
         <i class="fa-solid fa-ranking-star"></i> Bảng xếp hạng
       </a>
-
     </nav>
 
     <!-- User Actions / Profile & Language Switcher -->
@@ -33,21 +32,25 @@
       <!-- Quick Vocab Search Trigger -->
       <button
         type="button"
-        class="nav-quick-search-btn"
+        class="icon-btn quick-search-btn"
         (click)="openVocabSearch()"
         title="Tra cứu nhanh từ vựng (Ctrl+K)"
+        aria-label="Tra cứu nhanh từ vựng"
       >
         <i class="fa-solid fa-magnifying-glass"></i>
-        <span class="search-label">Tìm từ...</span>
-        <kbd class="shortcut-badge">Ctrl K</kbd>
+        <kbd class="shortcut-badge">K</kbd>
       </button>
 
       <!-- Language Switcher Dropdown -->
       <div class="lang-dropdown-wrapper">
-        <button class="lang-btn" (click)="toggleLangMenu()" [title]="'Chuyển đổi ngôn ngữ'">
+        <button
+          class="icon-btn lang-btn"
+          (click)="toggleLangMenu()"
+          [title]="'Ngôn ngữ: ' + i18n.currentLanguageOption().name"
+          aria-label="Chọn ngôn ngữ"
+        >
           <span class="lang-flag">{{ i18n.currentLanguageOption().flag }}</span>
-          <span class="lang-code">{{ i18n.currentLanguageOption().code.toUpperCase() }}</span>
-          <i class="fa-solid fa-angle-down"></i>
+          <i class="fa-solid fa-angle-down chev"></i>
         </button>
 
         @if (isLangMenuOpen) {
@@ -75,10 +78,10 @@
           type="button"
           class="stat-badge streak-badge"
           (click)="openStreakModal()"
-          [title]="'Xem chi tiết chuỗi học tập (' + ((userStats?.currentStreak ?? userStats?.streakDays ?? 0) + ' ngày)')"
+          [title]="'Chuỗi học tập: ' + ((userStats?.currentStreak ?? userStats?.streakDays ?? 0) + ' ngày')"
         >
           <i class="fa-solid fa-fire fire-icon" [class.studied]="userStats?.studiedToday"></i>
-          <span>{{ userStats?.currentStreak ?? userStats?.streakDays ?? 0 }} ngày</span>
+          <span>{{ userStats?.currentStreak ?? userStats?.streakDays ?? 0 }}</span>
         </button>
 
         <!-- Diamonds counter -->
@@ -89,15 +92,20 @@
 
         <!-- Avatar & Menu Dropdown -->
         <div class="profile-dropdown-wrapper">
-          <button class="profile-btn" (click)="toggleProfileMenu()">
+          <button
+            class="profile-btn"
+            (click)="toggleProfileMenu()"
+            [title]="currentUser.username"
+            aria-label="Menu tài khoản"
+          >
             <app-avatar-frame
               [avatarUrl]="currentUser.avatarUrl || 'assets/image/avt.png'"
               [frameId]="userStats?.equippedAvatarFrame || 'frame_default'"
               size="sm"
+              shape="circle"
               [showGlow]="true"
             ></app-avatar-frame>
-            <span class="user-name">{{ currentUser.username }}</span>
-            <i class="fa-solid fa-angle-down"></i>
+            <i class="fa-solid fa-angle-down chev"></i>
           </button>
 
           @if (isProfileMenuOpen) {
@@ -128,15 +136,6 @@
                 <i class="fa-solid fa-key"></i> Đổi mật khẩu
               </a>
               <hr class="menu-divider" />
-              <a [href]="ecosystem.comicsUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
-                <i class="fa-solid fa-book-open"></i> Đọc truyện tranh (React)
-              </a>
-              <a [href]="ecosystem.gachaUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
-                <i class="fa-solid fa-gem"></i> Quay Gacha nhân vật
-              </a>
-              <a [href]="ecosystem.fightingGameUrl" target="_blank" (click)="closeProfileMenu()" class="menu-item highlight-item">
-                <i class="fa-solid fa-gamepad"></i> Đấu trường Fighting Game
-              </a>
               @if (isAdmin) {
                 <hr class="menu-divider" />
                 <a routerLink="/admin" (click)="closeProfileMenu()" class="menu-item admin-item">

@@ -140,6 +140,27 @@
   }
 }
 
+// ── CIRCLE SHAPE VARIANT ─────────────────────────────────────────────────────
+.shape-circle {
+  .badge-shield {
+    width: 90px;
+    height: 90px;
+    clip-path: none;
+    border-radius: 50%;
+  }
+
+  .shield-pattern,
+  .shield-inner-border {
+    clip-path: none;
+    border-radius: 50%;
+  }
+
+  .avatar-hexagon-img {
+    clip-path: none;
+    border-radius: 50%;
+  }
+}
+
 // Sparkle / Glint star shape
 .glint {
   position: absolute;
@@ -726,15 +747,7 @@
 // SHARED: Scale khiên khi hover + kim cương nở thành khẩu trang ninja
 .rank-avatar-frame-container:hover {
   .badge-shield {
-    transform: scale(1.08);
-  }
-  // Kim cương nở phủ vùng mũi-miệng (~1/3 dưới lục giác) — khẩu trang ninja
-  .gem-core {
-    transform: translateY(6px) rotate(45deg) scale(4.5);
-    box-shadow: 0 0 26px rgba(255, 255, 255, 0.85), 0 0 12px rgba(255, 255, 255, 0.5);
-  }
-  .crown {
-    animation-duration: 1s;
+    transform: scale(1.06);
   }
   .avatar-hexagon-img {
     filter: brightness(1.1) saturate(1.15);
@@ -945,3 +958,4 @@
   }
 }
 
+.rank-avatar-frame-container:hover .badge-shield{transform:scale(1.08)}.rank-avatar-frame-container:hover .avatar-hexagon-img{filter:brightness(1.12) saturate(1.18)}

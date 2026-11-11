@@ -5,8 +5,9 @@ import {
   HttpErrorResponse,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { throwError, switchMap, catchError } from 'rxjs';
+import { throwError, switchMap, catchError, from } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { KeycloakService } from '../services/keycloak.service';
 
 import { environment } from '@env/environment';
 
@@ -50,12 +51,40 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ) => {
   const authService = inject(AuthService);
+  const keycloak = inject(KeycloakService);
 
   // Skip auth header for public endpoints
   if (isPublicUrl(req.url)) {
     return next(req);
   }
 
+  // ── Keycloak (OIDC) flow: refresh if needed, then attach token ────────────
+  if (keycloak.isAuthenticated) {
+    return from(keycloak.refresh(30)).pipe(
+      switchMap(() => {
+        const token = keycloak.token;
+        return next(token ? addToken(req, token) : req).pipe(
+          catchError((err: HttpErrorResponse) => {
+            if (err.status === 401) {
+              return from(keycloak.refresh(0)).pipe(
+                switchMap(() => {
+                  const refreshed = keycloak.token;
+                  return refreshed
+                    ? next(addToken(req, refreshed))
+                    : throwError(() => err);
+                }),
+                catchError((refreshErr) => throwError(() => refreshErr))
+              );
+            }
+            return throwError(() => err);
+          })
+        );
+      }),
+      catchError(() => next(req))
+    );
+  }
+
+  // ── Classic (self-issued JWT) flow ───────────────────────────────────────
   const token = authService.accessToken;
 
   // If no token at all, just pass through

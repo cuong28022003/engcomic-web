@@ -8,6 +8,7 @@
           [avatarUrl]="currentUser()?.avatarUrl || ''"
           [frameId]="getTierClass(currentRankIndex())"
           size="lg"
+          shape="circle"
           [showGlow]="true"
         ></app-avatar-frame>
       </div>
@@ -143,6 +144,7 @@
               [tier]="idx"
               [badgeImgUrl]="getTierBadgeImage(idx)"
               size="xl"
+              shape="circle"
               [showGlow]="true"
             ></app-avatar-frame>
           </div>

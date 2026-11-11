@@ -1,125 +1,38 @@
 <app-modal
   [isOpen]="isOpen()"
-  title="Chuỗi Ngày Học Tập"
-  size="lg"
+  title="Chuỗi học"
+  size="sm"
   (closed)="onClose()"
 >
   <div class="streak-modal-body">
-    <!-- 1. Big Flame Hero Display -->
-    <div class="streak-hero-section">
-      <div class="flame-glow-circle" [class.flame-active]="isStudiedToday()">
-        <i class="fa-solid fa-fire big-flame-icon"></i>
+    <div class="streak-hero">
+      <div class="flame-wrap" [class.active]="isStudiedToday()">
+        <i class="fa-solid fa-fire"></i>
       </div>
-
-      <div class="streak-counter-wrap">
-        <div class="streak-number">{{ streakCount() }}</div>
-        <div class="streak-unit">Ngày liên tiếp</div>
-      </div>
-
-      <div class="streak-status-pill" [class.status-completed]="isStudiedToday()">
+      <div class="streak-count">{{ streakCount() }}</div>
+      <div class="streak-label">ngày liên tiếp</div>
+      <div class="streak-sub" [class.done]="isStudiedToday()">
         @if (isStudiedToday()) {
-          <i class="fa-solid fa-circle-check"></i>
-          <span>Hôm nay ngọn lửa đã được thắp sáng! Tiếp tục phát huy nhé 🔥</span>
+          <span>Đã học hôm nay!</span>
         } @else {
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>Hôm nay chưa học! Hãy luyện tập bộ thẻ hoặc giải đề để duy trì chuỗi ngọn lửa 🔥</span>
+          <span>Học bài để duy trì chuỗi</span>
         }
       </div>
     </div>
 
-    <!-- 2. Weekly 7-Day Calendar Streak -->
-    <div class="weekly-streak-card glass-panel">
-      <div class="card-header-row">
-        <span class="card-title"><i class="fa-regular fa-calendar-check"></i> Tuần này</span>
-        <span class="card-meta">Kỷ lục: <strong>{{ longestStreak() }} ngày</strong></span>
-      </div>
-
-      <div class="days-row">
-        @for (d of weekDays(); track d.dayLabel) {
-          <div
-            class="day-col"
-            [class.is-today]="d.isToday"
-            [class.is-completed]="d.isCompleted"
-            [class.is-past]="d.isPast"
-          >
-            <span class="day-label">{{ d.dayLabel }}</span>
-            <div class="day-icon-circle">
-              @if (d.isCompleted) {
-                <i class="fa-solid fa-fire fire-mini"></i>
-              } @else if (d.isToday) {
-                <span class="today-dot"></span>
-              } @else {
-                <i class="fa-regular fa-circle empty-dot"></i>
-              }
-            </div>
-            <span class="day-date">{{ d.dateStr }}</span>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- 3. Milestone Rewards Progress -->
-    <div class="milestone-card glass-panel">
-      <div class="milestone-header">
-        <div class="m-left">
-          <i class="fa-solid fa-gift gift-icon"></i>
-          <div>
-            <div class="m-title">Mục tiêu chuỗi {{ nextMilestone().target }} ngày</div>
-            <div class="m-reward">Thưởng: {{ nextMilestone().reward }}</div>
+    <div class="week-row">
+      @for (d of weekDays(); track d.dayLabel) {
+        <div class="week-day" [class.today]="d.isToday" [class.done]="d.isCompleted">
+          <span class="day-name">{{ d.dayLabel }}</span>
+          <div class="day-dot">
+            @if (d.isCompleted) {
+              <i class="fa-solid fa-check"></i>
+            } @else if (d.isToday) {
+              <div class="dot"></div>
+            }
           </div>
         </div>
-        <span class="m-percent">{{ nextMilestone().progress }}%</span>
-      </div>
-
-      <div class="m-progress-bar-bg">
-        <div class="m-progress-fill" [style.width.%]="nextMilestone().progress"></div>
-      </div>
-    </div>
-
-    <!-- 4. Quick Study Modules Hub -->
-    <div class="study-modules-hub">
-      <div class="hub-title">
-        <i class="fa-solid fa-bolt-lightning"></i>
-        <span>Chọn hoạt động học để duy trì chuỗi</span>
-      </div>
-
-      <div class="modules-grid">
-        <button type="button" class="module-btn" (click)="goToDecks()">
-          <div class="mod-icon deck"><i class="fa-solid fa-layer-group"></i></div>
-          <div class="mod-info">
-            <div class="mod-name">Luyện Tập Theo Bộ Thẻ (Decks)</div>
-            <div class="mod-desc">Ôn Flashcards & bài tập 4 Level</div>
-          </div>
-          <i class="fa-solid fa-chevron-right mod-arrow"></i>
-        </button>
-
-        <button type="button" class="module-btn" (click)="goToToeic()">
-          <div class="mod-icon toeic"><i class="fa-solid fa-file-lines"></i></div>
-          <div class="mod-info">
-            <div class="mod-name">Giải Đề Thi TOEIC Reading</div>
-            <div class="mod-desc">Thi thử bấm giờ & phân tích đề</div>
-          </div>
-          <i class="fa-solid fa-chevron-right mod-arrow"></i>
-        </button>
-
-        <button type="button" class="module-btn" (click)="goToGrammar()">
-          <div class="mod-icon grammar"><i class="fa-solid fa-book-bookmark"></i></div>
-          <div class="mod-info">
-            <div class="mod-name">Thư Viện Ngữ Pháp TOEIC</div>
-            <div class="mod-desc">Chuyên đề ngữ pháp & tình huống</div>
-          </div>
-          <i class="fa-solid fa-chevron-right mod-arrow"></i>
-        </button>
-
-        <button type="button" class="module-btn" (click)="goToVocabVault()">
-          <div class="mod-icon vocab"><i class="fa-solid fa-vault"></i></div>
-          <div class="mod-info">
-            <div class="mod-name">Kho Từ Vựng Vocab Vault</div>
-            <div class="mod-desc">Quản lý sổ từ, tạo deck & tra cứu</div>
-          </div>
-          <i class="fa-solid fa-chevron-right mod-arrow"></i>
-        </button>
-      </div>
+      }
     </div>
   </div>
 </app-modal>

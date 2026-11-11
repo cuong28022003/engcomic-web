@@ -18,29 +18,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 14px;
   padding: 0 20px;
 }
 
 .logo-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.35rem;
+  gap: 8px;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .logo-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   box-shadow: 0 4px 15px rgba(255, 51, 119, 0.4);
 }
 
@@ -51,22 +52,32 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 4px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .nav-item, .dropdown-trigger {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: color 0.2s;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  transition: color 0.2s, background 0.2s;
 }
 
-.nav-item:hover, .dropdown-trigger:hover, .nav-item.active {
+.nav-item:hover, .dropdown-trigger:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item.active {
+  color: #fff;
+  background: rgba(99, 102, 241, 0.16);
 }
 
 .gacha-link:hover { color: #a855f7 !important; }
@@ -77,67 +88,57 @@
 .user-section {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.nav-quick-search-btn {
+/* Nút icon tròn dùng chung cho tìm kiếm / ngôn ngữ */
+.icon-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #94a3b8;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-  i {
-    font-size: 0.8rem;
-    color: #818cf8;
-  }
-
-  .search-label {
-    color: #cbd5e1;
-  }
-
-  .shortcut-badge {
-    padding: 1px 5px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-    font-size: 0.68rem;
-    color: #94a3b8;
-    font-family: inherit;
-  }
-
   &:hover {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(99, 102, 241, 0.16);
     border-color: rgba(99, 102, 241, 0.4);
     color: #fff;
     transform: translateY(-1px);
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
-
-    .search-label {
-      color: #fff;
-    }
-
-    .shortcut-badge {
-      border-color: rgba(99, 102, 241, 0.5);
-      color: #c7d2fe;
-    }
   }
+}
+
+.quick-search-btn .shortcut-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  padding: 0 4px;
+  min-width: 14px;
+  background: rgba(99, 102, 241, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  font-size: 0.56rem;
+  line-height: 14px;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
 }
 
 .stat-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 5px;
+  padding: 6px 10px;
   border-radius: var(--radius-full);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -189,36 +190,13 @@
 }
 
 .lang-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-full);
-  color: var(--text-main);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--primary-color);
-    background: rgba(255, 51, 119, 0.08);
-    transform: translateY(-1px);
-  }
-
   .lang-flag {
     font-size: 1rem;
     line-height: 1;
   }
 
-  .lang-code {
-    letter-spacing: 0.5px;
-  }
-
-  i {
-    font-size: 0.72rem;
+  .chev {
+    font-size: 0.62rem;
     color: var(--text-dim);
     transition: transform 0.2s;
   }
@@ -290,29 +268,32 @@
 .profile-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   border-radius: var(--radius-full);
+  transition: opacity 0.2s;
+
+  .chev {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+
+  &:hover .chev {
+    transform: translateY(1px);
+    color: var(--text-main);
+  }
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--primary-color);
-}
-
-.user-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .dropdown-menu {

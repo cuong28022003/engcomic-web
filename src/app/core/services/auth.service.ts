@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
@@ -8,6 +8,7 @@ import { initializeApp } from 'firebase/app';
 import { getStorage } from 'firebase/storage';
 import { environment } from '@env/environment';
 import { StorageService } from './storage.service';
+import { KeycloakService } from './keycloak.service';
 import {
   AuthResponse,
   CurrentUser,
@@ -41,7 +42,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private storage: StorageService
+    private storage: StorageService,
+    private keycloak: KeycloakService
   ) {
     // Restore from localStorage on app init
     const saved = this.storage.getItem<CurrentUser>(STORAGE_KEY);
@@ -61,10 +63,15 @@ export class AuthService {
   }
 
   get accessToken(): string | null {
+    if (this.keycloak.isAuthenticated && this.keycloak.token) {
+      return this.keycloak.token;
+    }
     return this.currentUser?.accessToken ?? null;
   }
 
   isLoggedIn(): boolean {
+    if (this.keycloak.isAuthenticated) return true;
+
     const user = this.currentUser;
     if (!user?.accessToken) return false;
     try {
@@ -130,9 +137,54 @@ export class AuthService {
   }
 
   logout(): void {
+    const wasKeycloakSession = this.keycloak.isAuthenticated;
     this._currentUser$.next(null);
     this.storage.removeItem(STORAGE_KEY);
+
+    if (wasKeycloakSession) {
+      this.keycloak.logout();
+      return;
+    }
+
     this.router.navigate([FULL_ROUTE.login]);
+  }
+
+  /**
+   * After a successful Keycloak login, ask the backend to link/upsert the
+   * Mongo user (by claim `sub`) and hydrate the current user profile.
+   */
+  async syncKeycloakUser(): Promise<void> {
+    const token = this.keycloak.token;
+    if (!token) return;
+
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{ data?: Record<string, unknown> }>(
+          `${this.BASE}/keycloak/sync`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+
+      const raw = (res?.data ?? res) as Record<string, unknown>;
+      const roles = Array.isArray(raw?.['roles'])
+        ? (raw['roles'] as string[])
+        : [];
+
+      const user: CurrentUser = {
+        accessToken: token,
+        refreshToken: '',
+        userId: (raw?.['id'] as string) || (raw?.['userId'] as string),
+        username: raw?.['username'] as string,
+        email: raw?.['email'] as string,
+        roles,
+        avatarUrl: (raw?.['imageUrl'] as string) || (raw?.['avatarUrl'] as string),
+      };
+
+      this._persistUser(user);
+    } catch (error) {
+      console.error('Keycloak user sync failed', error);
+    }
   }
 
   refreshToken(): Observable<string> {

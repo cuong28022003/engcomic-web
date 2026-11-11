@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
+import { KeycloakService } from '@core/services/keycloak.service';
 import { ToastService } from '@core/services/toast.service';
 
 function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
@@ -19,9 +20,12 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 })
 export class ChangePasswordComponent {
   private auth = inject(AuthService);
+  private keycloak = inject(KeycloakService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
+  readonly keycloakEnabled = this.keycloak.enabled;
+  readonly user = this.auth.currentUser;
   readonly loading = signal(false);
   readonly success = signal(false);
 
@@ -52,6 +56,13 @@ export class ChangePasswordComponent {
     if (score <= 2) return { level: 'weak', label: 'Yếu', pct: 33 };
     if (score === 3) return { level: 'fair', label: 'Trung bình', pct: 66 };
     return { level: 'strong', label: 'Mạnh', pct: 100 };
+  }
+
+  onOpenKeycloakAccount(): void {
+    this.keycloak.accountManagement().catch((err) => {
+      this.toast.error('Không thể mở trang quản lý tài khoản Keycloak');
+      console.error(err);
+    });
   }
 
   onSubmit(): void {

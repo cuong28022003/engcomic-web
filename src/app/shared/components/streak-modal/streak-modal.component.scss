@@ -1,408 +1,129 @@
 .streak-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 0;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 8px 12px;
 }
 
-// ── 1. Hero Fire Flame Display ─────────────────────────────────────────
-.streak-hero-section {
+.streak-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
-  padding: 0;
+  gap: 6px;
+}
 
-  .flame-glow-circle {
-    width: 68px;
-    height: 68px;
+.flame-wrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.18) 0%, transparent 70%);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  color: #fb923c;
+
+  i {
+    font-size: 2.1rem;
+  }
+
+  &.active {
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.32) 0%, transparent 72%);
+    color: #fbbf24;
+    box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.08);
+  }
+}
+
+.streak-count {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.streak-label {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.streak-sub {
+  font-size: 0.85rem;
+  color: #94a3b8;
+
+  &.done {
+    color: #22c55e;
+  }
+}
+
+.week-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+
+  .day-name {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+
+  .day-dot {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.04) 70%, transparent 100%);
-    border: 2px solid rgba(249, 115, 22, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.25);
-    transition: all 0.3s ease;
-
-    .big-flame-icon {
-      font-size: 2.2rem;
-      color: #fb923c;
-      filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.6));
-      animation: flamePulse 2s infinite ease-in-out;
-    }
-
-    &.flame-active {
-      background: radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, rgba(239, 68, 68, 0.15) 70%, transparent 100%);
-      border-color: #f97316;
-      box-shadow: 0 0 30px rgba(249, 115, 22, 0.45);
-
-      .big-flame-icon {
-        color: #ffedd5;
-        filter: drop-shadow(0 0 14px #f97316) drop-shadow(0 0 24px rgba(239, 68, 68, 0.8));
-      }
-    }
-  }
-
-  .streak-counter-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .streak-number {
-      font-size: 2.4rem;
-      font-weight: 900;
-      line-height: 1;
-      background: linear-gradient(135deg, #ffedd5 0%, #fb923c 45%, #ea580c 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.03em;
-    }
-
-    .streak-unit {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #fdba74;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 2px;
-    }
-  }
-
-  .streak-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    background: rgba(245, 158, 11, 0.12);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    color: #fde047;
+    background: rgba(148, 163, 184, 0.16);
+    color: transparent;
 
     i {
       font-size: 0.85rem;
-      color: #f59e0b;
     }
 
-    &.status-completed {
-      background: rgba(34, 197, 94, 0.12);
-      border-color: rgba(34, 197, 94, 0.35);
-      color: #86efac;
-
-      i {
-        color: #22c55e;
-      }
-    }
-  }
-}
-
-// ── 2. Weekly 7-Day Calendar Streak ───────────────────────────────────
-.weekly-streak-card {
-  background: rgba(18, 22, 36, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.8rem;
-
-    .card-title {
-      color: #cbd5e1;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-
-      i {
-        color: #f97316;
-      }
-    }
-
-    .card-meta {
-      color: #94a3b8;
-
-      strong {
-        color: #fef08a;
-      }
-    }
-  }
-
-  .days-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
-
-  .day-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 2px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-
-    .day-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-
-    .day-icon-circle {
-      width: 28px;
-      height: 28px;
+    .dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.3);
-
-      .fire-mini {
-        color: #f97316;
-        font-size: 0.85rem;
-        filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.7));
-      }
-
-      .today-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #f59e0b;
-        box-shadow: 0 0 8px #f59e0b;
-      }
-
-      .empty-dot {
-        color: #475569;
-        font-size: 0.6rem;
-      }
-    }
-
-    .day-date {
-      font-size: 0.65rem;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    &.is-today {
-      border-color: rgba(245, 158, 11, 0.4);
-      background: rgba(245, 158, 11, 0.08);
-
-      .day-label {
-        color: #f59e0b;
-      }
-    }
-
-    &.is-completed {
-      background: rgba(249, 115, 22, 0.12);
-      border-color: rgba(249, 115, 22, 0.3);
-
-      .day-label {
-        color: #fb923c;
-      }
-
-      .day-icon-circle {
-        background: rgba(249, 115, 22, 0.2);
-      }
-    }
-  }
-}
-
-// ── 3. Milestone Rewards Progress ─────────────────────────────────────
-.milestone-card {
-  background: rgba(18, 22, 36, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .milestone-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .m-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      .gift-icon {
-        font-size: 1.2rem;
-        color: #c084fc;
-        filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.5));
-      }
-
-      .m-title {
-        font-size: 0.84rem;
-        font-weight: 700;
-        color: #f8fafc;
-      }
-
-      .m-reward {
-        font-size: 0.74rem;
-        color: #a855f7;
-        font-weight: 600;
-      }
-    }
-
-    .m-percent {
-      font-size: 0.8rem;
-      font-weight: 800;
-      color: #c084fc;
+      background: #94a3b8;
     }
   }
 
-  .m-progress-bar-bg {
-    width: 100%;
-    height: 7px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 4px;
-    overflow: hidden;
-
-    .m-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
-      border-radius: 4px;
-      transition: width 0.4s ease;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-    }
-  }
-}
-
-// ── 4. Study Modules Hub ──────────────────────────────────────────────
-.study-modules-hub {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .hub-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    i {
+  &.today {
+    .day-name {
       color: #f59e0b;
     }
+    .day-dot {
+      background: rgba(245, 158, 11, 0.22);
+      .dot {
+        background: #f59e0b;
+      }
+    }
   }
 
-  .modules-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-
-    @media (max-width: 540px) {
-      grid-template-columns: 1fr;
+  &.done {
+    .day-name {
+      color: #fb923c;
     }
-
-    .module-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s ease;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(249, 115, 22, 0.35);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-
-        .mod-arrow {
-          transform: translateX(3px);
-          color: #fb923c;
-        }
-      }
-
-      .mod-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
-        flex-shrink: 0;
-
-        &.deck {
-          background: rgba(59, 130, 246, 0.15);
-          color: #60a5fa;
-        }
-
-        &.toeic {
-          background: rgba(249, 115, 22, 0.15);
-          color: #fb923c;
-        }
-
-        &.grammar {
-          background: rgba(16, 185, 129, 0.15);
-          color: #34d399;
-        }
-
-        &.vocab {
-          background: rgba(168, 85, 247, 0.15);
-          color: #c084fc;
-        }
-      }
-
-      .mod-info {
-        flex: 1;
-        min-width: 0;
-
-        .mod-name {
-          font-size: 0.82rem;
-          font-weight: 700;
-          color: #f1f5f9;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .mod-desc {
-          font-size: 0.7rem;
-          color: #64748b;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .mod-arrow {
-        color: #475569;
-        font-size: 0.72rem;
-        transition: transform 0.2s ease;
-      }
+    .day-dot {
+      background: rgba(249, 115, 22, 0.28);
+      color: #fff7ed;
     }
   }
 }
 
-@keyframes flamePulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.08);
+@media (max-width: 420px) {
+  .week-row {
+    gap: 8px;
   }
 }

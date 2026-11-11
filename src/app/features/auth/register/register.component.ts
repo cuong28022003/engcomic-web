@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
+import { KeycloakService } from '@core/services/keycloak.service';
 import { ToastService } from '@core/services/toast.service';
 
 @Component({
@@ -20,6 +21,13 @@ import { ToastService } from '@core/services/toast.service';
           <p class="subtitle">Bắt đầu hành trình đọc truyện và học tiếng Anh cùng EngComic</p>
         </div>
 
+        @if (keycloakEnabled) {
+          <div class="auth-form">
+            <button type="button" class="btn-keycloak submit-btn" (click)="onRegisterWithKeycloak()">
+              <i class="fa-solid fa-user-plus"></i> Đăng ký với Keycloak
+            </button>
+          </div>
+        } @else {
         <form (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
             <label for="username">Tên đăng nhập</label>
@@ -96,6 +104,7 @@ import { ToastService } from '@core/services/toast.service';
             }
           </button>
         </form>
+        }
 
         <div class="auth-footer">
           <p>Đã có tài khoản? <a routerLink="/login" class="link-highlight">Đăng nhập</a></p>
@@ -210,6 +219,24 @@ import { ToastService } from '@core/services/toast.service';
 
     .toggle-pwd-btn:hover { color: #fff; }
 
+    .btn-keycloak {
+      width: 100%;
+      padding: 13px;
+      font-size: 0.95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: #4f9deb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-keycloak:hover {
+      background: #3d8bd8;
+      box-shadow: 0 4px 18px rgba(79, 157, 235, 0.4);
+    }
+
     .submit-btn {
       width: 100%;
       padding: 13px;
@@ -237,15 +264,24 @@ import { ToastService } from '@core/services/toast.service';
 })
 export class RegisterComponent {
   private authService = inject(AuthService);
+  private keycloak = inject(KeycloakService);
   private toast = inject(ToastService);
   private router = inject(Router);
 
+  readonly keycloakEnabled = this.keycloak.enabled;
   username = '';
   email = '';
   password = '';
   confirmPassword = '';
   showPassword = false;
   loading = false;
+
+  onRegisterWithKeycloak(): void {
+    this.keycloak.register(`${window.location.origin}/login`).catch((err) => {
+      this.toast.error('Không thể kết nối Keycloak');
+      console.error(err);
+    });
+  }
 
   onSubmit(): void {
     if (!this.username.trim() || !this.email.trim() || !this.password.trim()) {

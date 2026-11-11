@@ -2,6 +2,12 @@ export const environment = {
   production: true,
   apiUrl: 'https://web-production-73fb63.up.railway.app/api',
   comicAppUrl: 'http://localhost:3000',
+  keycloak: {
+    enabled: true,
+    url: 'https://keycloak.your-domain.com',
+    realm: 'myapp',
+    clientId: 'angular-app',
+  },
   firebaseConfig: {
     apiKey: 'AIzaSyA0Psy4GpZ_ls5yzpspQg5q5BMdSLbVyuQ',
     authDomain: 'story-e3425.firebaseapp.com',

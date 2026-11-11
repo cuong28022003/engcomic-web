@@ -24,8 +24,14 @@ export class AvatarFrameComponent {
   /** Kích cỡ: sm (38px), md (52px), lg (82px), xl (120px) */
   readonly size = input<'sm' | 'md' | 'lg' | 'xl'>('md');
 
+  /** Hình dạng khung: lục giác mặc định hoặc tròn */
+  readonly shape = input<'hexagon' | 'circle'>('hexagon');
+
   /** Bật/tắt hiệu ứng hào quang sáng */
   readonly showGlow = input<boolean>(true);
+
+  /** CSS class hình dạng khung */
+  readonly shapeClass = computed<string>(() => `shape-${this.shape()}`);
 
   /** Xác định tier index (0: Bronze .. 6: Legend) */
   readonly tierIndex = computed<number>(() => {

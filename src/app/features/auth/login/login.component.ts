@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
+import { KeycloakService } from '@core/services/keycloak.service';
 import { ToastService } from '@core/services/toast.service';
 
 @Component({
@@ -21,59 +22,72 @@ import { ToastService } from '@core/services/toast.service';
         </div>
 
         <form (ngSubmit)="onSubmit()" class="auth-form">
-          <div class="form-group">
-            <label for="username">Tên đăng nhập</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-user input-icon"></i>
-              <input
-                id="username"
-                type="text"
-                name="username"
-                [(ngModel)]="username"
-                placeholder="Nhập username"
-                required
-                autocomplete="username"
-              />
+          @if (keycloakEnabled) {
+            <button type="button" class="btn-keycloak submit-btn" (click)="onLoginWithKeycloak()">
+              <i class="fa-solid fa-key"></i> Đăng nhập với Keycloak
+            </button>
+            <button type="button" class="btn-keycloak submit-btn" (click)="onRegisterWithKeycloak($event)">
+              <i class="fa-solid fa-user-plus"></i> Đăng ký tài khoản
+            </button>
+          } @else {
+            <div class="form-group">
+              <label for="username">Tên đăng nhập</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  [(ngModel)]="username"
+                  placeholder="Nhập username"
+                  required
+                  autocomplete="username"
+                />
+              </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <div class="label-row">
-              <label for="password">Mật khẩu</label>
-              <a href="#" class="forgot-link" (click)="onForgotPassword($event)">Quên mật khẩu?</a>
+            <div class="form-group">
+              <div class="label-row">
+                <label for="password">Mật khẩu</label>
+                <a href="#" class="forgot-link" (click)="onForgotPassword($event)">Quên mật khẩu?</a>
+              </div>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input
+                  id="password"
+                  [type]="showPassword ? 'text' : 'password'"
+                  name="password"
+                  [(ngModel)]="password"
+                  placeholder="Nhập mật khẩu"
+                  required
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  class="toggle-pwd-btn"
+                  (click)="showPassword = !showPassword"
+                >
+                  <i [class]="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                </button>
+              </div>
             </div>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-lock input-icon"></i>
-              <input
-                id="password"
-                [type]="showPassword ? 'text' : 'password'"
-                name="password"
-                [(ngModel)]="password"
-                placeholder="Nhập mật khẩu"
-                required
-                autocomplete="current-password"
-              />
-              <button
-                type="button"
-                class="toggle-pwd-btn"
-                (click)="showPassword = !showPassword"
-              >
-                <i [class]="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
-              </button>
-            </div>
-          </div>
 
-          <button type="submit" class="btn-primary submit-btn" [disabled]="loading">
-            @if (loading) {
-              <i class="fa-solid fa-circle-notch fa-spin"></i> Đang đăng nhập...
-            } @else {
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập
-            }
-          </button>
+            <button type="submit" class="btn-primary submit-btn" [disabled]="loading">
+              @if (loading) {
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Đang đăng nhập...
+              } @else {
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng nhập
+              }
+            </button>
+          }
         </form>
 
         <div class="auth-footer">
-          <p>Chưa có tài khoản? <a routerLink="/register" class="link-highlight">Đăng ký ngay</a></p>
+          @if (keycloakEnabled) {
+            <p>Chưa có tài khoản? <a href="#" class="link-highlight" (click)="onRegisterWithKeycloak($event)">Đăng ký ngay</a></p>
+          } @else {
+            <p>Chưa có tài khoản? <a routerLink="/register" class="link-highlight">Đăng ký ngay</a></p>
+          }
         </div>
       </div>
     </div>
@@ -208,6 +222,40 @@ import { ToastService } from '@core/services/toast.service';
       cursor: not-allowed;
     }
 
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    .btn-keycloak {
+      width: 100%;
+      padding: 13px;
+      font-size: 0.95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: #4f9deb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-keycloak:hover {
+      background: #3d8bd8;
+      box-shadow: 0 4px 18px rgba(79, 157, 235, 0.4);
+    }
+
     .auth-footer {
       text-align: center;
       margin-top: 28px;
@@ -223,14 +271,39 @@ import { ToastService } from '@core/services/toast.service';
 })
 export class LoginComponent {
   private authService = inject(AuthService);
+  private keycloak = inject(KeycloakService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  readonly keycloakEnabled = this.keycloak.enabled;
   username = '';
   password = '';
   showPassword = false;
   loading = false;
+
+  onLoginWithKeycloak(): void {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    const redirectUri = returnUrl
+      ? `${window.location.origin}${returnUrl}`
+      : `${window.location.origin}/`;
+    this.keycloak.login(redirectUri).catch((err) => {
+      this.toast.error('Không thể kết nối Keycloak');
+      console.error(err);
+    });
+  }
+
+  onRegisterWithKeycloak(event?: Event): void {
+    event?.preventDefault();
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    const redirectUri = returnUrl
+      ? `${window.location.origin}${returnUrl}`
+      : `${window.location.origin}/`;
+    this.keycloak.register(redirectUri).catch((err) => {
+      this.toast.error('Không thể kết nối Keycloak');
+      console.error(err);
+    });
+  }
 
   onSubmit(): void {
     if (!this.username.trim() || !this.password.trim()) {

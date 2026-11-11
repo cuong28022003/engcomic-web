@@ -1,26 +1,32 @@
 <div class="study-session-page">
   <!-- Top header with Progress -->
   <div class="study-topbar glass-panel">
-    <a [routerLink]="deckId ? ['/deck', deckId] : '/deck'" class="btn-icon" title="Thoát phiên học">
+    <a [routerLink]="deckId ? ['/deck', deckId] : '/deck'" class="back-btn" title="Thoát phiên học">
       <i class="fa-solid fa-arrow-left"></i>
     </a>
-    <div class="progress-wrap">
-      <div class="deck-title-row">
-        <span class="deck-title">{{ deck()?.name || 'Ôn Tập Flashcard' }}</span>
-        @if (levelParam() > 0) {
-          <span class="filter-pill lvl">Level {{ levelParam() }}</span>
-        }
-        @if (posParam() !== 'all') {
-          <span class="filter-pill pos">{{ posParam() }}</span>
-        }
-        @if (starParam()) {
-          <span class="filter-pill star"><i class="fa-solid fa-star"></i> Yêu thích</span>
-        }
-      </div>
+
+    <div class="topbar-meta">
+      <span class="deck-title">{{ deck()?.name || 'Ôn Tập Flashcard' }}</span>
+      @if (levelParam() > 0 || posParam() !== 'all' || starParam()) {
+        <div class="filters-inline">
+          @if (levelParam() > 0) {
+            <span class="filter-pill lvl">L{{ levelParam() }}</span>
+          }
+          @if (posParam() !== 'all') {
+            <span class="filter-pill pos">{{ posParam() }}</span>
+          }
+          @if (starParam()) {
+            <span class="filter-pill star"><i class="fa-solid fa-star"></i></span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="topbar-progress">
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" [style.width.%]="progressPercent()"></div>
       </div>
-      <span class="progress-text">{{ currentIndex() + 1 }} / {{ cards().length }}</span>
+      <span class="progress-text">{{ currentIndex() + 1 }}/{{ cards().length }}</span>
     </div>
   </div>
 

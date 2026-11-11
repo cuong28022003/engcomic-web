@@ -1,0 +1,655 @@
+<div class="home-container">
+
+  <!-- ── 1. Hero Banner Section (Compact & Dynamic) ── -->
+  <section class="hero-section glass-panel">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fa-solid fa-sparkles"></i>
+        <span>HỆ SINH THÁI HỌC TIẾNG ANH ĐỘT PHÁ & GAMIFICATION</span>
+      </div>
+
+      <h1 class="hero-title">
+        Học Tiếng Anh Qua Truyện Tranh, <br/>
+        <span class="gradient-text">Kho Từ Vựng & Đấu Trường Gacha</span>
+      </h1>
+
+      <p class="hero-desc">
+        Đắm chìm vào thế giới truyện tranh song ngữ với tra từ 1-chạm & OCR, làm chủ từ vựng bằng
+        thuật toán Spaced Repetition (SM-2), tích lũy Kim Cương quay Gacha nhân vật và thi đấu đỉnh cao.
+      </p>
+
+      <!-- Multi-purpose Search Trigger -->
+      <div class="hero-search-trigger" (click)="openVocabModal()">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <span class="search-placeholder">Tra nhanh từ vựng, ngữ pháp hoặc tìm truyện tranh...</span>
+        <div class="search-shortcuts">
+          <button type="button" class="sc-tag" (click)="$event.stopPropagation(); openVocabModal()" title="Tra cứu nhanh từ vựng">
+            <kbd>Ctrl K</kbd> Từ vựng
+          </button>
+          <button type="button" class="sc-tag sc-grammar" (click)="$event.stopPropagation(); openGrammarModal()" title="Tra cứu nhanh ngữ pháp">
+            <kbd>Ctrl G</kbd> Ngữ pháp
+          </button>
+          <a [routerLink]="['/search']" class="sc-tag sc-comic" (click)="$event.stopPropagation()" title="Khám phá truyện tranh">
+            <i class="fa-solid fa-book-open"></i> Truyện tranh
+          </a>
+        </div>
+      </div>
+
+      <!-- Primary React Ecosystem Gateways (Hero CTAs) -->
+      <div class="hero-gateway-actions">
+        <a [href]="ecosystem.comicsUrl" target="_blank" class="btn-hero-cta cta-comic" title="Mở Website Đọc Truyện Tranh (React)">
+          <div class="cta-icon">
+            <i class="fa-solid fa-book-open-reader"></i>
+          </div>
+          <div class="cta-info">
+            <span class="cta-title">Đọc Truyện Tranh</span>
+            <span class="cta-desc">Song ngữ 1-chạm & OCR • Web React</span>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square cta-badge-icon"></i>
+        </a>
+
+        <a [href]="ecosystem.gachaUrl" target="_blank" class="btn-hero-cta cta-gacha" title="Mở Website Game Gacha & Đấu Trường (React)">
+          <div class="cta-icon">
+            <i class="fa-solid fa-gamepad"></i>
+          </div>
+          <div class="cta-info">
+            <span class="cta-title">Game Gacha & Đấu Trường</span>
+            <span class="cta-desc">Chiêu mộ tướng SSR & Võ đài • Web React</span>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square cta-badge-icon"></i>
+        </a>
+      </div>
+
+      <!-- Quick Platform Learning Modules -->
+      <div class="hero-learning-pills">
+        <span class="pills-label"><i class="fa-solid fa-graduation-cap"></i> Khóa học & Luyện tập:</span>
+        <div class="pills-list">
+          <a routerLink="/vocab" class="pill-item">
+            <i class="fa-solid fa-brain" style="color: #818cf8;"></i>
+            <span>Kho Từ Vựng (SRS)</span>
+          </a>
+          <a routerLink="/reader" class="pill-item">
+            <i class="fa-solid fa-file-lines" style="color: #38bdf8;"></i>
+            <span>Luyện Đề Đọc</span>
+          </a>
+          <a routerLink="/grammar" class="pill-item">
+            <i class="fa-solid fa-spell-check" style="color: #34d399;"></i>
+            <span>Ngữ Pháp</span>
+          </a>
+          <a routerLink="/leaderboard" class="pill-item">
+            <i class="fa-solid fa-ranking-star" style="color: #fbbf24;"></i>
+            <span>Bảng Xếp Hạng</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Right Visual: Daily Word Spotlight + Mini Gacha Perk -->
+    <div class="hero-visual">
+      <div class="spotlight-card glass-panel">
+        <div class="spotlight-header">
+          <span class="spotlight-tag">
+            <i class="fa-solid fa-star"></i> Từ vựng hôm nay
+          </span>
+          <span class="srs-pill">
+            <i class="fa-solid fa-repeat"></i> SRS SM-2
+          </span>
+        </div>
+
+        <div class="spotlight-body">
+          <div class="word-row">
+            <div class="word-group">
+              <span class="main-word">{{ dailyWord.word }}</span>
+              <span class="ipa-code">{{ dailyWord.ipa }}</span>
+            </div>
+            <button
+              type="button"
+              class="audio-play-btn"
+              [class.playing]="isPlayingSample()"
+              (click)="playDailyWord()"
+              title="Nghe phát âm chuẩn US"
+            >
+              <i class="fa-solid" [class.fa-volume-high]="!isPlayingSample()" [class.fa-spinner]="isPlayingSample()" [class.fa-spin]="isPlayingSample()"></i>
+            </button>
+          </div>
+
+          <div class="pos-row">
+            <span class="pos-badge pos-noun">Danh từ (n)</span>
+            <span class="topic-pill"><i class="fa-solid fa-compass"></i> Khám phá & Đời sống</span>
+          </div>
+
+          <p class="meaning-text">{{ dailyWord.meaning }}</p>
+
+          <div class="colloc-box">
+            <span class="colloc-label">Collocation:</span>
+            <span class="colloc-val">"{{ dailyWord.collocation }}"</span>
+          </div>
+
+          <div class="example-box">
+            <i class="fa-solid fa-quote-left"></i>
+            <span>{{ dailyWord.example }}</span>
+          </div>
+        </div>
+
+        <!-- Gamification Mini Perk Footer -->
+        <div class="spotlight-gacha-perk">
+          <div class="perk-icon">
+            <i class="fa-solid fa-gem"></i>
+          </div>
+          <div class="perk-info">
+            <span class="perk-title">Thưởng Gamification Hàng Ngày</span>
+            <span class="perk-sub">Học 10 từ hôm nay để nhận +50 💎 quay Gacha tướng SSR!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. Personalized Student Dashboard (Horizontal Sleek Bar) ── -->
+  @if (currentUser()) {
+    <section class="personal-dash-panel glass-panel">
+      <div class="dash-user-info">
+        <app-avatar-frame
+          [avatarUrl]="currentUser()?.avatarUrl || 'assets/image/avt.png'"
+          [frameId]="userStats()?.equippedAvatarFrame || 'frame_default'"
+          size="sm"
+          [showGlow]="true"
+        ></app-avatar-frame>
+        <div class="user-titles">
+          <div class="greeting-row">
+            <h2 class="welcome-text">Xin chào, {{ currentUser()?.username }}!</h2>
+            @if (userStats()?.equippedTitle) {
+              <span class="equipped-title-badge">{{ userStats()?.equippedTitle }}</span>
+            }
+          </div>
+          <span class="sub-greeting">Sẵn sàng tích lũy kim cương và thăng hạng hôm nay!</span>
+        </div>
+      </div>
+
+      <div class="dash-quick-stats">
+        <!-- Streak Box -->
+        <div class="stat-box streak-box">
+          <div class="stat-icon-wrap streak-icon">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-num">{{ userStats()?.currentStreak ?? userStats()?.streakDays ?? 0 }}d</span>
+            <span class="stat-label">Chuỗi học</span>
+          </div>
+        </div>
+
+        <!-- Due Cards Box -->
+        <div class="stat-box due-box">
+          <div class="stat-icon-wrap due-icon">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-num">{{ dueCardsCount() }} từ</span>
+            <span class="stat-label">Cần ôn</span>
+          </div>
+          @if (dueCardsCount() > 0) {
+            <a routerLink="/vocab/practice" class="stat-action-btn">Ôn</a>
+          }
+        </div>
+
+        <!-- Diamond Box (Used for Gacha) -->
+        <div class="stat-box diamond-box">
+          <div class="stat-icon-wrap diamond-icon">
+            <i class="fa-solid fa-gem"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-num">{{ userStats()?.diamond ?? userStats()?.diamonds ?? 0 }}</span>
+            <span class="stat-label">Kim cương Gacha</span>
+          </div>
+        </div>
+
+        <!-- Total Vocab Box -->
+        <div class="stat-box total-box">
+          <div class="stat-icon-wrap total-icon">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-num">{{ totalCardsCount() }} từ</span>
+            <span class="stat-label">Kho từ vựng</span>
+          </div>
+        </div>
+
+        <!-- Quick Link to Showcase & Frames -->
+        <a [routerLink]="['/user', currentUser()?.userId, 'showcase']" class="dash-showcase-btn" title="Tủ đồ & Khung Avatar">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Tủ đồ</span>
+        </a>
+      </div>
+    </section>
+  }
+
+  <!-- ── 3. 4 Core Pillars Grid (Compact & Well-Proportioned) ── -->
+  <section class="pillars-section">
+    <div class="section-title-wrap">
+      <span class="section-tag"><i class="fa-solid fa-compass"></i> HỆ SINH THÁI TOÀN DIỆN</span>
+      <h2 class="section-heading">4 Trụ Cột Học Tiếng Anh Đột Phá</h2>
+      <p class="section-subtext">Kết hợp giữa giải trí truyện tranh, khoa học nhận thức và cơ chế Gamification hấp dẫn</p>
+    </div>
+
+    <div class="pillars-grid">
+      <!-- Pillar 1: English Comics & OCR -->
+      <a [href]="ecosystem.comicsUrl" target="_blank" class="pillar-card pillar-comic">
+        <div class="pillar-top-row">
+          <div class="pillar-icon-wrap">
+            <i class="fa-solid fa-book-open-reader"></i>
+          </div>
+          <span class="pillar-level-tag">Song Ngữ 1-Chạm</span>
+        </div>
+        <h3 class="pillar-title">Đọc Truyện Tranh Tiếng Anh</h3>
+        <p class="pillar-desc">
+          Thẩm thấu từ vựng và ngữ cảnh tự nhiên qua manga/comic. Tra từ tức thì với công nghệ nhận diện chữ OCR và lưu thẻ ngay khi đọc.
+        </p>
+        <div class="pillar-chips">
+          <span class="p-chip">Tra từ 1-chạm</span>
+          <span class="p-chip">Bóng thoại OCR</span>
+        </div>
+        <div class="pillar-cta">
+          <span>Sang Web Đọc Truyện</span>
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </div>
+      </a>
+
+      <!-- Pillar 2: Vocab Vault SRS -->
+      <a routerLink="/vocab" class="pillar-card pillar-vocab">
+        <div class="pillar-top-row">
+          <div class="pillar-icon-wrap">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <span class="pillar-level-tag">Chống Quên Tuyệt Đối</span>
+        </div>
+        <h3 class="pillar-title">Kho Từ Vựng Vocab Vault</h3>
+        <p class="pillar-desc">
+          Thuật toán Spaced Repetition (SM-2) tự động tối ưu hóa ngày ôn tập. Cảnh báo từ hay quên (Leech) và import từ vựng thông minh.
+        </p>
+        <div class="pillar-chips">
+          <span class="p-chip">Lặp ngắt quãng SM-2</span>
+          <span class="p-chip">Cứu hộ từ khó Leech</span>
+        </div>
+        <div class="pillar-cta">
+          <span>Vào kho từ vựng</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+
+      <!-- Pillar 3: Gamification & Gacha Game -->
+      <a [href]="ecosystem.gachaUrl" target="_blank" class="pillar-card pillar-gacha">
+        <div class="pillar-top-row">
+          <div class="pillar-icon-wrap">
+            <i class="fa-solid fa-gem"></i>
+          </div>
+          <span class="pillar-level-tag">Gamification RPG</span>
+        </div>
+        <h3 class="pillar-title">Vũ Trụ Gacha & Đấu Trường</h3>
+        <p class="pillar-desc">
+          Học tiếng Anh để nhận Kim Cương 💎. Quay Gacha chiêu mộ các tướng SSR cực mạnh, mở khóa Khung Avatar thần thoại và so tài chiến đấu.
+        </p>
+        <div class="pillar-chips">
+          <span class="p-chip">Quay tướng Gacha SSR</span>
+          <span class="p-chip">Khung Avatar lấp lánh</span>
+        </div>
+        <div class="pillar-cta">
+          <span>Sang Game Gacha Tướng</span>
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </div>
+      </a>
+
+      <!-- Pillar 4: Reading Mastery & Grammar -->
+      <a routerLink="/reader" class="pillar-card pillar-reader">
+        <div class="pillar-top-row">
+          <div class="pillar-icon-wrap">
+            <i class="fa-solid fa-file-signature"></i>
+          </div>
+          <span class="pillar-level-tag">Thực Chiến Đọc Hiểu</span>
+        </div>
+        <h3 class="pillar-title">Luyện Đề Đọc & Ngữ Pháp</h3>
+        <p class="pillar-desc">
+          Rèn luyện kỹ năng đọc hiểu chuyên sâu, phòng thi TOEIC chia đôi màn hình PDF, Pacing Stopwatch cùng thư viện 100+ chủ điểm ngữ pháp.
+        </p>
+        <div class="pillar-chips">
+          <span class="p-chip">Đề thi chia đôi PDF</span>
+          <span class="p-chip">Tra ngữ pháp 3 giây</span>
+        </div>
+        <div class="pillar-cta">
+          <span>Vào phòng luyện thi</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── 4. Featured English Comics Section ── -->
+  <section class="featured-comics-section">
+    <div class="section-header-bar">
+      <div>
+        <div class="sub-badge"><i class="fa-solid fa-book-open"></i> ĐỌC TRUYỆN SONG NGỮ</div>
+        <h2 class="section-heading">Truyện Tranh Tiếng Anh Nổi Bật</h2>
+        <p class="section-subtext">Học tiếng Anh tự nhiên qua cốt truyện cuốn hút, minh họa sống động và đàm thoại đời thường</p>
+      </div>
+      <a routerLink="/search" class="view-all-link">
+        <span>Xem tất cả kho truyện</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="comics-grid">
+      @for (comic of hotComics(); track comic.id) {
+        <div class="comic-item-card glass-panel">
+          <div class="comic-thumb-wrap">
+            <img
+              [src]="comic.imageUrl || comic.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80'"
+              [alt]="comic.title || comic.name || 'Truyện tranh'"
+              class="comic-thumb"
+              loading="lazy"
+              (error)="onComicImageError($event)"
+            />
+            <div class="comic-overlay-badges">
+              @if (comic.isPremium) {
+                <span class="badge-vip"><i class="fa-solid fa-crown"></i> VIP</span>
+              }
+              <span class="badge-rating">
+                <i class="fa-solid fa-star"></i> {{ (comic.rating || 4.8) | number:'1.1-1' }}
+              </span>
+            </div>
+            <div class="comic-hover-action">
+              <a [href]="ecosystem.comicDetailUrl(comic.id)" target="_blank" class="btn-read-sm" title="Mở bộ truyện trong Web Truyện Tranh">
+                <i class="fa-solid fa-book-open"></i> Đọc & Tra từ
+                <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="comic-info-box">
+            <h3 class="comic-name" [title]="comic.title || comic.name || ''">
+              {{ comic.title || comic.name }}
+            </h3>
+
+            <div class="comic-meta-row">
+              <span class="meta-item"><i class="fa-regular fa-eye"></i> {{ (comic.views || 12000) | number }} lượt đọc</span>
+              <span class="meta-item"><i class="fa-regular fa-bookmark"></i> {{ comic.totalChapters || 100 }} chaps</span>
+            </div>
+
+            <div class="comic-genres-row">
+              @if (comic.genres && comic.genres.length > 0) {
+                @for (g of comic.genres.slice(0, 2); track g) {
+                  <span class="genre-pill">{{ g }}</span>
+                }
+              } @else {
+                <span class="genre-pill">Adventure</span>
+                <span class="genre-pill">Shounen</span>
+              }
+              @if (comic.englishLevel) {
+                <span class="level-pill">{{ comic.englishLevel }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── 5. Gamification & Gacha Showcase Banner ── -->
+  <section class="gacha-showcase-section glass-panel">
+    <div class="gacha-content">
+      <div class="gacha-badge">
+        <i class="fa-solid fa-gamepad"></i>
+        <span>VŨ TRỤ GAMIFICATION & GACHA</span>
+      </div>
+
+      <h2 class="gacha-title">
+        Học Tiếng Anh — Tích Kim Cương <br/>
+        <span class="gradient-text-gold">Quay Tướng SSR & Đấu Trường</span>
+      </h2>
+
+      <p class="gacha-desc">
+        Hệ thống tích hợp độc đáo: Cứ mỗi ngày học từ vựng, duy trì Streak 🔥 hay hoàn thành bài đọc hiểu,
+        bạn sẽ nhận <strong>Kim Cương 💎</strong>. Sử dụng kim cương để quay Gacha mở khóa dàn chiến binh Anime/Manga,
+        trang bị Khung Avatar độc quyền và tham gia vào Đấu Trường Chiến Đấu!
+      </p>
+
+      <div class="gacha-steps">
+        <div class="g-step">
+          <div class="step-num">1</div>
+          <div class="step-txt">
+            <strong>Học & Giữ Streak</strong>
+            <span>Tích lũy Kim Cương 💎</span>
+          </div>
+        </div>
+        <div class="g-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="g-step">
+          <div class="step-num">2</div>
+          <div class="step-txt">
+            <strong>Quay Gacha</strong>
+            <span>Chiêu mộ Tướng SSR 5★</span>
+          </div>
+        </div>
+        <div class="g-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="g-step">
+          <div class="step-num">3</div>
+          <div class="step-txt">
+            <strong>Tủ Đồ & Đấu Trường</strong>
+            <span>Khung Avatar & Xếp Hạng</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gacha-actions">
+        <a [href]="ecosystem.gachaUrl" target="_blank" class="btn-primary btn-gold" title="Mở Game Gacha">
+          <i class="fa-solid fa-gem"></i>
+          <span>Quay Gacha Ngay</span>
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>
+        </a>
+        <a [href]="ecosystem.fightingGameUrl" target="_blank" class="btn-secondary" title="Vào Đấu Trường Chiến Đấu">
+          <i class="fa-solid fa-gamepad"></i>
+          <span>Đấu Trường Fighting</span>
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>
+        </a>
+        @if (currentUser()) {
+          <a [routerLink]="['/user', currentUser()?.userId, 'showcase']" class="btn-secondary">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Tủ Đồ & Danh Hiệu</span>
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Featured Gacha Character Cards Showcase -->
+    <div class="gacha-cards-display">
+      @for (char of featuredGachaCharacters; track char.name) {
+        <div class="gacha-char-card" [class]="char.badgeClass">
+          <div class="rarity-tag">{{ char.rarity }}</div>
+          <div class="char-avatar-box">
+            <app-avatar-frame
+              [avatarUrl]="char.avatarUrl"
+              [frameId]="char.frameId"
+              size="md"
+              [showGlow]="true"
+            ></app-avatar-frame>
+          </div>
+          <div class="char-info">
+            <h4 class="char-name">{{ char.name }}</h4>
+            <span class="char-title">{{ char.title }}</span>
+            <div class="char-stars">
+              @for (star of [1,2,3,4,5].slice(0, char.stars); track star) {
+                <i class="fa-solid fa-star"></i>
+              }
+            </div>
+            <div class="char-stat-row">
+              <span class="stat-lbl">Chiến lực:</span>
+              <span class="stat-val">{{ char.combatPower }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ── 6. Leaderboard & Quick Study Hub (Compact 2-Columns) ── -->
+  <section class="bottom-hub-section">
+    <!-- Column 1: Top Learners Leaderboard -->
+    <div class="hub-col leaderboard-col glass-panel">
+      <div class="col-header">
+        <div class="col-title-group">
+          <i class="fa-solid fa-trophy highlight"></i>
+          <div>
+            <h3>Bảng Vinh Danh Tuần</h3>
+            <p class="col-sub">Top học giả có chuỗi học tập và điểm tích lũy cao nhất</p>
+          </div>
+        </div>
+        <a routerLink="/leaderboard" class="view-more-btn" title="Bảng xếp hạng đầy đủ">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+
+      <div class="leaderboard-list">
+        @for (u of topUsers().slice(0, 5); track u.userId; let i = $index) {
+          <div class="user-rank-row" [class.podium-1]="i === 0" [class.podium-2]="i === 1" [class.podium-3]="i === 2">
+            <div class="rank-pos">
+              @if (i === 0) {
+                <span class="trophy-gold"><i class="fa-solid fa-crown"></i></span>
+              } @else if (i === 1) {
+                <span class="trophy-silver">2</span>
+              } @else if (i === 2) {
+                <span class="trophy-bronze">3</span>
+              } @else {
+                <span class="pos-num">{{ i + 1 }}</span>
+              }
+            </div>
+
+            <div class="user-avt-wrap">
+              <app-avatar-frame
+                [avatarUrl]="u.avatarUrl || 'assets/image/avt.png'"
+                [frameId]="getFrameForUser(u, i)"
+                size="sm"
+                [showGlow]="i < 3"
+              ></app-avatar-frame>
+            </div>
+
+            <div class="user-meta">
+              <div class="user-name-line">
+                <span class="username">{{ u.username }}</span>
+                @if (getTitleForUser(u); as title) {
+                  <span class="title-chip">{{ title }}</span>
+                }
+              </div>
+              <span class="user-rank-title">{{ u.rank?.name || 'Học Giả Tích Cực' }}</span>
+            </div>
+
+            <div class="user-scores">
+              <span class="xp-val">{{ (u.xp || 0) | number }} XP</span>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-list-notice">
+            <i class="fa-solid fa-award"></i>
+            <span>Hãy bắt đầu học ngay hôm nay để ghi tên mình lên bảng vàng!</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Column 2: Quick Study Shortcuts & Grammar Spot -->
+    <div class="hub-col quick-tools-col glass-panel">
+      <div class="col-header">
+        <div class="col-title-group">
+          <i class="fa-solid fa-bolt highlight"></i>
+          <div>
+            <h3>Trạm Luyện Tập Nhanh</h3>
+            <p class="col-sub">Lối tắt tra cứu và các công cụ bổ trợ học tập tức thì</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-tools-grid">
+        <!-- Quick Tool 1: Vocab Quick Search -->
+        <button type="button" class="tool-card" (click)="openVocabModal()">
+          <div class="tool-icon-wrap icon-vocab">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div class="tool-body">
+            <div class="tool-top">
+              <strong>Tra Cứu Từ Vựng Nhanh</strong>
+              <kbd>Ctrl K</kbd>
+            </div>
+            <p>Tra nghĩa, IPA, collocation và phát âm US chỉ trong 1 giây</p>
+          </div>
+        </button>
+
+        <!-- Quick Tool 2: Grammar Search -->
+        <button type="button" class="tool-card" (click)="openGrammarModal()">
+          <div class="tool-icon-wrap icon-grammar">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="tool-body">
+            <div class="tool-top">
+              <strong>Tra Cứu Ngữ Pháp</strong>
+              <kbd>Ctrl G</kbd>
+            </div>
+            <p>100+ cấu trúc, bẫy thi thường gặp và ví dụ thực chiến</p>
+          </div>
+        </button>
+
+        <!-- Quick Tool 3: Flashcards Spaced Repetition -->
+        <a routerLink="/vocab" class="tool-card">
+          <div class="tool-icon-wrap icon-flashcards">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div class="tool-body">
+            <div class="tool-top">
+              <strong>Ôn Tập Thẻ Spaced Repetition</strong>
+              <span class="badge-mini">SM-2</span>
+            </div>
+            <p>Tối ưu hóa khả năng ghi nhớ dài hạn, chống quên tuyệt đối</p>
+          </div>
+        </a>
+
+        <!-- Quick Tool 4: Reading Test Exam -->
+        <a routerLink="/reader" class="tool-card">
+          <div class="tool-icon-wrap icon-exam">
+            <i class="fa-solid fa-stopwatch"></i>
+          </div>
+          <div class="tool-body">
+            <div class="tool-top">
+              <strong>Phòng Luyện Đọc TOEIC</strong>
+              <span class="badge-mini">Pacing</span>
+            </div>
+            <p>Chia đôi màn hình PDF chuẩn đề thi thật, đo tốc độ làm bài</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── Modals ── -->
+
+<!-- Vocab Search Modal -->
+@if (showVocabSearch()) {
+  <app-vocab-search-modal
+    [isOpen]="showVocabSearch()"
+    (close)="closeVocabModal()"
+  ></app-vocab-search-modal>
+}
+
+<!-- Grammar Search Modal -->
+@if (showGrammarSearch()) {
+  <app-grammar-search-modal
+    [isOpen]="showGrammarSearch()"
+    (close)="closeGrammarModal()"
+    (selectPoint)="onGrammarSelected($event)"
+  ></app-grammar-search-modal>
+}
+
+<!-- Grammar Card Modal -->
+@if (showGrammarCard()) {
+  <app-grammar-card-modal
+    [isOpen]="showGrammarCard()"
+    [grammarPoint]="selectedGrammarPoint()"
+    (close)="closeGrammarCardModal()"
+  ></app-grammar-card-modal>
+}
